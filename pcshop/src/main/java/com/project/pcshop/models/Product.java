@@ -21,25 +21,25 @@ public class Product extends BaseEntity {
     @Column(nullable = false)
     private Float price;
 
-    private Float discount = 0f;
+    private Float discount;
 
     @Column(name = "stock_quantity")
-    private Integer stockQuantity = 0;
+    private Integer stockQuantity;
 
-    @Column(length = 300)
+    @Column(name = "thumbnail")
     private String thumbnail;
 
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(name = "description")
     private String description;
 
     @Column(name = "warranty_months")
     private Integer warrantyMonths = 12;
 
     @Column(name = "is_active")
-    private Boolean isActive = true;
+    private Boolean isActive;
 
     @Column(name = "is_featured")
-    private Boolean isFeatured = false;
+    private Boolean isFeatured;
 
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
