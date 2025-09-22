@@ -15,7 +15,7 @@ import java.time.LocalDate;
 public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(length = 100)
     private String fullname;
@@ -26,7 +26,7 @@ public class User extends BaseEntity {
     @Column(length = 200)
     private String address;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String password;
 
     @Column(nullable = false, length = 150, unique = true)
