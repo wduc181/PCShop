@@ -1,9 +1,9 @@
 package com.project.pcshop.controllers;
 
-import com.project.pcshop.dtos.CartItemDTO;
-import com.project.pcshop.models.CartItem;
+import com.project.pcshop.dtos.CartItemsDTO;
+import com.project.pcshop.models.CartItems;
 import com.project.pcshop.responses.CartResponse;
-import com.project.pcshop.services.interfaces.ICartItemService;
+import com.project.pcshop.services.interfaces.ICartItemsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,13 +16,13 @@ import java.util.List;
 @RestController
 @RequestMapping("${api.prefix}/cart-items")
 @RequiredArgsConstructor
-public class CartItemController {
+public class CartItemsController {
 
-    private final ICartItemService cartItemService;
+    private final ICartItemsService cartItemService;
 
     @PostMapping
     public ResponseEntity<?> addItem(
-            @Valid @RequestBody CartItemDTO cartItemDTO,
+            @Valid @RequestBody CartItemsDTO cartItemsDTO,
             BindingResult result
     ) {
        try {
@@ -31,7 +31,7 @@ public class CartItemController {
                        .stream().map(FieldError::getDefaultMessage).toList();
                return ResponseEntity.badRequest().body(errorMessages);
            }
-           List<CartItem> items = cartItemService.addItemToCart(cartItemDTO);
+           List<CartItems> items = cartItemService.addItemToCart(cartItemsDTO);
            return ResponseEntity.ok("Added to cart");
        } catch (Exception e) {
            return ResponseEntity.badRequest().body(e.getMessage());
@@ -43,27 +43,27 @@ public class CartItemController {
             @PathVariable Long id,
             @RequestParam Integer quantity
     ) {
-        List<CartItem> items = cartItemService.updateItemQuantity(id, quantity);
+        List<CartItems> items = cartItemService.updateItemQuantity(id, quantity);
         Long userId = items.isEmpty() ? null : items.getFirst().getUser().getId();
         return ResponseEntity.ok("Updated item's quantity");
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> removeItem(@PathVariable Long id) {
-        List<CartItem> items = cartItemService.removeItem(id);
+        List<CartItems> items = cartItemService.removeItem(id);
         Long userId = items.isEmpty() ? null : id;
         return ResponseEntity.ok("Removed item successfully");
     }
 
     @DeleteMapping("/user/{userId}")
     public ResponseEntity<?> clearCart(@PathVariable Long userId) {
-        List<CartItem> items = cartItemService.clearCart(userId);
+        List<CartItems> items = cartItemService.clearCart(userId);
         return ResponseEntity.ok("Clear cart successfully");
     }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getCart(@PathVariable Long userId) {
-        List<CartItem> items = cartItemService.getCartByUser(userId);
+        List<CartItems> items = cartItemService.getCartByUser(userId);
         return ResponseEntity.ok(CartResponse.fromCartItems(items, userId));
     }
 }

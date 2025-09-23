@@ -1,6 +1,6 @@
 package com.project.pcshop.responses;
 
-import com.project.pcshop.models.CartItem;
+import com.project.pcshop.models.CartItems;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CartItemResponse {
+public class CartItemsResponse {
     private Long id;
     private Long productId;
     private String productName;
@@ -16,10 +16,10 @@ public class CartItemResponse {
     private float price;
     private float subtotal;
 
-    public static CartItemResponse fromCartItem(CartItem item) {
+    public static CartItemsResponse fromCartItem(CartItems item) {
         float price = item.getProduct().getPrice();
         float subtotal = price * item.getQuantity();
-        return new CartItemResponse(
+        return new CartItemsResponse(
                 item.getId(),
                 item.getProduct().getId(),
                 item.getProduct().getName(),

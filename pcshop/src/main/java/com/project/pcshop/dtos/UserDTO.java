@@ -38,5 +38,5 @@ public class UserDTO {
     private LocalDate dateOfBirth;
 
     @JsonProperty("role_id")
-    private int roleId;
+    private Long roleId;
 }

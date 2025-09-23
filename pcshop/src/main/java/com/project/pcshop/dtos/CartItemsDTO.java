@@ -10,7 +10,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CartItemDTO {
+public class CartItemsDTO {
     @JsonProperty("user_id")
     @NotNull(message = "User ID is required")
     private Long userId;
