@@ -61,10 +61,15 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             return;
         }
         final String authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader == null && authorizationHeader.startsWith("Bearer ")) {
-            final String token = authorizationHeader.substring(7);
-            final String phoneNumber = jwtTokenUtil.extractPhoneNumber(token);
+
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
         }
+
+        final String token = authorizationHeader.substring(7);
+        final String phoneNumber = jwtTokenUtil.extractPhoneNumber(token);
+
     }
 }
 
