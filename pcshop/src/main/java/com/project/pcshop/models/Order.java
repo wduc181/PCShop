@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -23,14 +24,17 @@ public class Order {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private String fullname;
+    @Column(name = "fullname")
+    private String fullName;
+
+    @Column(name = "email")
     private String email;
 
     @Column(name = "phone_number", nullable = false, length = 15)
     private String phoneNumber;
 
-    @Column(nullable = false, length = 200)
-    private String address;
+    @Column(name = "address")
+    private String address = "";
 
     private String note;
 
@@ -38,7 +42,9 @@ public class Order {
     private LocalDateTime orderDate;
 
     @Enumerated(EnumType.STRING)
-    private OrderStatus status = OrderStatus.PENDING;
+    @Column(name = "status")
+    @Builder.Default
+    private OrderStatus status = OrderStatus.pending;
 
     @Column(name = "total_price", nullable = false)
     private Float totalPrice;
@@ -48,7 +54,8 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")
-    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
+    @Builder.Default
+    private PaymentStatus paymentStatus = PaymentStatus.pending;
 
     @Column(name = "shipping_method")
     private String shippingMethod;
@@ -62,8 +69,9 @@ public class Order {
     @Column(name = "shipping_date")
     private LocalDate shippingDate;
 
+    @Builder.Default
     private Boolean active = true;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderDetail> orderDetails;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<OrderDetail> orderDetails = new ArrayList<>();
 }
