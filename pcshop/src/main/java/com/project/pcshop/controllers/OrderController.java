@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ public class OrderController {
 
     private final IOrderService orderService;
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/from-cart/{userId}")
     public ResponseEntity<?> createOrderFromCart(
             @PathVariable Long userId,
@@ -45,7 +47,7 @@ public class OrderController {
         }
     }
 
-    //not test, for admin later
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("")
     public ResponseEntity<?> getAllOrders() {
         try {
@@ -58,6 +60,7 @@ public class OrderController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getOrdersByUser(
             @PathVariable Long userId,
@@ -78,6 +81,7 @@ public class OrderController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/{id}/details")
     public ResponseEntity<?> getOrderWithDetails(@PathVariable Long id) {
         try {
@@ -88,6 +92,7 @@ public class OrderController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateOrder(
             @PathVariable Long id,
@@ -109,6 +114,7 @@ public class OrderController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteOrder(@PathVariable Long id) {
         try {

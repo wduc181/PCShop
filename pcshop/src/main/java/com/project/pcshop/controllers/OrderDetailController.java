@@ -5,6 +5,7 @@ import com.project.pcshop.responses.OrderDetailResponse;
 import com.project.pcshop.services.interfaces.IOrderDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +17,7 @@ public class OrderDetailController {
 
     private final IOrderDetailService orderDetailService;
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/order/{orderId}")
     public ResponseEntity<?> getDetailsByOrder(@PathVariable Long orderId) {
         try {
@@ -28,6 +30,7 @@ public class OrderDetailController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/{id}")
     public ResponseEntity<?> getDetailById(@PathVariable Long id) {
         try {
@@ -38,6 +41,7 @@ public class OrderDetailController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteDetail(@PathVariable Long id) {
         try {

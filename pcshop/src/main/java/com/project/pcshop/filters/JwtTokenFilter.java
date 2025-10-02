@@ -1,15 +1,18 @@
 package com.project.pcshop.filters;
 
 import com.project.pcshop.components.JwtTokenUtil;
+import com.project.pcshop.models.User;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -34,13 +37,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 Pair.of(String.format("%s/products", apiPrefix), "GET"),
                 Pair.of(String.format("%s/categories", apiPrefix), "GET"),
                 Pair.of(String.format("%s/users/register", apiPrefix), "POST"),
-                Pair.of(String.format("%s/users/login", apiPrefix), "POST"),
-                Pair.of(String.format("%s/cart-items", apiPrefix), "GET"),
-                Pair.of(String.format("%s/cart-items", apiPrefix), "POST"),
-                Pair.of(String.format("%s/cart-items", apiPrefix), "PUT"),
-                Pair.of(String.format("%s/cart-items/users", apiPrefix), "DELETE"),
-                Pair.of(String.format("%s/cart-items", apiPrefix), "DELETE")
-                );
+                Pair.of(String.format("%s/users/login", apiPrefix), "POST")
+        );
         for (Pair<String, String> bypassToken : bypassTokens) {
             if (request.getServletPath().contains(bypassToken.getFirst())
                     && request.getMethod().equals(bypassToken.getSecond())) {
@@ -55,21 +53,36 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
-    ) throws ServletException, IOException {
-        if (isBypassToken(request)) {
+    ) throws IOException {
+        try {
+            if (isBypassToken(request)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            final String authorizationHeader = request.getHeader("Authorization");
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                return;
+            }
+            final String token = authorizationHeader.substring(7);
+            final String phoneNumber = jwtTokenUtil.extractPhoneNumber(token);
+            if (phoneNumber != null
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
+                User existingUser = (User) userDetailsService.loadUserByUsername(phoneNumber);
+                if (jwtTokenUtil.isValidToken(token, existingUser)) {
+                    UsernamePasswordAuthenticationToken authenticationToken
+                            = new UsernamePasswordAuthenticationToken(
+                            existingUser,
+                            null,
+                            existingUser.getAuthorities()
+                    );
+                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                }
+            }
             filterChain.doFilter(request, response);
-            return;
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
         }
-        final String authorizationHeader = request.getHeader("Authorization");
-
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        final String token = authorizationHeader.substring(7);
-        final String phoneNumber = jwtTokenUtil.extractPhoneNumber(token);
-
     }
 }
-

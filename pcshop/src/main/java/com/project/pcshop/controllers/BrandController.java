@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,6 +52,7 @@ public class BrandController {
         return uniqueFilename;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("")
     public ResponseEntity<?> createBrand(@Valid @ModelAttribute BrandDTO brandDTO) {
         try {
@@ -79,6 +81,7 @@ public class BrandController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("")
     public ResponseEntity<List<BrandResponse>> getAllBrands() {
         List<Brand> allBrands = brandService.getAllBrands();
@@ -88,6 +91,7 @@ public class BrandController {
         return ResponseEntity.ok(brandResponses);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateBrand(@PathVariable Long id,
                                          @ModelAttribute BrandDTO brandDTO) {
@@ -112,6 +116,7 @@ public class BrandController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteBrand(@PathVariable Long id) {
         brandService.deleteBrand(id);

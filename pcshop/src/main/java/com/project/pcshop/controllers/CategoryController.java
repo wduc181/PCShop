@@ -7,6 +7,7 @@ import com.project.pcshop.services.interfaces.ICategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import java.util.List;
 public class CategoryController {
     private final ICategoryService categoryService;
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("")
     public ResponseEntity<?> addCategories(
             @Valid @RequestBody CategoryDTO categoryDTO,
@@ -39,7 +41,7 @@ public class CategoryController {
         }
     }
 
-
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("")
     public ResponseEntity<List<CategoryResponse>> getAllCategories() {
         List<Category> categories = categoryService.getAllCategories();
@@ -49,6 +51,7 @@ public class CategoryController {
         return ResponseEntity.ok(categoryResponses);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCategory(
             @PathVariable Long id,
@@ -70,6 +73,7 @@ public class CategoryController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteCategory(
             @PathVariable Long id

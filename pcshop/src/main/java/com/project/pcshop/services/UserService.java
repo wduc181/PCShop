@@ -3,6 +3,7 @@ package com.project.pcshop.services;
 import com.project.pcshop.components.JwtTokenUtil;
 import com.project.pcshop.dtos.UserDTO;
 import com.project.pcshop.exceptions.DataNotFoundException;
+import com.project.pcshop.exceptions.PermissionDenyException;
 import com.project.pcshop.models.Role;
 import com.project.pcshop.models.User;
 import com.project.pcshop.repositories.RoleRepository;
@@ -11,6 +12,7 @@ import com.project.pcshop.services.interfaces.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,10 +29,15 @@ public class UserService implements IUserService {
     private final AuthenticationManager authenticationManager;
 
     @Override
-    public User createUser(UserDTO userDTO) throws DataNotFoundException {
+    public User createUser(UserDTO userDTO) throws Exception {
         String phoneNumber = userDTO.getPhoneNumber();
         if(userRepository.existsByPhoneNumber(phoneNumber)) {
             throw new DataIntegrityViolationException("Phone number already exists.");
+        }
+        Role role = roleRepository.findById(userDTO.getRoleId())
+                .orElseThrow(() ->new DataNotFoundException("role not found."));
+        if (role.getName().toUpperCase().equals(Role.ADMIN)) {
+            throw new PermissionDenyException("You are not allowed to register an admin account");
         }
         User newUser = User.builder()
                 .fullName(userDTO.getFullname())
@@ -40,12 +47,11 @@ public class UserService implements IUserService {
                 .address(userDTO.getAddress())
                 .dateOfBirth(userDTO.getDateOfBirth())
                 .build();
-        Role role = roleRepository.findById(userDTO.getRoleId())
-                .orElseThrow(() ->new DataNotFoundException("role not found."));
         newUser.setRole(role);
         String password = userDTO.getPassword();
         String encodedPassword = passwordEncoder.encode(password);
         newUser.setPassword(encodedPassword);
+        newUser.setIsActive(true);
         return userRepository.save(newUser);
     }
 
@@ -56,6 +62,11 @@ public class UserService implements IUserService {
             throw new DataNotFoundException("Wrong phone number or password.");
         }
         User existingUser = user.get();
+
+        if (!passwordEncoder.matches(password, existingUser.getPassword())) {
+            throw new BadCredentialsException("Wrong phone number or password.");
+        }
+
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 existingUser, password, existingUser.getAuthorities());
         authenticationManager.authenticate(authenticationToken);

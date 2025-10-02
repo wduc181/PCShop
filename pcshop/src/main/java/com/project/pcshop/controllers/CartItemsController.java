@@ -7,6 +7,7 @@ import com.project.pcshop.services.interfaces.ICartItemsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ public class CartItemsController {
 
     private final ICartItemsService cartItemService;
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping
     public ResponseEntity<?> addItem(
             @Valid @RequestBody CartItemsDTO cartItemsDTO,
@@ -38,6 +40,7 @@ public class CartItemsController {
        }
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateQuantity(
             @PathVariable Long id,
@@ -55,12 +58,14 @@ public class CartItemsController {
         return ResponseEntity.ok("Removed item successfully");
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/user/{userId}")
     public ResponseEntity<?> clearCart(@PathVariable Long userId) {
         List<CartItems> items = cartItemService.clearCart(userId);
         return ResponseEntity.ok("Clear cart successfully");
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getCart(@PathVariable Long userId) {
         List<CartItems> items = cartItemService.getCartByUser(userId);
