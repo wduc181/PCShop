@@ -1,27 +1,47 @@
-**/target/
-*.class
-*.jar
-*.war
-*.ear
+# ----------------
+# Java / Spring Boot (backend)
+# ----------------
+/pcshopbackend/target/
+/pcshopbackend/.idea/
+/pcshopbackend/.mvn/wrapper/maven-wrapper.jar
+/pcshopbackend/.mvn/wrapper/maven-wrapper.properties
+/pcshopbackend/mvnw
+/pcshopbackend/mvnw.cmd
 
-**/pom.xml.tag
-**/pom.xml.releaseBackup
-**/pom.xml.versionsBackup
-**/pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-.mvn/timing.properties
-
-.idea/
-*.iml
-.vscode/
+# Log files
 *.log
 
+# OS generated files
 .DS_Store
 Thumbs.db
 
-frontend/node_modules/
-frontend/build/
+# ----------------
+# Node / React (frontend)
+# ----------------
+/pcshopfrontend/node_modules/
+/pcshopfrontend/dist/
+/pcshopfrontend/.env
+/pcshopfrontend/.vite
+/pcshopfrontend/.cache
 
-uploads/
+# ----------------
+# Common IDE configs
+# ----------------
+.idea/
+.vscode/
+*.iml
+
+# ----------------
+# Environment / sensitive files
+# ----------------
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ----------------
+# Other
+# ----------------
+/uploads/
+database.jpg
