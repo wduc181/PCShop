@@ -3,8 +3,9 @@ import { BrowserRouter, Routes, Route } from "react-router";
 import HomePage from "./pages/HomePage";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage";
-import ProductsByCategory from "./pages/ProductsByCategory";
-import ProductsByBrand from "./pages/ProductsByBrand";
+import ProductsByCategory from "./pages/ProductsByCategoryPage";
+import ProductsByBrand from "./pages/ProductsByBrandPage";
+import CartPage from "./pages/CartPage";
 
 function App() {
   return (
@@ -30,6 +31,11 @@ function App() {
           <Route
             path="/brand/:brandName"
             element={<ProductsByBrand />}
+          />
+
+          <Route
+            path="/cart-items*"
+            element={<CartPage />}
           />
 
           <Route

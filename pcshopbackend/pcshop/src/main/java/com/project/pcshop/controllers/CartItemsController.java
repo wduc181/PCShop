@@ -51,6 +51,7 @@ public class CartItemsController {
         return ResponseEntity.ok("Updated item's quantity");
     }
 
+    @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> removeItem(@PathVariable Long id) {
         List<CartItems> items = cartItemService.removeItem(id);
@@ -58,7 +59,7 @@ public class CartItemsController {
         return ResponseEntity.ok("Removed item successfully");
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/user/{userId}")
     public ResponseEntity<?> clearCart(@PathVariable Long userId) {
         List<CartItems> items = cartItemService.clearCart(userId);
