@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams } from "react-router";
 import { mockOrderDetails } from "@/lib/mockOrderDetails";
-import MainLayout from "@/components/MainLayout";
+import MainLayout from "@/components/Layouts/MainLayout";
 
 const OrderDetailPage = () => {
   const { id } = useParams();

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import CustomPagination from "@/components/ProductsPages/CustomPagination";
-import MainLayout from "@/components/MainLayout";
+import MainLayout from "@/components/Layouts/MainLayout";
 
 const ProductsByCategory = () => {
   const category = {

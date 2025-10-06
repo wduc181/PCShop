@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import MainLayout from "@/components/MainLayout";
+import MainLayout from "@/components/Layouts/MainLayout";
 
 const CartPage = () => {
   // Fake dữ liệu response từ backend

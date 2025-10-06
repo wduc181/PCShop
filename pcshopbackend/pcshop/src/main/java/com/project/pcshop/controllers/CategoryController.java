@@ -20,7 +20,7 @@ import java.util.List;
 public class CategoryController {
     private final ICategoryService categoryService;
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("")
     public ResponseEntity<?> addCategories(
             @Valid @RequestBody CategoryDTO categoryDTO,
@@ -41,7 +41,6 @@ public class CategoryController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("")
     public ResponseEntity<List<CategoryResponse>> getAllCategories() {
         List<Category> categories = categoryService.getAllCategories();

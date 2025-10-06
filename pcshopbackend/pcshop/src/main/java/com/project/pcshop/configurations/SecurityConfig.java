@@ -21,8 +21,8 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         return phoneNumber -> userRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new UsernameNotFoundException
-                        ("User with phone number " + phoneNumber + " not found"));
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "User with phone number " + phoneNumber + " not found"));
     }
 
     @Bean
@@ -32,10 +32,10 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userDetailsService());
-        authenticationProvider.setPasswordEncoder(passwordEncoder());
-        return authenticationProvider;
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService());
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
     }
 
     @Bean

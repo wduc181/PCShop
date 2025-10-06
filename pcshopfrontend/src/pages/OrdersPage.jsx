@@ -2,7 +2,7 @@ import React from "react";
 import { mockOrders } from "@/lib/mockOrders";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
-import MainLayout from "@/components/MainLayout";
+import MainLayout from "@/components/Layouts/MainLayout";
 
 const OrdersPage = () => {
   const navigate = useNavigate();

@@ -2,7 +2,7 @@ import React from "react";
 import OnSale from "@/components/HomePage/OnSale";
 import Featured from "@/components/HomePage/Featured";
 import Brands from "@/components/HomePage/Brands";
-import MainLayout from "@/components/MainLayout";
+import MainLayout from "@/components/Layouts/MainLayout";
 
 const HomePage = () => {
   return (

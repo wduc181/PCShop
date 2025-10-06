@@ -8,6 +8,12 @@ import ProductsByBrand from "./pages/ProductsByBrandPage";
 import CartPage from "./pages/CartPage";
 import OrdersPage from "./pages/OrdersPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
+import CategoriesPage from "./pages/Admin/CategoriesPage";
+import UsersPage from "./pages/Admin/UsersPage";
+import BrandsPage from "./pages/Admin/BrandPage";
+import OrdersHistoryPage from "./pages/Admin/OrderHistoryPage";
+import ProductsPage from "./pages/Admin/ProductsPage";
+import AOrdersPage from "./pages/Admin/AOrdersPage";
 
 function App() {
   return (
@@ -29,9 +35,16 @@ function App() {
 
           <Route path="/cart-items*" element={<CartPage />} />
 
-          {/* Orders */}
+          
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:id" element={<OrderDetailPage />} />
+
+          <Route path="/admin/categories" element={<CategoriesPage />} />
+          <Route path="/admin/users" element={<UsersPage />} />
+          <Route path="/admin/brands" element={<BrandsPage />} />
+          <Route path="/admin/order-history" element={<OrdersHistoryPage />} />
+          <Route path="/admin/products" element={<ProductsPage />} />
+          <Route path="/admin/orders" element={<AOrdersPage />} />
 
           <Route path="/*" element={<NotFound />} />
         </Routes>
