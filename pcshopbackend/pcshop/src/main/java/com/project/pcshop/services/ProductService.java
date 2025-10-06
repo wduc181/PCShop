@@ -1,11 +1,16 @@
 package com.project.pcshop.services;
 
 import com.project.pcshop.dtos.ProductDTO;
+import com.project.pcshop.dtos.ProductImageDTO;
+import com.project.pcshop.exceptions.DataNotFoundException;
+import com.project.pcshop.exceptions.InvalidParamException;
 import com.project.pcshop.models.Brand;
 import com.project.pcshop.models.Category;
 import com.project.pcshop.models.Product;
+import com.project.pcshop.models.ProductImage;
 import com.project.pcshop.repositories.BrandRepository;
 import com.project.pcshop.repositories.CategoryRepository;
+import com.project.pcshop.repositories.ProductImageRepository;
 import com.project.pcshop.repositories.ProductRepository;
 import com.project.pcshop.services.interfaces.IProductService;
 import org.springframework.data.domain.Page;
@@ -18,13 +23,15 @@ public class ProductService implements IProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
+    private final ProductImageRepository productImageRepository;
 
     public ProductService(ProductRepository productRepository,
                           CategoryRepository categoryRepository,
-                          BrandRepository brandRepository) {
+                          BrandRepository brandRepository, ProductImageRepository productImageRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.brandRepository = brandRepository;
+        this.productImageRepository = productImageRepository;
     }
 
     @Override
@@ -101,5 +108,25 @@ public class ProductService implements IProductService {
     @Override
     public Page<Product> getProductsByCategory(Long categoryId, Pageable pageable) {
         return productRepository.findByCategory_Id(categoryId, pageable);
+    }
+
+    @Override
+    public ProductImage createProductImage(
+            Long productId,
+            ProductImageDTO productImageDTO)
+            throws Exception {
+        Product existingProduct = productRepository
+                .findById(productId)
+                .orElseThrow(() -> new DataNotFoundException("Cannot find product ID = "
+                        + productImageDTO.getProductId() + "."));
+        ProductImage newProductImage = ProductImage.builder()
+                .product(existingProduct)
+                .imageUrl(productImageDTO.getImageUrl())
+                .build();
+        int numberOfImages = productImageRepository.findByProductId(productId).size();
+        if (numberOfImages > 5) {
+            throw new InvalidParamException("Max number of images is 5.");
+        }
+        return productImageRepository.save(newProductImage);
     }
 }

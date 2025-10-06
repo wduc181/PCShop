@@ -1,6 +1,4 @@
-# ----------------
 # Java / Spring Boot (backend)
-# ----------------
 /pcshopbackend/target/
 /pcshopbackend/.idea/
 /pcshopbackend/.mvn/wrapper/maven-wrapper.jar
@@ -15,33 +13,29 @@
 .DS_Store
 Thumbs.db
 
-# ----------------
 # Node / React (frontend)
-# ----------------
 /pcshopfrontend/node_modules/
 /pcshopfrontend/dist/
 /pcshopfrontend/.env
 /pcshopfrontend/.vite
 /pcshopfrontend/.cache
 
-# ----------------
-# Common IDE configs
-# ----------------
+
+# IDE configs
+
 .idea/
 .vscode/
 *.iml
 
-# ----------------
 # Environment / sensitive files
-# ----------------
+
 *.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# ----------------
+
 # Other
-# ----------------
 /uploads/
 database.jpg
