@@ -10,6 +10,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class BrandResponse {
+    private Long id;
     private String name;
     private String description;
     private String logoUrl;
@@ -17,6 +18,7 @@ public class BrandResponse {
     // Convert từ Brand entity sang BrandResponse DTO
     public static BrandResponse fromBrand(Brand brand) {
         return BrandResponse.builder()
+                .id(brand.getId())
                 .name(brand.getName())
                 .description(brand.getDescription())
                 .logoUrl(brand.getLogoUrl())

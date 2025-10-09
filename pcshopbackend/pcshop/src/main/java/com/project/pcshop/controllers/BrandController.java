@@ -25,7 +25,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("${api.prefix}/brands")
 @RequiredArgsConstructor
-public class BrandController {
+public class BrandController {  
     private final IBrandService brandService;
 
     private boolean isImageFile(MultipartFile file) {
