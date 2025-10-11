@@ -59,7 +59,6 @@ public class ProductController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/{id}")
     public ResponseEntity<?> getProductById(@PathVariable Long id) {
         try {
@@ -70,7 +69,6 @@ public class ProductController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("")
     public ResponseEntity<ProductListResponse> getProducts(
             @RequestParam(defaultValue = "1") int page,
@@ -95,7 +93,6 @@ public class ProductController {
                 .build());
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<ProductListResponse> getProductsByCategory(
             @PathVariable Long categoryId,
@@ -154,45 +151,53 @@ public class ProductController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(value = "uploads/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadImages (
-            @ModelAttribute ("file") List<MultipartFile> files,
-            @PathVariable("id") Long productId)
-    {
-
+    public ResponseEntity<?> uploadImages(
+            @RequestParam("file") MultipartFile[] files,
+            @PathVariable("id") Long productId
+    ) {
         try {
             Product existingProduct = productService.getProductById(productId);
-            files = files == null ? new ArrayList<>() : files;
-            if (files.size() > 5) {
-                return ResponseEntity.badRequest().body("Maximum images is 5.");
+            if (existingProduct == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Product id not found" + productId);
+            }
+            if (files == null || files.length == 0) {
+                return ResponseEntity.badRequest().body("No file found");
+            }
+            if (files.length > 5) {
+                return ResponseEntity.badRequest().body("Maximum number of files exceeded");
             }
             List<ProductImage> productImages = new ArrayList<>();
-            for (MultipartFile file:files) {
-                if(file.getSize() == 0) {
-                    continue;
-                }
+            for (MultipartFile file : files) {
+                if (file == null || file.isEmpty()) continue;
+
                 if (file.getSize() > 10 * 1024 * 1024) {
                     return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
-                            .body("File is too large! Maximum size is 10MB.");
+                            .body("Invalid image size, maximum allowed is 10MB");
                 }
                 String contentType = file.getContentType();
                 if (contentType == null || !contentType.startsWith("image/")) {
                     return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
-                            .body("File must be an image.");
+                            .body("Unsupported image type");
                 }
-                String filename = storeFile(file);
 
-                ProductImage newProductImage = productService.createProductImage(
+                String filename = storeFile(file);
+                ProductImage newImage = productService.createProductImage(
                         existingProduct.getId(),
                         ProductImageDTO.builder()
                                 .imageUrl(filename)
-                                .build());
-                productImages.add(newProductImage);
+                                .build()
+                );
+                productImages.add(newImage);
             }
-            return ResponseEntity.ok().body(productImages);
+
+            return ResponseEntity.ok(productImages);
+
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body("Lỗi khi upload ảnh: " + e.getMessage());
         }
     }
+
 
     private boolean isImageFile(MultipartFile file) {
         String contentType = file.getContentType();
@@ -218,6 +223,17 @@ public class ProductController {
         Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
         return uniqueFilename;
     }
+
+    @GetMapping("/{id}/images")
+    public ResponseEntity<?> getImagesByProduct(@PathVariable("id") Long productId) {
+        try {
+            List<ProductImage> images = productService.getImageByProductId(productId);
+            return ResponseEntity.ok(images);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
 }
 
 

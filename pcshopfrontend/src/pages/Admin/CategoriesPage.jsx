@@ -65,6 +65,16 @@ const CategoryPage = () => {
 
   return (
       <AdminLayout>
+        <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.05) 0, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 20px),
+            repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.05) 0, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 20px)
+          `,
+          backgroundSize: "40px 40px",
+        }}
+      />
         <main className="flex-1 p-8">
           <h2 className="text-3xl font-bold mb-8 text-gray-800">
             Quản lý Danh mục
@@ -72,7 +82,7 @@ const CategoryPage = () => {
 
           <form
             onSubmit={handleSubmit}
-            className="bg-white p-6 rounded-2xl shadow-md mb-8 w-full max-w-xl"
+            className="bg-white text-card-foreground p-6 rounded-2xl shadow-md mb-8 w-full max-w-xl"
           >
             <div className="mb-4">
               <label className="block font-semibold mb-2">Tên danh mục</label>
@@ -119,30 +129,30 @@ const CategoryPage = () => {
             )}
           </form>
 
-          {/* Bảng danh sách */}
+          {/*Danh sach danh  muc*/}
           <div className="bg-white p-6 rounded-2xl shadow-md">
             <h3 className="text-2xl font-semibold mb-4">Danh sách danh mục</h3>
-            <table className="w-full border-collapse border border-gray-200">
+            <table className="w-full border-collapse border border-gray-200 bg-white">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="border p-3">Tên</th>
-                  <th className="border p-3">Mô tả</th>
-                  <th className="border p-3">Hành động</th>
+                  <th className="border p-3 bg-gray-100">Tên</th>
+                  <th className="border p-3 bg-gray-100">Mô tả</th>
+                  <th className="border p-3 bg-gray-100">Hành động</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-white">
                 {categories.length === 0 ? (
-                  <tr>
-                    <td colSpan="4" className="text-center py-4 text-gray-500">
+                  <tr className="bg-white">
+                    <td colSpan="4" className="text-center py-4 text-gray-500 bg-white">
                       Chưa có danh mục nào
                     </td>
                   </tr>
                 ) : (
                   categories.map((cat) => (
-                    <tr key={cat.id} className="hover:bg-gray-50">
-                      <td className="border p-3">{cat.name}</td>
-                      <td className="border p-3">{cat.description}</td>
-                      <td className="border p-3 text-center">
+                    <tr key={cat.id} className="hover:bg-gray-50 bg-white">
+                      <td className="border p-3 bg-white">{cat.name}</td>
+                      <td className="border p-3 bg-white">{cat.description}</td>
+                      <td className="border p-3 text-center bg-white">
                         <button
                           className="bg-yellow-400 text-white px-3 py-1 rounded-md hover:bg-yellow-500 mr-2"
                           onClick={() => handleEdit(cat)}

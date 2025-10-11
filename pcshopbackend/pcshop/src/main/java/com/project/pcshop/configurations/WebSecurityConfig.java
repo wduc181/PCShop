@@ -38,7 +38,9 @@ public class WebSecurityConfig {
                                 String.format("%s/users/login", apiPrefix),
                                 String.format("%s/categories", apiPrefix),
                                 String.format("%s/brands", apiPrefix),
-                                "/uploads/brands/**"
+                                String.format("%s/products", apiPrefix),
+                                String.format("%s/products/**", apiPrefix),
+                                "/uploads/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 );

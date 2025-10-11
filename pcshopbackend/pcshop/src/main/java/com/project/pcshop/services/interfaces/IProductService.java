@@ -7,6 +7,8 @@ import com.project.pcshop.models.ProductImage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface IProductService {
     Product createProduct(ProductDTO productDTO);
     Product updateProduct(Long id, ProductDTO productDTO);
@@ -14,5 +16,6 @@ public interface IProductService {
     Product getProductById(Long id);
     Page<Product> getAllProducts(Pageable pageable);
     Page<Product> getProductsByCategory(Long categoryId, Pageable pageable);
-    public ProductImage createProductImage(Long productId, ProductImageDTO productImageDTO) throws Exception;
+    ProductImage createProductImage(Long productId, ProductImageDTO productImageDTO) throws Exception;
+    List<ProductImage> getImageByProductId(Long productId);
 }

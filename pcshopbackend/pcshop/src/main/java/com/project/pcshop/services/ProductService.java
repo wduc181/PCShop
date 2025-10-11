@@ -17,6 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class ProductService implements IProductService {
 
@@ -111,22 +113,35 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public ProductImage createProductImage(
-            Long productId,
-            ProductImageDTO productImageDTO)
+    public ProductImage createProductImage(Long productId, ProductImageDTO productImageDTO)
             throws Exception {
         Product existingProduct = productRepository
                 .findById(productId)
                 .orElseThrow(() -> new DataNotFoundException("Cannot find product ID = "
                         + productImageDTO.getProductId() + "."));
+
         ProductImage newProductImage = ProductImage.builder()
                 .product(existingProduct)
                 .imageUrl(productImageDTO.getImageUrl())
                 .build();
+
         int numberOfImages = productImageRepository.findByProductId(productId).size();
-        if (numberOfImages > 5) {
+        if (numberOfImages >= 5) {
             throw new InvalidParamException("Max number of images is 5.");
         }
-        return productImageRepository.save(newProductImage);
+
+        ProductImage savedImage = productImageRepository.save(newProductImage);
+
+        if (existingProduct.getThumbnail() == null || existingProduct.getThumbnail().isEmpty()) {
+            existingProduct.setThumbnail(savedImage.getImageUrl());
+            productRepository.save(existingProduct);
+        }
+
+        return savedImage;
+    }
+
+    @Override
+    public List<ProductImage> getImageByProductId(Long productId) {
+        return  productImageRepository.findByProductId(productId);
     }
 }

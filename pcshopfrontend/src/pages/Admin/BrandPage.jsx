@@ -102,37 +102,47 @@ const BrandPage = () => {
 
   return (
     <AdminLayout>
+      <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.05) 0, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 20px),
+            repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.05) 0, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 20px)
+          `,
+          backgroundSize: "40px 40px",
+        }}
+      />
       <div className="relative z-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Quản lý Nhãn hàng</h1>
           <Button onClick={handleOpenAdd}>+ Thêm nhãn hàng</Button>
         </div>
 
-        <Card className="shadow-md">
-          <CardContent>
-            <table className="w-full border-collapse">
+        <Card className="shadow-md bg-white">
+          <CardContent className="p-6 bg-white">
+            <table className="w-full border-collapse bg-white">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="py-2 px-4 border">Logo</th>
-                  <th className="py-2 px-4 border">Tên nhãn hàng</th>
-                  <th className="py-2 px-4 border">Mô tả</th>
-                  <th className="py-2 px-4 border text-center">Hành động</th>
+                  <th className="py-2 px-4 border bg-gray-100">Logo</th>
+                  <th className="py-2 px-4 border bg-gray-100">Tên nhãn hàng</th>
+                  <th className="py-2 px-4 border bg-gray-100">Mô tả</th>
+                  <th className="py-2 px-4 border text-center bg-gray-100">Hành động</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-white">
                 {brands.length === 0 ? (
-                  <tr>
+                  <tr className="bg-white">
                     <td
                       colSpan="4"
-                      className="text-center py-4 text-gray-500 italic"
+                      className="text-center py-4 text-gray-500 italic bg-white"
                     >
                       Chưa có nhãn hàng nào.
                     </td>
                   </tr>
                 ) : (
                   brands.map((brand) => (
-                    <tr key={brand.id || Math.random()} className="border-b hover:bg-gray-50">
-                      <td className="py-2 px-4 border text-center">
+                    <tr key={brand.id || Math.random()} className="border-b hover:bg-gray-50 bg-white">
+                      <td className="py-2 px-4 border text-center bg-white">
                         {brand.logoUrl ? (
                           <img
                             src={`http://localhost:8088/uploads/brands/${brand.logoUrl}`}
@@ -143,9 +153,9 @@ const BrandPage = () => {
                           <span className="text-gray-400 italic">No image</span>
                         )}
                       </td>
-                      <td className="py-2 px-4 border">{brand.name}</td>
-                      <td className="py-2 px-4 border">{brand.description}</td>
-                      <td className="py-2 px-4 border text-center space-x-2">
+                      <td className="py-2 px-4 border bg-white">{brand.name}</td>
+                      <td className="py-2 px-4 border bg-white">{brand.description}</td>
+                      <td className="py-2 px-4 border text-center space-x-2 bg-white">
                         <Button
                           variant="outline"
                           size="sm"
