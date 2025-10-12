@@ -228,7 +228,10 @@ public class ProductController {
     public ResponseEntity<?> getImagesByProduct(@PathVariable("id") Long productId) {
         try {
             List<ProductImage> images = productService.getImageByProductId(productId);
-            return ResponseEntity.ok(images);
+            List<String> imageFileNames = images.stream()
+                    .map(ProductImage::getImageUrl)
+                    .toList();
+            return ResponseEntity.ok(imageFileNames);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }

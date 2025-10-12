@@ -1,90 +1,118 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { uploadProductImages } from "@/services/productsService";
+import { uploadProductImages, getProductImages } from "@/services/productsService";
 
-const ProductImagesDialog = ({ open, onClose, productId }) => {
+const BASE_IMAGE_URL = "http://localhost:8088/uploads/products";
+
+const ProductImagesDialog = ({ open, onOpenChange, productId }) => {
   const [files, setFiles] = useState([]);
-  const [previewUrls, setPreviewUrls] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [previews, setPreviews] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
-  const handleFileChange = (e) => {
-    const selected = Array.from(e.target.files || []);
-    if (selected.length > 5) {
-      alert("Chỉ được chọn tối đa 5 ảnh!");
-      return;
+  // 🟢 Fetch ảnh sẵn có khi mở dialog
+  useEffect(() => {
+    if (open && productId) {
+      const fetchImages = async () => {
+        try {
+          const res = await getProductImages(productId);
+          // res có thể là mảng tên file, ví dụ ["img1.jpg", "img2.png"]
+          setExistingImages(res || []);
+        } catch (error) {
+          console.error("Không thể tải ảnh sản phẩm:", error);
+        }
+      };
+      fetchImages();
     }
+  }, [open, productId]);
+
+  // 🟢 Tạo preview khi chọn file
+  const handleFileChange = (e) => {
+    const selected = Array.from(e.target.files);
     setFiles(selected);
-    setPreviewUrls(selected.map((f) => URL.createObjectURL(f)));
+    const previewsArr = selected.map((file) => URL.createObjectURL(file));
+    setPreviews(previewsArr);
   };
 
+  // 🟢 Upload ảnh mới (nếu có)
   const handleUpload = async () => {
-    if (!productId) {
-      alert("Không tìm thấy sản phẩm để thêm ảnh.");
-      return;
-    }
-    if (files.length === 0) {
-      alert("Vui lòng chọn ít nhất một ảnh.");
-      return;
-    }
-
-    setLoading(true);
     try {
-      await uploadProductImages(productId, files);
-      alert("Tải ảnh sản phẩm thành công!");
-      onClose();
+      setUploading(true);
+
+      if (files.length > 0) {
+        await uploadProductImages(productId, files);
+        alert("Upload ảnh thành công!");
+      } else {
+        alert("Không có ảnh mới — giữ nguyên ảnh cũ.");
+      }
+
+      onOpenChange(false);
     } catch (error) {
       console.error("Lỗi khi upload ảnh:", error);
-      alert("Không thể upload ảnh. Kiểm tra console để biết thêm chi tiết.");
+      alert("Không thể upload ảnh. Kiểm tra console để biết chi tiết.");
     } finally {
-      setLoading(false);
+      setUploading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Thêm ảnh sản phẩm</DialogTitle>
-          <DialogDescription>
-            Bạn có thể thêm tối đa 5 ảnh cho sản phẩm này. Ảnh đầu tiên sẽ được đặt làm thumbnail.
-          </DialogDescription>
+          <DialogTitle>Ảnh sản phẩm</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <Input type="file" multiple accept="image/*" onChange={handleFileChange} />
-          <div className="grid grid-cols-3 gap-2">
-            {previewUrls.map((url, idx) => (
-              <div key={idx} className="relative">
+        {/* Ảnh sẵn có */}
+        <div>
+          <h3 className="font-medium mb-2">Ảnh hiện có:</h3>
+          {existingImages.length > 0 ? (
+            <div className="grid grid-cols-3 gap-3">
+              {existingImages.map((img, idx) => (
                 <img
-                  src={url}
-                  alt={`preview-${idx}`}
-                  className="w-full h-28 object-cover rounded border"
+                  key={idx}
+                  src={`${BASE_IMAGE_URL}/${img}`}
+                  alt={`product-img-${idx}`}
+                  className="w-full h-32 object-cover rounded border"
+                  onError={(e) => (e.target.src = "/placeholder-image.png")}
                 />
-                {idx === 0 && (
-                  <span className="absolute top-1 left-1 bg-black text-white text-xs px-1 rounded">
-                    Thumbnail
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">Chưa có ảnh nào cho sản phẩm này.</p>
+          )}
         </div>
 
-        <DialogFooter className="mt-4">
-          <Button variant="ghost" onClick={onClose} disabled={loading}>
+        {/* Upload ảnh mới */}
+        <div className="mt-4">
+          <h3 className="font-medium mb-2">Thêm ảnh mới (tùy chọn):</h3>
+          <input type="file" multiple accept="image/*" onChange={handleFileChange} />
+          {previews.length > 0 && (
+            <div className="grid grid-cols-3 gap-3 mt-3">
+              {previews.map((src, idx) => (
+                <img
+                  key={idx}
+                  src={src}
+                  alt={`preview-${idx}`}
+                  className="w-full h-32 object-cover rounded border"
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={uploading}>
             Hủy
           </Button>
-          <Button onClick={handleUpload} disabled={loading}>
-            {loading ? "Đang tải lên..." : "Lưu ảnh"}
+          <Button onClick={handleUpload} disabled={uploading}>
+            {uploading ? "Đang tải..." : "Lưu thay đổi"}
           </Button>
         </DialogFooter>
       </DialogContent>

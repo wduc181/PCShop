@@ -31,9 +31,7 @@ const ProductsPage = () => {
   };
 
   const handleEdit = (id) => {
-    if (productFormRef.current) {
-      productFormRef.current.openEdit(id);
-    }
+    productFormRef.current?.openEdit(id);
   };
 
   const handleDelete = async (id) => {
@@ -69,18 +67,16 @@ const ProductsPage = () => {
         {/* Tiêu đề + nút thêm */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Sản phẩm</h1>
-          <ProductFormDialog 
-            ref={productFormRef}
-            onSuccess={() => fetchProducts(page)}
-            trigger={<Button>+ Thêm sản phẩm</Button>}
-          />
+          <Button onClick={() => productFormRef.current?.openCreate()}>
+            + Thêm sản phẩm
+          </Button>
         </div>
 
         {/* Bảng sản phẩm */}
         <div className="bg-white rounded-xl shadow-md p-6">
           {loading ? (
             <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-solid border-blue-500 border-r-transparent align-[-0.125em]" />
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-solid border-blue-500 border-r-transparent" />
               <p className="mt-2 text-gray-500">Đang tải dữ liệu...</p>
             </div>
           ) : products.length === 0 ? (
@@ -128,18 +124,24 @@ const ProductsPage = () => {
               onEdit={handleEdit}
               onDelete={handleDelete}
             />
-        )}
+          )}
 
-        {/* Phân trang */}
+          {/* Phân trang */}
           <div className="mt-4">
             <AdminPagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
             />
           </div>
         </div>
       </div>
+
+      {/* Form thêm/sửa sản phẩm */}
+      <ProductFormDialog
+        ref={productFormRef}
+        onSuccess={() => fetchProducts(page)}
+      />
     </AdminLayout>
   );
 };

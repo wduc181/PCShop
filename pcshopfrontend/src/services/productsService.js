@@ -108,4 +108,3 @@ export const getProductImages = async (id) => {
     throw error;
   }
 };
-
