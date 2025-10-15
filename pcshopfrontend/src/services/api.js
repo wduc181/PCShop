@@ -1,5 +1,5 @@
 // src/services/api.js
-const BASE_URL = "http://localhost:8088/api/ver1";
+import { API_URL } from "@/config/env";
 
 export const apiRequest = async (endpoint, options = {}) => {
   const token =
@@ -13,7 +13,7 @@ export const apiRequest = async (endpoint, options = {}) => {
     ...(options.headers || {}),
   };
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
+  const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
   });

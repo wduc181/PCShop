@@ -14,6 +14,7 @@ import BrandsPage from "./pages/Admin/BrandPage";
 import OrdersHistoryPage from "./pages/Admin/OrderHistoryPage";
 import ProductsPage from "./pages/Admin/ProductsPage";
 import AOrdersPage from "./pages/Admin/AOrdersPage";
+import ProductPage from "./pages/ProductPage";
 
 function App() {
   return (
@@ -32,6 +33,8 @@ function App() {
           />
 
           <Route path="/brand/:brandName" element={<ProductsByBrand />} />
+
+          <Route path="/products/:id" element={<ProductPage />} />
 
           <Route path="/cart-items*" element={<CartPage />} />
 

@@ -9,6 +9,7 @@ import {
   updateBrand,
   deleteBrand,
 } from "@/services/brandService";
+import { brandImageUrl } from "@/config/env";
 
 const BrandPage = () => {
   const [brands, setBrands] = useState([]);
@@ -145,7 +146,7 @@ const BrandPage = () => {
                       <td className="py-2 px-4 border text-center bg-white">
                         {brand.logoUrl ? (
                           <img
-                            src={`http://localhost:8088/uploads/brands/${brand.logoUrl}`}
+                            src={brandImageUrl(brand.logoUrl)}
                             alt={brand.name}
                             className="w-16 h-16 object-contain mx-auto rounded"
                           />

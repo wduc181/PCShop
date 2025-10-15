@@ -23,11 +23,9 @@ const MainLayout = ({ children }) => {
         {/* Header */}
         <Header />
 
-        <div className="flex flex-1 pt-12">
+        <div className="flex flex-1 pt-[60px]">
           {/* Sidebar */}
-          <div className="h-[calc(100vh-3rem)] sticky top-12">
-            <Sidebar />
-          </div>
+          <Sidebar />
 
           {/* Main content */}
           <main className="flex-1 p-6 overflow-y-auto">{children}</main>

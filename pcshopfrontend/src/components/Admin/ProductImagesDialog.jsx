@@ -8,8 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { uploadProductImages, getProductImages } from "@/services/productsService";
-
-const BASE_IMAGE_URL = "http://localhost:8088/uploads/products";
+import { productImageUrl, UPLOADS_PRODUCTS } from "@/config/env";
 
 const ProductImagesDialog = ({ open, onOpenChange, productId }) => {
   const [files, setFiles] = useState([]);
@@ -77,7 +76,7 @@ const ProductImagesDialog = ({ open, onOpenChange, productId }) => {
               {existingImages.map((img, idx) => (
                 <img
                   key={idx}
-                  src={`${BASE_IMAGE_URL}/${img}`}
+                  src={productImageUrl(img)}
                   alt={`product-img-${idx}`}
                   className="w-full h-32 object-cover rounded border"
                   onError={(e) => (e.target.src = "/placeholder-image.png")}

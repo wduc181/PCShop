@@ -1,25 +1,46 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { List, ShoppingCart } from "lucide-react";
 import { Link } from "react-router";
-
-const categories = [
-  "PC Gaming - Máy tính chơi game",
-  "PC Workstation",
-  "PC Văn Phòng",
-  "PC AMD Gaming",
-  "PC Core Ultra",
-  "PC Giả Lập - Ảo Hóa",
-  "Linh kiện máy tính",
-  "Màn hình",
-  "Gaming Gear",
-  "Giá Treo Màn Hình",
-];
+import { getCategories } from "../services/categoryService";
+import { Skeleton } from "./ui/skeleton";
 
 const Sidebar = () => {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await getCategories();
+        if (!mounted) return;
+        // Normalize to array of { id, name }
+        const list = Array.isArray(data)
+          ? data.map((c) => ({ id: c.id ?? c.category_id ?? c.ID, name: c.name ?? c.category_name ?? c.Name }))
+          : [];
+        setCategories(list.filter((c) => c && c.name));
+      } catch (e) {
+        console.error("Lỗi tải danh mục ở Sidebar:", e);
+        if (mounted) setError("Không thể tải danh mục");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const toCategoryPath = (name) => `/category/${encodeURIComponent(name)}`;
+
   return (
-    <aside className="w-96 bg-black text-white flex flex-col justify-between h-[calc(100vh-60px)] sticky top-[60px]">
-      <div>
-        {/* Giỏ hàng */}
+    <aside
+      className="bg-black text-white flex flex-col sticky top-[60px] w-full sm:w-64 md:w-72 lg:w-80 xl:w-96 h-[calc(100vh-60px)]"
+    >
+      {/* Cart */}
+      <div className="shrink-0">
         <Link
           to="/cart-items"
           className="flex items-center gap-2 px-4 py-2 mx-6 my-3 rounded-lg bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium transition-colors"
@@ -35,23 +56,43 @@ const Sidebar = () => {
             Danh mục sản phẩm
           </span>
         </div>
+      </div>
 
-        {/* Category list */}
-        <nav className="flex flex-col mt-2">
-          {categories.map((cat, index) => (
-            <a
-              key={index}
-              href="#"
-              className="px-6 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-            >
-              {cat}
-            </a>
-          ))}
-        </nav>
+      {/* Category list (scrollable) */}
+  <div className="flex-1 min-h-0 overflow-y-auto">
+        {loading && (
+          <div className="mt-2 space-y-2 px-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-6 w-full bg-gray-800" />)
+            )}
+          </div>
+        )}
+        {!loading && error && (
+          <div className="px-6 py-3 text-sm text-red-400">{error}</div>
+        )}
+        {!loading && !error && (
+          <nav className="flex flex-col mt-2">
+            {categories.length === 0 ? (
+              <div className="px-6 py-3 text-sm text-gray-400">
+                Chưa có danh mục nào
+              </div>
+            ) : (
+              categories.map((cat) => (
+                <Link
+                  key={cat.id ?? cat.name}
+                  to={toCategoryPath(cat.name)}
+                  className="px-6 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                >
+                  {cat.name}
+                </Link>
+              ))
+            )}
+          </nav>
+        )}
       </div>
 
       {/* Bottom login */}
-      <div className="px-6 py-4 border-t border-gray-700">
+      <div className="px-6 py-4 border-t border-gray-700 shrink-0">
         <Link
           to="/users/auth"
           className="block w-full py-2 text-center text-sm font-medium bg-gray-800 hover:bg-gray-700 rounded transition-colors"

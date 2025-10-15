@@ -5,6 +5,7 @@ import AdminPagination from "@/components/Admin/AdminPagination";
 import { Button } from "@/components/ui/button";
 import ProductFormDialog from "@/components/Admin/ProductFormDialog";
 import { getAllProducts, deleteProduct } from "@/services/productsService";
+import { productImageUrl } from "@/config/env";
 
 const ProductsPage = () => {
   const [page, setPage] = useState(1);
@@ -100,7 +101,7 @@ const ProductsPage = () => {
                   <div className="w-16 h-16 relative bg-gray-100 rounded">
                     {p.thumbnail ? (
                       <img
-                        src={`http://localhost:8088/uploads/products/${p.thumbnail}`}
+                        src={productImageUrl(p.thumbnail)}
                         alt={p.name}
                         className="w-full h-full object-contain rounded"
                         onError={(e) => {

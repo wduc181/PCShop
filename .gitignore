@@ -27,6 +27,7 @@ Thumbs.db
 .vscode/
 *.iml
 
+
 # Environment / sensitive files
 
 *.env
@@ -39,3 +40,4 @@ Thumbs.db
 # Other
 /uploads/
 database.jpg
+/github/
