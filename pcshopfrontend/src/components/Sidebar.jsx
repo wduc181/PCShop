@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { List, ShoppingCart } from "lucide-react";
+import { List, ShoppingCart, User as UserIcon, LogOut } from "lucide-react";
 import { Link } from "react-router";
 import { getCategories } from "../services/categoryService";
 import { Skeleton } from "./ui/skeleton";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router";
 
 const Sidebar = () => {
+  const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -91,14 +95,39 @@ const Sidebar = () => {
         )}
       </div>
 
-      {/* Bottom login */}
-      <div className="px-6 py-4 border-t border-gray-700 shrink-0">
-        <Link
-          to="/users/auth"
-          className="block w-full py-2 text-center text-sm font-medium bg-gray-800 hover:bg-gray-700 rounded transition-colors"
-        >
-          Đăng nhập
-        </Link>
+      {/* Bottom user card or login */}
+      <div className="px-6 py-3 border-t border-gray-700 shrink-0">
+        {isAuthenticated ? (
+          <div className="bg-gray-800 rounded-md px-3 py-2 flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center shrink-0">
+                <UserIcon className="w-4 h-4 text-gray-300" />
+              </div>
+              <div className="text-sm font-medium truncate">
+                {user?.fullname || user?.phoneNumber || "Người dùng"}
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                try { localStorage.removeItem("user_fullname"); } catch (_) {}
+                logout();
+                navigate("/users/auth", { replace: true });
+              }}
+              className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white"
+              title="Đăng xuất"
+            >
+              <LogOut className="w-3 h-3" />
+              <span>Thoát</span>
+            </button>
+          </div>
+        ) : (
+          <Link
+            to="/users/auth"
+            className="block w-full py-2 text-center text-sm font-medium bg-gray-800 hover:bg-gray-700 rounded transition-colors"
+          >
+            Đăng nhập
+          </Link>
+        )}
       </div>
     </aside>
   );

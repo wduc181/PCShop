@@ -1,15 +1,29 @@
 // src/services/api.js
 import { API_URL } from "@/config/env";
 
+// Debug helper: only logs in development
+const dbg = (...args) => {
+  try {
+    if (import.meta?.env?.DEV) console.log("[apiRequest]", ...args);
+  } catch (_) {
+    // ignore
+  }
+};
+
 export const apiRequest = async (endpoint, options = {}) => {
-  const token =
-    "eyJhbGciOiJIUzI1NiJ9.eyJwaG9uZU51bWJlciI6IjAwMDAwMDAwMDIiLCJzdWIiOiIwMDAwMDAwMDAyIiwiZXhwIjoxNzYyMDEzNTk3fQ.vPZfRfIzax_gHIJZ9r_MsbAZqW_KRW26stKs3jQRw1U";
+  let token;
+  try {
+    token = localStorage.getItem("token") || undefined;
+  } catch (_) {
+    token = undefined;
+  }
+  dbg("init", { endpoint, method: options.method || "GET", isFormData: options.body instanceof FormData, hasToken: !!token });
 
   const isFormData = options.body instanceof FormData;
 
   const headers = {
     ...(isFormData ? {} : { "Content-Type": "application/json" }),
-    Authorization: `Bearer ${token}`,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {}),
   };
 
@@ -17,6 +31,8 @@ export const apiRequest = async (endpoint, options = {}) => {
     ...options,
     headers,
   });
+
+  dbg("response", { endpoint, status: response.status });
 
   if (!response.ok) {
     const errorText = await response.text();

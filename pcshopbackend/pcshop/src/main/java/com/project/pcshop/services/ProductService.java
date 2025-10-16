@@ -1,6 +1,7 @@
 package com.project.pcshop.services;
 
 import com.project.pcshop.dtos.ProductDTO;
+import com.project.pcshop.dtos.ProductDiscountDTO;
 import com.project.pcshop.dtos.ProductImageDTO;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.exceptions.InvalidParamException;
@@ -142,5 +143,14 @@ public class ProductService implements IProductService {
     @Override
     public List<ProductImage> getImageByProductId(Long productId) {
         return  productImageRepository.findByProductId(productId);
+    }
+
+    @Override
+    public Product discountProduct(Long id, ProductDiscountDTO dto) {
+
+            Product product = productRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Product not found"));
+            product.setDiscount(dto.getDiscount());
+            return productRepository.save(product);
     }
 }

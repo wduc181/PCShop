@@ -1,6 +1,7 @@
 package com.project.pcshop.controllers;
 
 import com.project.pcshop.dtos.ProductDTO;
+import com.project.pcshop.dtos.ProductDiscountDTO;
 import com.project.pcshop.dtos.ProductImageDTO;
 import com.project.pcshop.models.Product;
 import com.project.pcshop.models.ProductImage;
@@ -237,6 +238,49 @@ public class ProductController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/discount")
+    public ResponseEntity<?> discountProduct(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductDiscountDTO  productDiscountDTO,
+            BindingResult result
+    ) {
+        try {
+            if (result.hasErrors()) {
+                List<String> errorMessages = result.getFieldErrors()
+                        .stream()
+                        .map(FieldError::getDefaultMessage)
+                        .toList();
+                return ResponseEntity.badRequest().body(errorMessages);
+            }
+            Product updated = productService.discountProduct(id, productDiscountDTO);
+            return ResponseEntity.ok(ProductResponse.fromProduct(updated));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/recommend")
+    public ResponseEntity<?> featProduct(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductDiscountDTO  productDiscountDTO,
+            BindingResult result
+    ) {
+        try {
+            if (result.hasErrors()) {
+                List<String> errorMessages = result.getFieldErrors()
+                        .stream()
+                        .map(FieldError::getDefaultMessage)
+                        .toList();
+                return ResponseEntity.badRequest().body(errorMessages);
+            }
+            Product updated = productService.discountProduct(id, productDiscountDTO);
+            return ResponseEntity.ok(ProductResponse.fromProduct(updated));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
 
 

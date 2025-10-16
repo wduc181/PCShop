@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 
-const AdminTable = ({ columns, data, onEdit, onDelete }) => {
+const AdminTable = ({ columns, data, onEdit, onDelete, renderActions }) => {
   return (
     <div className="overflow-x-auto bg-white shadow rounded-lg">
       <table className="w-full border-collapse">
@@ -20,12 +20,18 @@ const AdminTable = ({ columns, data, onEdit, onDelete }) => {
                 <td key={jdx} className="p-3 border-b">{val}</td>
               ))}
               <td className="p-3 border-b text-center">
-                <Button variant="outline" size="sm" className="mr-2" onClick={() => onEdit(item.id)}>
-                  Sửa
-                </Button>
-                <Button variant="destructive" size="sm" onClick={() => onDelete(item.id)}>
-                  Xóa
-                </Button>
+                {typeof renderActions === "function" ? (
+                  renderActions(item)
+                ) : (
+                  <>
+                    <Button variant="outline" size="sm" className="mr-2" onClick={() => onEdit(item.id)}>
+                      Sửa
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => onDelete(item.id)}>
+                      Xóa
+                    </Button>
+                  </>
+                )}
               </td>
             </tr>
           ))}

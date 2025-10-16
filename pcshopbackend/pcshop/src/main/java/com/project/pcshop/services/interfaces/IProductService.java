@@ -1,6 +1,7 @@
 package com.project.pcshop.services.interfaces;
 
 import com.project.pcshop.dtos.ProductDTO;
+import com.project.pcshop.dtos.ProductDiscountDTO;
 import com.project.pcshop.dtos.ProductImageDTO;
 import com.project.pcshop.models.Product;
 import com.project.pcshop.models.ProductImage;
@@ -18,4 +19,5 @@ public interface IProductService {
     Page<Product> getProductsByCategory(Long categoryId, Pageable pageable);
     ProductImage createProductImage(Long productId, ProductImageDTO productImageDTO) throws Exception;
     List<ProductImage> getImageByProductId(Long productId);
+    Product discountProduct(Long id, ProductDiscountDTO productDiscountDTO);
 }

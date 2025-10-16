@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
 import AdminLayout from "@/components/Layouts/AdminLayout";
-import {
-  getCategories,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-} from "../../services/categoryService";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
+import { getCategories, createCategory, updateCategory, deleteCategory } from "../../services/categoryService";
 
 const CategoryPage = () => {
   const [categories, setCategories] = useState([]);
   const [category, setCategory] = useState({ id: null, name: "", description: "" });
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadCategories();
@@ -18,10 +19,13 @@ const CategoryPage = () => {
 
   const loadCategories = async () => {
     try {
+      setLoading(true);
       const data = await getCategories();
-      setCategories(data);
+      setCategories(Array.isArray(data) ? data : data?.categories || []);
     } catch (error) {
       console.error("Lỗi khi tải danh mục:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -29,6 +33,7 @@ const CategoryPage = () => {
     e.preventDefault();
 
     try {
+      setLoading(true);
       if (isEditing && category.id) {
         await updateCategory(category.id, {
           name: category.name,
@@ -45,6 +50,8 @@ const CategoryPage = () => {
       setIsEditing(false);
     } catch (error) {
       console.error("Lỗi khi lưu danh mục:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,121 +63,132 @@ const CategoryPage = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xóa danh mục này?")) return;
     try {
+      setLoading(true);
       await deleteCategory(id);
       await loadCategories();
     } catch (error) {
       console.error("Lỗi khi xóa danh mục:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
       <AdminLayout>
+        {/* Nền caro */}
         <div
-        className="absolute inset-0 z-0 pointer-events-none"
-        style={{
-          backgroundImage: `
-            repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.05) 0, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 20px),
-            repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.05) 0, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 20px)
-          `,
-          backgroundSize: "40px 40px",
-        }}
-      />
-        <main className="flex-1 p-8">
-          <h2 className="text-3xl font-bold mb-8 text-gray-800">
-            Quản lý Danh mục
-          </h2>
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{
+            backgroundImage: `
+              repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.05) 0, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 20px),
+              repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.05) 0, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 20px)
+            `,
+            backgroundSize: "40px 40px",
+          }}
+        />
+        <main className="relative z-10 flex-1 p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">Quản lý Danh mục</h2>
+          </div>
 
-          <form
-            onSubmit={handleSubmit}
-            className="bg-white text-card-foreground p-6 rounded-2xl shadow-md mb-8 w-full max-w-xl"
-          >
-            <div className="mb-4">
-              <label className="block font-semibold mb-2">Tên danh mục</label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-lg p-2 focus:ring focus:ring-blue-300"
-                value={category.name}
-                onChange={(e) =>
-                  setCategory({ ...category, name: e.target.value })
-                }
-                required
-              />
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6 items-start">
+            {/* Form */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{isEditing ? "Cập nhật danh mục" : "Thêm danh mục mới"}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium">Tên danh mục</label>
+                    <Input
+                      placeholder="Ví dụ: CPU, VGA..."
+                      value={category.name}
+                      onChange={(e) => setCategory({ ...category, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium">Mô tả</label>
+                    <Input
+                      placeholder="Mô tả ngắn"
+                      value={category.description}
+                      onChange={(e) => setCategory({ ...category, description: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Button type="submit" disabled={loading}>
+                      {isEditing ? "Cập nhật" : "Thêm mới"}
+                    </Button>
+                    {isEditing && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setCategory({ id: null, name: "", description: "" });
+                          setIsEditing(false);
+                        }}
+                      >
+                        Hủy
+                      </Button>
+                    )}
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
 
-            <div className="mb-4">
-              <label className="block font-semibold mb-2">Mô tả</label>
-              <textarea
-                className="w-full border border-gray-300 rounded-lg p-2 focus:ring focus:ring-blue-300"
-                value={category.description}
-                onChange={(e) =>
-                  setCategory({ ...category, description: e.target.value })
-                }
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition"
-            >
-              {isEditing ? "Cập nhật" : "Thêm mới"}
-            </button>
-
-            {isEditing && (
-              <button
-                type="button"
-                className="ml-4 text-gray-600 underline"
-                onClick={() =>
-                  setCategory({ id: null, name: "", description: "" }) ||
-                  setIsEditing(false)
-                }
-              >
-                Hủy
-              </button>
-            )}
-          </form>
-
-          {/*Danh sach danh  muc*/}
-          <div className="bg-white p-6 rounded-2xl shadow-md">
-            <h3 className="text-2xl font-semibold mb-4">Danh sách danh mục</h3>
-            <table className="w-full border-collapse border border-gray-200 bg-white">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="border p-3 bg-gray-100">Tên</th>
-                  <th className="border p-3 bg-gray-100">Mô tả</th>
-                  <th className="border p-3 bg-gray-100">Hành động</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white">
-                {categories.length === 0 ? (
-                  <tr className="bg-white">
-                    <td colSpan="4" className="text-center py-4 text-gray-500 bg-white">
-                      Chưa có danh mục nào
-                    </td>
-                  </tr>
-                ) : (
-                  categories.map((cat) => (
-                    <tr key={cat.id} className="hover:bg-gray-50 bg-white">
-                      <td className="border p-3 bg-white">{cat.name}</td>
-                      <td className="border p-3 bg-white">{cat.description}</td>
-                      <td className="border p-3 text-center bg-white">
-                        <button
-                          className="bg-yellow-400 text-white px-3 py-1 rounded-md hover:bg-yellow-500 mr-2"
-                          onClick={() => handleEdit(cat)}
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600"
-                          onClick={() => handleDelete(cat.id)}
-                        >
-                          Xóa
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+            {/* Danh sách */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Danh sách danh mục</CardTitle>
+              </CardHeader>
+              <Separator />
+              <CardContent>
+                <div className="rounded-md border bg-white">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Tên</TableHead>
+                        <TableHead>Mô tả</TableHead>
+                        <TableHead className="text-right">Hành động</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {loading ? (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center py-6 text-gray-500">
+                            Đang tải dữ liệu...
+                          </TableCell>
+                        </TableRow>
+                      ) : categories.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center py-6 text-gray-500">
+                            Chưa có danh mục nào
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        categories.map((cat) => (
+                          <TableRow key={cat.id}>
+                            <TableCell className="font-medium">{cat.name}</TableCell>
+                            <TableCell>{cat.description}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button variant="outline" size="sm" onClick={() => handleEdit(cat)}>
+                                  Sửa
+                                </Button>
+                                <Button variant="destructive" size="sm" onClick={() => handleDelete(cat.id)}>
+                                  Xóa
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </main>
       </AdminLayout>

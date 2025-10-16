@@ -4,8 +4,10 @@ import AdminTable from "@/components/Admin/AdminTable";
 import AdminPagination from "@/components/Admin/AdminPagination";
 import { Button } from "@/components/ui/button";
 import ProductFormDialog from "@/components/Admin/ProductFormDialog";
-import { getAllProducts, deleteProduct } from "@/services/productsService";
+import { getAllProducts, deleteProduct, discountProduct } from "@/services/productsService";
 import { productImageUrl } from "@/config/env";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const ProductsPage = () => {
   const [page, setPage] = useState(1);
@@ -13,6 +15,9 @@ const ProductsPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const productFormRef = useRef();
+  const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
+  const [discountTarget, setDiscountTarget] = useState(null); // { id, name, currentDiscount }
+  const [discountValue, setDiscountValue] = useState(0);
 
   useEffect(() => {
     fetchProducts(page);
@@ -45,6 +50,32 @@ const ProductsPage = () => {
     } catch (error) {
       console.error("Lỗi xóa sản phẩm:", error);
       alert(error.response?.data?.message || "Không thể xóa sản phẩm.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openDiscountDialog = (product) => {
+    setDiscountTarget({ id: product.id, name: product.name, currentDiscount: product.discount ?? 0 });
+    setDiscountValue(product.discount ?? 0);
+    setDiscountDialogOpen(true);
+  };
+
+  const submitDiscount = async () => {
+    if (!discountTarget) return;
+    const value = Number(discountValue);
+    if (Number.isNaN(value) || value < 0 || value > 100) {
+      alert("Giá trị giảm giá phải trong khoảng 0 - 100");
+      return;
+    }
+    try {
+      setLoading(true);
+      await discountProduct(discountTarget.id, value);
+      setDiscountDialogOpen(false);
+      await fetchProducts(page);
+    } catch (error) {
+      console.error("Lỗi áp dụng giảm giá:", error);
+      alert(error.response?.data?.message || "Không thể áp dụng giảm giá.");
     } finally {
       setLoading(false);
     }
@@ -94,6 +125,7 @@ const ProductsPage = () => {
                 "Nhãn hàng",
                 "Giá (VNĐ)",
                 "Tồn kho",
+                "Giảm giá (%)",
               ]}
               data={products.map((p) => ({
                 id: p.id,
@@ -121,9 +153,32 @@ const ProductsPage = () => {
                 brand: p.brandName || "—",
                 price: p.price?.toLocaleString("vi-VN"),
                 stock: p.stockQuantity ?? 0,
+                discount: p.discount ?? 0,
               }))}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              renderActions={(item) => {
+                const product = products.find((p) => p.id === item.id) || {};
+                const hasDiscount = (product.discount ?? 0) > 0;
+                return (
+                  <div className="flex items-center justify-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(item.id)}>
+                      Sửa
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(item.id)}>
+                      Xóa
+                    </Button>
+                    <Button
+                      size="sm"
+                      className={hasDiscount ? "bg-green-600 text-white hover:bg-green-700" : "bg-white text-black border"}
+                      onClick={() => openDiscountDialog({ id: product.id, name: product.name, discount: product.discount })}
+                      title={hasDiscount ? `Đang giảm ${product.discount}%` : "Áp dụng giảm giá"}
+                    >
+                      Giảm giá
+                    </Button>
+                  </div>
+                );
+              }}
             />
           )}
 
@@ -143,6 +198,34 @@ const ProductsPage = () => {
         ref={productFormRef}
         onSuccess={() => fetchProducts(page)}
       />
+
+      {/* Dialog áp dụng giảm giá */}
+      <Dialog open={discountDialogOpen} onOpenChange={setDiscountDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Áp dụng giảm giá</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-sm text-gray-600">
+              Sản phẩm: <span className="font-medium">{discountTarget?.name}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={discountValue}
+                onChange={(e) => setDiscountValue(e.target.value)}
+              />
+              <span>%</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDiscountDialogOpen(false)}>Hủy</Button>
+            <Button onClick={submitDiscount}>Lưu</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

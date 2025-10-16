@@ -65,6 +65,21 @@ export const updateProduct = async (id, productData) => {
   }
 };
 
+// Giảm giá sản phẩm (PUT /products/{id}/discount)
+export const discountProduct = async (id, discount) => {
+  try {
+    const response = await apiRequest(`${BASE_URL}/${id}/discount`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ discount }),
+    });
+    return response;
+  } catch (error) {
+    console.error("Error discounting product:", error);
+    throw error;
+  }
+};
+
 export const deleteProduct = async (id) => {
   try {
     const response = await apiRequest(`${BASE_URL}/${id}`, {
