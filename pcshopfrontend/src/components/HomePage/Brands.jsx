@@ -10,7 +10,11 @@ const Brands = () => {
     const fetchBrands = async () => {
       try {
         const data = await apiRequest("/brands");
-        setBrands(data);
+        // Ẩn brand có id = 25
+        const filtered = Array.isArray(data)
+          ? data.filter((b) => Number(b?.id) !== 25)
+          : [];
+        setBrands(filtered);
       } catch (error) {
         console.error("Lỗi tải brands:", error);
       }

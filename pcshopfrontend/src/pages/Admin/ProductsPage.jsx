@@ -4,10 +4,11 @@ import AdminTable from "@/components/Admin/AdminTable";
 import AdminPagination from "@/components/Admin/AdminPagination";
 import { Button } from "@/components/ui/button";
 import ProductFormDialog from "@/components/Admin/ProductFormDialog";
-import { getAllProducts, deleteProduct, discountProduct } from "@/services/productsService";
+import { getAllProducts, deleteProduct, discountProduct, recommendProduct } from "@/services/productsService";
 import { productImageUrl } from "@/config/env";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Star } from "lucide-react";
 
 const ProductsPage = () => {
   const [page, setPage] = useState(1);
@@ -59,6 +60,21 @@ const ProductsPage = () => {
     setDiscountTarget({ id: product.id, name: product.name, currentDiscount: product.discount ?? 0 });
     setDiscountValue(product.discount ?? 0);
     setDiscountDialogOpen(true);
+  };
+
+  const toggleRecommend = async (product) => {
+    // cố gắng đọc cờ từ cả featured và isFeatured để tương thích backend
+    const isFeatured = Boolean(product?.featured ?? product?.isFeatured ?? false);
+    try {
+      setLoading(true);
+      await recommendProduct(product.id, !isFeatured);
+      await fetchProducts(page);
+    } catch (error) {
+      console.error("Lỗi cập nhật recommend:", error);
+      alert(error.response?.data?.message || "Không thể cập nhật recommend.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const submitDiscount = async () => {
@@ -160,6 +176,7 @@ const ProductsPage = () => {
               renderActions={(item) => {
                 const product = products.find((p) => p.id === item.id) || {};
                 const hasDiscount = (product.discount ?? 0) > 0;
+                const isFeatured = Boolean(product?.featured ?? product?.isFeatured ?? false);
                 return (
                   <div className="flex items-center justify-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => handleEdit(item.id)}>
@@ -175,6 +192,14 @@ const ProductsPage = () => {
                       title={hasDiscount ? `Đang giảm ${product.discount}%` : "Áp dụng giảm giá"}
                     >
                       Giảm giá
+                    </Button>
+                    <Button
+                      size="sm"
+                      className={isFeatured ? "bg-yellow-500 text-black hover:bg-yellow-600" : "bg-white text-black border"}
+                      onClick={() => toggleRecommend(product)}
+                      title={isFeatured ? "Đang recommend" : "Bật recommend"}
+                    >
+                      <Star className="w-4 h-4 mr-1" /> {isFeatured ? "Đang bật" : "Bật"}
                     </Button>
                   </div>
                 );

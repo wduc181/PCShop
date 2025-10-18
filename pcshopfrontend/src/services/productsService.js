@@ -2,9 +2,11 @@ import { apiRequest } from "./api";
 
 const BASE_URL = "/products";
 
-export const getAllProducts = async (page = 1, limit = 20) => {
+export const getAllProducts = async (page = 1, limit = 20, sort) => {
   try {
-    const response = await apiRequest(`${BASE_URL}?page=${page}&limit=${limit}`, {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (sort) params.set("sort", sort);
+    const response = await apiRequest(`${BASE_URL}?${params.toString()}`, {
       method: "GET",
     });
     return response;
@@ -14,12 +16,11 @@ export const getAllProducts = async (page = 1, limit = 20) => {
   }
 };
 
-export const getProductsByCategory = async (categoryId, page = 1, size = 20) => {
+export const getProductsByCategory = async (categoryId, page = 1, size = 20, sort) => {
   try {
-    const response = await apiRequest(
-      `${BASE_URL}/category/${categoryId}?page=${page}&size=${size}`,
-      { method: "GET" }
-    );
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (sort) params.set("sort", sort);
+    const response = await apiRequest(`${BASE_URL}/category/${categoryId}?${params.toString()}`, { method: "GET" });
     return response;
   } catch (error) {
     console.error("Error fetching products by category:", error);
@@ -65,7 +66,6 @@ export const updateProduct = async (id, productData) => {
   }
 };
 
-// Giảm giá sản phẩm (PUT /products/{id}/discount)
 export const discountProduct = async (id, discount) => {
   try {
     const response = await apiRequest(`${BASE_URL}/${id}/discount`, {
@@ -76,6 +76,22 @@ export const discountProduct = async (id, discount) => {
     return response;
   } catch (error) {
     console.error("Error discounting product:", error);
+    throw error;
+  }
+};
+
+export const recommendProduct = async (id, featured) => {
+  try {
+    // Gửi cả featured và isFeatured để tương thích với DTO boolean có tiền tố 'is'
+    const payload = { featured: !!featured, isFeatured: !!featured };
+    const response = await apiRequest(`${BASE_URL}/${id}/recommend`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return response;
+  } catch (error) {
+    console.error("Error recommending product:", error);
     throw error;
   }
 };

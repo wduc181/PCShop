@@ -2,6 +2,7 @@ package com.project.pcshop.controllers;
 
 import com.project.pcshop.dtos.ProductDTO;
 import com.project.pcshop.dtos.ProductDiscountDTO;
+import com.project.pcshop.dtos.ProductFeaturedDTO;
 import com.project.pcshop.dtos.ProductImageDTO;
 import com.project.pcshop.models.Product;
 import com.project.pcshop.models.ProductImage;
@@ -73,13 +74,20 @@ public class ProductController {
     @GetMapping("")
     public ResponseEntity<ProductListResponse> getProducts(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int limit
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(required = false) String sort
     ) {
-        PageRequest pageRequest = PageRequest.of(
-                page - 1,
-                limit,
-                Sort.by("createdAt").descending()
-        );
+        Sort sortSpec = Sort.by("createdAt").descending();
+        if (sort != null) {
+            String s = sort.trim().toLowerCase();
+            if (s.equals("discount")) {
+                sortSpec = Sort.by("discount").descending();
+            } else if (s.equals("featured")) {
+                sortSpec = Sort.by("isFeatured").descending();
+            }
+        }
+
+        PageRequest pageRequest = PageRequest.of(page - 1, limit, sortSpec);
 
         Page<Product> productPage = productService.getAllProducts(pageRequest);
 
@@ -98,12 +106,28 @@ public class ProductController {
     public ResponseEntity<ProductListResponse> getProductsByCategory(
             @PathVariable Long categoryId,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String sort
     ) {
-        PageRequest pageRequest = PageRequest.of(
-                page - 1
-                , size
-                , Sort.by("createdAt").descending());
+        Sort sortSpec = Sort.by("createdAt").descending();
+        if (sort != null) {
+            String s = sort.trim().toLowerCase();
+            switch (s) {
+                case "asc":
+                    sortSpec = Sort.by("price").ascending();
+                    break;
+                case "desc":
+                    sortSpec = Sort.by("price").descending();
+                    break;
+                case "alphabet":
+                    sortSpec = Sort.by("name").ascending();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        PageRequest pageRequest = PageRequest.of(page - 1, size, sortSpec);
         Page<Product> productPage = productService.getProductsByCategory(categoryId, pageRequest);
 
         List<ProductResponse> products = productPage
@@ -262,9 +286,9 @@ public class ProductController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/recommend")
-    public ResponseEntity<?> featProduct(
+    public ResponseEntity<?> recommendProduct(
             @PathVariable Long id,
-            @Valid @RequestBody ProductDiscountDTO  productDiscountDTO,
+            @Valid @RequestBody ProductFeaturedDTO productFeaturedDTO,
             BindingResult result
     ) {
         try {
@@ -275,7 +299,7 @@ public class ProductController {
                         .toList();
                 return ResponseEntity.badRequest().body(errorMessages);
             }
-            Product updated = productService.discountProduct(id, productDiscountDTO);
+            Product updated = productService.recommendProduct(id, productFeaturedDTO);
             return ResponseEntity.ok(ProductResponse.fromProduct(updated));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
