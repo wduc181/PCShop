@@ -1,76 +1,202 @@
-import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useEffect, useMemo, useState } from "react";
+import MainLayout from "@/components/Layouts/MainLayout";
+import { useParams } from "react-router";
+import { getProductsByCategory } from "@/services/productsService";
+import { getCategories } from "@/services/categoryService";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import CustomPagination from "@/components/ProductsPages/CustomPagination";
-import MainLayout from "@/components/Layouts/MainLayout";
+import ProductIsFeatured from "@/components/common/ProductIsFeatured";
+
+// Simple slugify to match ":categoryName" with category.name
+const slugify = (s = "") =>
+  s
+    .toString()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
 
 const ProductsByCategory = () => {
-  const category = {
-    name: "Gaming Laptops",
-    description: "Những chiếc laptop mạnh mẽ dành cho game thủ và dân thiết kế.",
-    image:
-      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=1600&q=80",
-  };
+  const { categoryName } = useParams();
 
-  const allProducts = Array.from({ length: 45 }).map((_, i) => ({
-    id: i,
-    name: `Laptop ${i + 1}`,
-    price: `${20 + i} triệu`,
-    image:
-      "https://images.unsplash.com/photo-1587202372616-b43abea06c6d?auto=format&fit=crop&w=800&q=80",
-  }));
+  const [categoryId, setCategoryId] = useState(null);
+  const [categoryLabel, setCategoryLabel] = useState("");
+  const [loadingCategory, setLoadingCategory] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [page, setPage] = useState(1);
   const pageSize = 15;
-  const totalPages = Math.ceil(allProducts.length / pageSize);
+  const [sort, setSort] = useState(""); // "", "asc", "desc", "alphabet"
 
-  const startIndex = (currentPage - 1) * pageSize;
-  const currentProducts = allProducts.slice(startIndex, startIndex + pageSize);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    let active = true;
+    const run = async () => {
+      try {
+        setLoadingCategory(true);
+        setNotFound(false);
+        const cats = await getCategories();
+        const list = Array.isArray(cats) ? cats : cats?.categories || [];
+        const match = list.find((c) => slugify(c.name) === (categoryName || "").toLowerCase());
+        if (!active) return;
+        if (match) {
+          setCategoryId(match.id);
+          setCategoryLabel(match.name);
+        } else {
+          setCategoryId(null);
+          setCategoryLabel("");
+          setNotFound(true);
+        }
+        setPage(1); // reset page when category changes
+      } catch (e) {
+        if (active) setNotFound(true);
+        console.error("Lỗi tải danh mục:", e);
+      } finally {
+        if (active) setLoadingCategory(false);
+      }
+    };
+    run();
+    return () => {
+      active = false;
+    };
+  }, [categoryName]);
+
+  // Fetch products by category
+  useEffect(() => {
+    let active = true;
+    const fetchProducts = async () => {
+      if (!categoryId) {
+        setItems([]);
+        setTotalPages(1);
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const resp = await getProductsByCategory(categoryId, page, pageSize, sort || undefined);
+        if (!active) return;
+        setItems(resp?.products || []);
+        setTotalPages(resp?.totalPages || 1);
+      } catch (e) {
+        console.error("Lỗi tải sản phẩm theo danh mục:", e);
+        if (active) {
+          setItems([]);
+          setTotalPages(1);
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetchProducts();
+    return () => {
+      active = false;
+    };
+  }, [categoryId, page, sort]);
+
+  const title = useMemo(() => categoryLabel || "Danh mục", [categoryLabel]);
 
   return (
     <MainLayout>
-      {/* Category Header */}
-      <div className="relative w-full h-64 bg-black rounded-2xl overflow-hidden mb-10">
-        <img
-          src={category.image}
-          alt={category.name}
-          className="absolute inset-0 w-full h-full object-cover opacity-50"
-        />
-        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center text-white px-4">
-          <h1 className="text-3xl font-bold">{category.name}</h1>
-          <p className="text-sm mt-2 max-w-2xl">{category.description}</p>
+      {/* Header + Controls */}
+      <div className="bg-black text-white rounded-xl shadow-lg p-6 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">
+              {loadingCategory ? "Đang tải danh mục..." : notFound ? "Không tìm thấy danh mục" : title}
+            </h1>
+            {!loadingCategory && !notFound && (
+              <p className="text-white/70 text-sm mt-1">Lọc và sắp xếp sản phẩm theo nhu cầu của bạn</p>
+            )}
+          </div>
+
+          {/* Sort Controls */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-white/70 mr-1">Sắp xếp:</span>
+            <Button
+              variant={sort === "" ? "default" : "outline"}
+              size="sm"
+              className="!text-black"
+              onClick={() => {
+                setSort("");
+                setPage(1);
+              }}
+            >
+              Mới nhất
+            </Button>
+            <Button
+              variant={sort === "asc" ? "default" : "outline"}
+              size="sm"
+              className="!text-black"
+              onClick={() => {
+                setSort("asc");
+                setPage(1);
+              }}
+            >
+              Giá tăng
+            </Button>
+            <Button
+              variant={sort === "desc" ? "default" : "outline"}
+              size="sm"
+              className="!text-black"
+              onClick={() => {
+                setSort("desc");
+                setPage(1);
+              }}
+            >
+              Giá giảm
+            </Button>
+            <Button
+              variant={sort === "alphabet" ? "default" : "outline"}
+              size="sm"
+              className="!text-black"
+              onClick={() => {
+                setSort("alphabet");
+                setPage(1);
+              }}
+            >
+              A-Z
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Product Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-10">
-        {currentProducts.map((product) => (
-          <Card
-            key={product.id}
-            className="rounded-2xl shadow-md hover:shadow-lg transition duration-300"
-          >
-            <CardContent className="p-4 flex flex-col items-center">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-40 object-cover rounded-xl mb-4"
-              />
-              <h2 className="text-lg font-semibold">{product.name}</h2>
-              <p className="text-gray-600 mb-3">{product.price}</p>
-              <Button className="w-full">Xem chi tiết</Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Content */}
+      {loadingCategory ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 md:h-48 w-full rounded-lg" />
+          ))}
+        </div>
+      ) : notFound ? (
+        <div className="text-center text-gray-600">Danh mục không tồn tại.</div>
+      ) : loading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 md:h-48 w-full rounded-lg" />
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="text-center text-gray-600">Không có sản phẩm trong danh mục này.</div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+          {items.map((p) => (
+            <ProductIsFeatured key={p.id} product={p} heightClass="h-40 md:h-48" />
+          ))}
+        </div>
+      )}
 
       {/* Pagination */}
-      <div className="flex justify-center">
-        <CustomPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
-      </div>
+      {!loadingCategory && !notFound && (
+        <div className="flex justify-center mb-10">
+          <CustomPagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        </div>
+      )}
     </MainLayout>
   );
 };

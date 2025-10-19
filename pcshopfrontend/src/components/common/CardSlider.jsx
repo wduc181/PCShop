@@ -79,7 +79,7 @@ const CardSlider = ({
       <button
         type="button"
         aria-label="Previous"
-        onClick={prev}
+        onClick={next}
         disabled={!canSlide}
         className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-gray-800/80 hover:bg-gray-700 text-white disabled:opacity-50"
       >
@@ -88,7 +88,7 @@ const CardSlider = ({
       <button
         type="button"
         aria-label="Next"
-        onClick={next}
+        onClick={prev}
         disabled={!canSlide}
         className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-gray-800/80 hover:bg-gray-700 text-white disabled:opacity-50"
       >

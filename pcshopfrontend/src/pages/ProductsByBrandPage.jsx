@@ -1,89 +1,175 @@
-import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useEffect, useMemo, useState } from "react";
+import MainLayout from "@/components/Layouts/MainLayout";
+import { useParams } from "react-router";
+import { getAllBrands } from "@/services/brandService";
+import { getProductsByBrand } from "@/services/productsService";
+import { brandImageUrl } from "@/config/env";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import CustomPagination from "@/components/ProductsPages/CustomPagination";
-import MainLayout from "@/components/Layouts/MainLayout";
+import ProductIsFeatured from "@/components/common/ProductIsFeatured";
 
 const ProductsByBrand = () => {
-  // Fake dữ liệu
-  const brand = {
-    name: "ASUS",
-    description:
-      "ASUS nổi tiếng với dòng ROG mạnh mẽ cho game thủ, Zenbook sang trọng và Vivobook phổ thông.",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/2/2e/AsusTek_logo.svg",
-  };
+  const { brandName } = useParams();
 
-  const allProducts = Array.from({ length: 30 }).map((_, i) => ({
-    id: i,
-    name: `ASUS Laptop ${i + 1}`,
-    price: `${15 + i} triệu`,
-    shortDesc: "Laptop hiệu năng cao, thiết kế hiện đại.",
-    image:
-      "https://images.unsplash.com/photo-1587202372616-b43abea06c6d?auto=format&fit=crop&w=800&q=80",
-  }));
+  const [brandId, setBrandId] = useState(null);
+  const [brandLabel, setBrandLabel] = useState("");
+  const [brandLogo, setBrandLogo] = useState("");
+  const [brandDescription, setBrandDescription] = useState("");
+  const [loadingBrand, setLoadingBrand] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 6;
-  const totalPages = Math.ceil(allProducts.length / pageSize);
+  const [page, setPage] = useState(1);
+  const pageSize = 15;
+  const [sort, setSort] = useState(""); // "", "asc", "desc", "alphabet"
 
-  const startIndex = (currentPage - 1) * pageSize;
-  const currentProducts = allProducts.slice(startIndex, startIndex + pageSize);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const slugify = (s = "") =>
+    s
+      .toString()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+
+  // Resolve brandId from route param via brands list
+  useEffect(() => {
+    let active = true;
+    const run = async () => {
+      try {
+        setLoadingBrand(true);
+        setNotFound(false);
+        const brands = await getAllBrands();
+        const list = Array.isArray(brands) ? brands : brands?.brands || [];
+        const match = list.find((b) => slugify(b.name) === (brandName || "").toLowerCase());
+        if (!active) return;
+        if (match) {
+          setBrandId(match.id);
+          setBrandLabel(match.name);
+          setBrandLogo(match.logoUrl || "");
+          setBrandDescription(match.description || "");
+        } else {
+          setBrandId(null);
+          setBrandLabel("");
+          setBrandLogo("");
+          setBrandDescription("");
+          setNotFound(true);
+        }
+        setPage(1);
+      } catch (e) {
+        console.error("Lỗi tải brand:", e);
+        if (active) setNotFound(true);
+      } finally {
+        if (active) setLoadingBrand(false);
+      }
+    };
+    run();
+    return () => {
+      active = false;
+    };
+  }, [brandName]);
+
+  // Fetch products by brand
+  useEffect(() => {
+    let active = true;
+    const fetchProducts = async () => {
+      if (!brandId) {
+        setItems([]);
+        setTotalPages(1);
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const resp = await getProductsByBrand(brandId, page, pageSize, sort || undefined);
+        if (!active) return;
+        setItems(resp?.products || []);
+        setTotalPages(resp?.totalPages || 1);
+      } catch (e) {
+        console.error("Lỗi tải sản phẩm theo brand:", e);
+        if (active) {
+          setItems([]);
+          setTotalPages(1);
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetchProducts();
+    return () => {
+      active = false;
+    };
+  }, [brandId, page, sort]);
+
+  const title = useMemo(() => brandLabel || "Thương hiệu", [brandLabel]);
 
   return (
     <MainLayout>
       {/* Brand Header */}
       <div className="flex flex-col items-center justify-center py-12 bg-gradient-to-r from-slate-900 to-slate-700 text-white rounded-2xl mb-10">
-        <img src={brand.logo} alt={brand.name} className="h-20 mb-4" />
-        <h1 className="text-3xl font-bold">{brand.name}</h1>
-        <p className="text-sm mt-2 max-w-xl text-center">
-          {brand.description}
-        </p>
+        {loadingBrand ? (
+          <Skeleton className="h-20 w-40 mb-4" />
+        ) : brandLogo ? (
+          <img src={brandImageUrl(brandLogo)} alt={title} className="h-20 mb-4 object-contain" />
+        ) : null}
+        <h1 className="text-3xl font-bold">{loadingBrand ? "Đang tải..." : notFound ? "Không tìm thấy thương hiệu" : title}</h1>
+        {!loadingBrand && !notFound && (
+          <p className="text-sm mt-2 max-w-xl text-center opacity-80">
+            {brandDescription || `Sản phẩm chính hãng từ thương hiệu ${title}`}
+          </p>
+        )}
       </div>
 
-      {/* Filter bar */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Sản phẩm của {brand.name}</h2>
-        <select className="border rounded-lg p-2">
-          <option value="new">Mới nhất</option>
-          <option value="price-asc">Giá tăng dần</option>
-          <option value="price-desc">Giá giảm dần</option>
-        </select>
-      </div>
+      {/* Sort bar */}
+      {!loadingBrand && !notFound && (
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <h2 className="text-xl font-semibold">Sản phẩm của {title}</h2>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Sắp xếp:</span>
+            <Button variant={sort === "" ? "default" : "outline"} size="sm" onClick={() => { setSort(""); setPage(1); }}>Mới nhất</Button>
+            <Button variant={sort === "asc" ? "default" : "outline"} size="sm" onClick={() => { setSort("asc"); setPage(1); }}>Giá tăng</Button>
+            <Button variant={sort === "desc" ? "default" : "outline"} size="sm" onClick={() => { setSort("desc"); setPage(1); }}>Giá giảm</Button>
+            <Button variant={sort === "alphabet" ? "default" : "outline"} size="sm" onClick={() => { setSort("alphabet"); setPage(1); }}>A-Z</Button>
+          </div>
+        </div>
+      )}
 
-      {/* Product list dạng card ngang */}
-      <div className="space-y-6 mb-10">
-        {currentProducts.map((product) => (
-          <Card
-            key={product.id}
-            className="flex flex-row rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition"
-          >
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-48 h-48 object-cover"
-            />
-            <CardContent className="flex flex-col justify-between p-6 flex-1">
-              <div>
-                <h2 className="text-xl font-semibold">{product.name}</h2>
-                <p className="text-gray-600">{product.price}</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  {product.shortDesc}
-                </p>
-              </div>
-              <Button className="w-fit mt-4">Xem chi tiết</Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Content */}
+      {loadingBrand ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 md:h-48 w-full rounded-lg" />
+          ))}
+        </div>
+      ) : notFound ? (
+        <div className="text-center text-gray-600">Thương hiệu không tồn tại.</div>
+      ) : loading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 md:h-48 w-full rounded-lg" />
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="text-center text-gray-600">Không có sản phẩm của thương hiệu này.</div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+          {items.map((p) => (
+            <ProductIsFeatured key={p.id} product={p} heightClass="h-40 md:h-48" />
+          ))}
+        </div>
+      )}
 
       {/* Pagination */}
-      <div className="flex justify-center">
-        <CustomPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
-      </div>
+      {!loadingBrand && !notFound && (
+        <div className="flex justify-center mb-10">
+          <CustomPagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        </div>
+      )}
     </MainLayout>
   );
 };

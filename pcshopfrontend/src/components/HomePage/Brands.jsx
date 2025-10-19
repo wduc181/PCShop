@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { apiRequest } from "@/services/api";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Link } from "react-router";
+import { brandImageUrl } from "@/config/env";
 
 const Brands = () => {
   const [brands, setBrands] = useState([]);
@@ -22,7 +24,7 @@ const Brands = () => {
     fetchBrands();
   }, []);
 
-  const groupCount = Math.ceil(brands.length / 5);
+  const groupCount = Math.max(1, Math.ceil(brands.length / 5));
 
   // Tự động sang trái mỗi 4s
   useEffect(() => {
@@ -41,8 +43,19 @@ const Brands = () => {
     setIndex((prev) => (prev + 1) % groupCount);
   };
 
-  return (                 
-<div className="relative bg-[linear-gradient(137deg,rgba(0,0,0,1)_23%,rgba(255,255,255,1)_55%,rgba(0,0,0,1)_76%)] text-gray-900 rounded-2xl shadow-xl py-12 px-10 text-center overflow-hidden">
+  // Slugify to match ProductsByBrandPage
+  const slugify = (s = "") =>
+    s
+      .toString()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+
+  return (
+    <div className="relative bg-[linear-gradient(137deg,rgba(0,0,0,1)_23%,rgba(255,255,255,1)_55%,rgba(0,0,0,1)_76%)] text-gray-900 rounded-2xl shadow-xl py-12 px-10 text-center overflow-hidden">
       <h2 className="text-3xl font-bold mb-8 tracking-tight bg-clip-text text-transparent bg-[linear-gradient(180deg,#ffffff,#cfd3e1)] drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
         Các nhãn hàng
       </h2>
@@ -56,7 +69,7 @@ const Brands = () => {
             transform: `translateX(-${index * (100 / groupCount)}%)`,
           }}
         >
-          {Array.from({ length: groupCount }).map((_, groupIdx) => (
+          {Array.from({ length: Math.ceil(brands.length / 5) || 0 }).map((_, groupIdx) => (
             <div
               key={groupIdx}
               className="flex justify-center gap-12 w-full flex-shrink-0"
@@ -65,14 +78,14 @@ const Brands = () => {
               {brands
                 .slice(groupIdx * 5, groupIdx * 5 + 5)
                 .map((brand) => (
-                  <a
+                  <Link
                     key={brand.id}
-                    href={`/brands/${brand.name}`}
+                    to={`/brand/${slugify(brand.name)}`}
                     className="flex flex-col items-center group transition-transform duration-300 hover:scale-105"
                   >
                     <div className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 w-36 h-24 flex items-center justify-center">
                       <img
-                        src={`http://localhost:8088/uploads/brands/${brand.logoUrl}`}
+                        src={brandImageUrl(brand.logoUrl)}
                         alt={brand.name}
                         className="h-16 w-auto object-contain"
                       />
@@ -80,7 +93,7 @@ const Brands = () => {
                     <p className="mt-2 text-sm font-medium text-rose-400 group-hover:text-cyan-500">
                       {brand.name}
                     </p>
-                  </a>
+                  </Link>
                 ))}
             </div>
           ))}
@@ -104,7 +117,7 @@ const Brands = () => {
 
       {/* Chấm dưới xem trang */}
       <div className="flex justify-center mt-6 gap-2">
-        {Array.from({ length: groupCount }).map((_, i) => (
+        {Array.from({ length: Math.ceil(brands.length / 5) || 0 }).map((_, i) => (
           <div
             key={i}
             className={`w-3 h-3 rounded-full transition-all duration-300 ${

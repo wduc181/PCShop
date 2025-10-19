@@ -114,6 +114,11 @@ public class ProductService implements IProductService {
     }
 
     @Override
+    public Page<Product> getProductsByBrand(Long brandId, Pageable pageable) {
+        return productRepository.findByBrand_Id(brandId, pageable);
+    }
+
+    @Override
     public ProductImage createProductImage(Long productId, ProductImageDTO productImageDTO)
             throws Exception {
         Product existingProduct = productRepository

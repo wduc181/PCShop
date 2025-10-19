@@ -28,6 +28,18 @@ export const getProductsByCategory = async (categoryId, page = 1, size = 20, sor
   }
 };
 
+export const getProductsByBrand = async (brandId, page = 1, size = 20, sort) => {
+  try {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (sort) params.set("sort", sort);
+    const response = await apiRequest(`${BASE_URL}/brand/${brandId}?${params.toString()}`, { method: "GET" });
+    return response;
+  } catch (error) {
+    console.error("Error fetching products by brand:", error);
+    throw error;
+  }
+};
+
 export const getProductById = async (id) => {
   try {
     const response = await apiRequest(`${BASE_URL}/${id}`, { method: "GET" });

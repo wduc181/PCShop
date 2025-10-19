@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import MainLayout from "@/components/Layouts/MainLayout";
-import { useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { getProductById, getProductImages } from "@/services/productsService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,15 +10,46 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { productImageUrl, resolveAssetUrl } from "@/config/env";
+import { addToCart } from "@/services/cartItemsService";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 const ProductPage = () => {
 	const { id } = useParams();
+	const location = useLocation();
+	const navigate = useNavigate();
+	const { isAuthenticated, token } = useAuth();
 	const [product, setProduct] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [qty, setQty] = useState(1);
-  const [images, setImages] = useState([]);
-  const [imgIndex, setImgIndex] = useState(0);
+	const [adding, setAdding] = useState(false);
+	const [images, setImages] = useState([]);
+	const [imgIndex, setImgIndex] = useState(0);
+
+	// Resolve userId: prefer ?uid= in URL, then localStorage 'user_id'
+	const userId = useMemo(() => {
+		const params = new URLSearchParams(location.search);
+		const qUid = params.get("uid");
+		let stored = null;
+		try { stored = localStorage.getItem("user_id"); } catch (_) {}
+		// try to decode from token on the fly as a fallback
+		let decodedUid = null;
+		try {
+			const tok = token || localStorage.getItem("token");
+			if (tok) {
+				const parts = tok.split(".");
+				if (parts.length >= 2) {
+					const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+					const raw = payload?.user_id ?? payload?.userId ?? payload?.id ?? payload?.uid ?? null;
+					decodedUid = raw != null ? String(raw) : null;
+				}
+			}
+		} catch (_) {}
+		const val = qUid ?? stored ?? decodedUid ?? null;
+		const num = val != null ? Number(val) : null;
+		return Number.isFinite(num) && num > 0 ? num : null;
+	}, [location.search, token]);
 
 	useEffect(() => {
 		let ignore = false;
@@ -76,27 +107,28 @@ const ProductPage = () => {
 		return price.toLocaleString("vi-VN") + " ₫";
 	}, [product]);
 
-	const handleAddToCart = () => {
-		// TODO: integrate real cart API/service. Temporary: localStorage cart.
+	const handleAddToCart = async () => {
+		// Call backend cart API with auth; fall back to auth page if not identified
+		if (!isAuthenticated) {
+			toast.warning("Vui lòng đăng nhập để thêm vào giỏ hàng");
+			navigate("/users/auth", { replace: true });
+			return;
+		}
+		if (!userId) {
+			toast.warning("Không xác định được tài khoản. Vui lòng đăng xuất và đăng nhập lại.");
+			return;
+		}
 		try {
+			setAdding(true);
 			const numQty = Math.max(1, parseInt(qty, 10) || 1);
-			const key = "pcshop_cart";
-			const current = JSON.parse(localStorage.getItem(key) || "[]");
-			const idx = current.findIndex((i) => i.id === product.id);
-			if (idx >= 0) current[idx].qty += numQty;
-			else
-				current.push({
-					id: product.id,
-					name: product.name,
-					price: product.price,
-					thumbnail: product.thumbnail,
-					qty: numQty,
-				});
-			localStorage.setItem(key, JSON.stringify(current));
-			alert("Đã thêm vào giỏ hàng");
+			await addToCart(userId, product.id, numQty);
+			toast.success("Đã thêm sản phẩm vào giỏ hàng");
 		} catch (e) {
-			console.error(e);
-			alert("Không thể thêm vào giỏ hàng");
+			console.error("Add to cart error:", e);
+			const msg = e?.message || "Không thể thêm vào giỏ hàng";
+			toast.error(msg);
+		} finally {
+			setAdding(false);
 		}
 	};
 
@@ -201,8 +233,8 @@ const ProductPage = () => {
 												onChange={(e) => setQty(e.target.value)}
 												className="w-24"
 											/>
-											<Button onClick={handleAddToCart} disabled={product.stockQuantity <= 0}>
-												Thêm vào giỏ hàng
+											<Button onClick={handleAddToCart} disabled={product.stockQuantity <= 0 || adding}>
+												{adding ? "Đang thêm..." : "Thêm vào giỏ hàng"}
 											</Button>
 										</div>
 

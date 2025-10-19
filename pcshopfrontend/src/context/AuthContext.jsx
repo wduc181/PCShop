@@ -37,6 +37,8 @@ export const AuthProvider = ({ children }) => {
     if (!token) {
       setUser(null);
       setIsAdmin(false);
+      // remove cached user id when logged out
+      try { localStorage.removeItem("user_id"); } catch (_) {}
       return;
     }
     const payload = decodeJwt(token);
@@ -44,6 +46,14 @@ export const AuthProvider = ({ children }) => {
     let roles = payload?.roles || payload?.authorities || payload?.scope || [];
     if (typeof roles === "string") roles = roles.split(/\s|,/).filter(Boolean);
     if (!Array.isArray(roles)) roles = [];
+
+    // try to persist numeric user id for cart API
+    const rawUid = payload?.user_id ?? payload?.userId ?? payload?.id ?? payload?.uid ?? null;
+    const uidNum = rawUid != null ? Number(rawUid) : null;
+    try {
+      if (Number.isFinite(uidNum) && uidNum > 0) localStorage.setItem("user_id", String(uidNum));
+      else localStorage.removeItem("user_id");
+    } catch (_) {}
 
     let fullname = null;
     try {

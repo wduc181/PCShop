@@ -18,6 +18,7 @@ public interface IProductService {
     Product getProductById(Long id);
     Page<Product> getAllProducts(Pageable pageable);
     Page<Product> getProductsByCategory(Long categoryId, Pageable pageable);
+    Page<Product> getProductsByBrand(Long brandId, Pageable pageable);
     ProductImage createProductImage(Long productId, ProductImageDTO productImageDTO) throws Exception;
     List<ProductImage> getImageByProductId(Long productId);
     Product discountProduct(Long id, ProductDiscountDTO productDiscountDTO);

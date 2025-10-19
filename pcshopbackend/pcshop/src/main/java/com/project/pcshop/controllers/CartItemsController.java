@@ -33,7 +33,7 @@ public class CartItemsController {
                        .stream().map(FieldError::getDefaultMessage).toList();
                return ResponseEntity.badRequest().body(errorMessages);
            }
-           List<CartItems> items = cartItemService.addItemToCart(cartItemsDTO);
+           cartItemService.addItemToCart(cartItemsDTO);
            return ResponseEntity.ok("Added to cart");
        } catch (Exception e) {
            return ResponseEntity.badRequest().body(e.getMessage());

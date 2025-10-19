@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage";
 import ProductsByCategory from "./pages/ProductsByCategoryPage";
+import ProductsPage from "./pages/ProductsPage";
 import ProductsByBrand from "./pages/ProductsByBrandPage";
 import CartPage from "./pages/CartPage";
 import OrdersPage from "./pages/OrdersPage";
@@ -12,7 +13,7 @@ import CategoriesPage from "./pages/Admin/CategoriesPage";
 import UsersPage from "./pages/Admin/UsersPage";
 import BrandsPage from "./pages/Admin/BrandPage";
 import OrdersHistoryPage from "./pages/Admin/OrderHistoryPage";
-import ProductsPage from "./pages/Admin/ProductsPage";
+import AProductsPage from "./pages/Admin/AProductsPage";
 import AOrdersPage from "./pages/Admin/AOrdersPage";
 import ProductPage from "./pages/ProductPage";
 
@@ -35,6 +36,7 @@ function App() {
           <Route path="/brand/:brandName" element={<ProductsByBrand />} />
 
           <Route path="/products/:id" element={<ProductPage />} />
+          <Route path="/products" element={<ProductsPage />} />
 
           <Route path="/cart-items*" element={<CartPage />} />
 
@@ -46,7 +48,7 @@ function App() {
           <Route path="/admin/users" element={<UsersPage />} />
           <Route path="/admin/brands" element={<BrandsPage />} />
           <Route path="/admin/order-history" element={<OrdersHistoryPage />} />
-          <Route path="/admin/products" element={<ProductsPage />} />
+          <Route path="/admin/products" element={<AOrdersPage />} />
           <Route path="/admin/orders" element={<AOrdersPage />} />
 
           <Route path="/*" element={<NotFound />} />

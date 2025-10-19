@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -9,53 +9,94 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import MainLayout from "@/components/Layouts/MainLayout";
+import { useLocation } from "react-router";
+import { useAuth } from "@/context/AuthContext";
+import {
+  getCart,
+  updateCartItemQuantity,
+  removeCartItem,
+  clearCart as clearCartApi,
+} from "@/services/cartItemsService";
 
 const CartPage = () => {
-  // Fake dữ liệu response từ backend
-  const [cart, setCart] = useState({
-    userId: 1,
-    items: [
-      {
-        id: 1,
-        productId: 5,
-        productName: "Laptop ASUS ROG",
-        quantity: 2,
-        price: 25000000,
-        subtotal: 50000000,
-      },
-      {
-        id: 2,
-        productId: 6,
-        productName: "Laptop MSI GF63",
-        quantity: 1,
-        price: 18000000,
-        subtotal: 18000000,
-      },
-    ],
-    totalPrice: 68000000,
-  });
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const [cart, setCart] = useState({ userId: null, items: [], totalPrice: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Mock hàm update
-  const updateQuantity = (id, newQuantity) => {
-    setCart((prev) => {
-      const items = prev.items.map((it) =>
-        it.id === id ? { ...it, quantity: newQuantity, subtotal: newQuantity * it.price } : it
-      );
-      const total = items.reduce((sum, it) => sum + it.subtotal, 0);
-      return { ...prev, items, totalPrice: total };
-    });
+  // Resolve userId: prefer ?uid= in URL, then localStorage 'user_id'
+  const userId = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const qUid = params.get("uid");
+    let stored = null;
+    try { stored = localStorage.getItem("user_id"); } catch (_) {}
+    const val = qUid ?? stored ?? null;
+    const num = val != null ? Number(val) : null;
+    return Number.isFinite(num) && num > 0 ? num : null;
+  }, [location.search]);
+
+  const loadCart = async () => {
+    if (!userId) {
+      setError("Không xác định được tài khoản. Vui lòng đăng nhập lại.");
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      const data = await getCart(userId);
+      const normalized = {
+        userId: data?.userId ?? userId,
+        items: Array.isArray(data?.items) ? data.items : [],
+        totalPrice: Number(data?.totalPrice || 0),
+      };
+      setCart(normalized);
+      setError("");
+    } catch (e) {
+      console.error("Lỗi tải giỏ hàng:", e);
+      setError("Không thể tải giỏ hàng. Hãy thử lại sau.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const removeItem = (id) => {
-    setCart((prev) => {
-      const items = prev.items.filter((it) => it.id !== id);
-      const total = items.reduce((sum, it) => sum + it.subtotal, 0);
-      return { ...prev, items, totalPrice: total };
-    });
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      setError("Bạn cần đăng nhập để xem giỏ hàng.");
+      return;
+    }
+    loadCart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, userId]);
+
+  const updateQuantity = async (id, newQuantity) => {
+    try {
+      if (newQuantity < 1) return;
+      await updateCartItemQuantity(id, newQuantity);
+      await loadCart();
+    } catch (e) {
+      console.error("Lỗi cập nhật số lượng:", e);
+    }
   };
 
-  const clearCart = () => {
-    setCart((prev) => ({ ...prev, items: [], totalPrice: 0 }));
+  const removeItem = async (id) => {
+    try {
+      await removeCartItem(id);
+      await loadCart();
+    } catch (e) {
+      console.error("Lỗi xoá sản phẩm:", e);
+    }
+  };
+
+  const clearCart = async () => {
+    try {
+      if (!userId) return;
+      await clearCartApi(userId);
+      await loadCart();
+    } catch (e) {
+      console.error("Lỗi xoá toàn bộ giỏ hàng:", e);
+    }
   };
 
   return (
@@ -63,6 +104,13 @@ const CartPage = () => {
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h1 className="text-2xl font-bold mb-6">Giỏ hàng của bạn</h1>
 
+        {loading ? (
+          <div className="py-10 text-center text-gray-500">Đang tải giỏ hàng...</div>
+        ) : error ? (
+          <div className="py-10 text-center text-red-600">{error}</div>
+        ) : cart.items.length === 0 ? (
+          <div className="py-10 text-center text-gray-500">Giỏ hàng trống.</div>
+        ) : (
         <Table>
           <TableHeader>
             <TableRow>
@@ -114,6 +162,7 @@ const CartPage = () => {
             ))}
           </TableBody>
         </Table>
+        )}
 
         {/* Summary */}
         <div className="flex justify-between items-center mt-8">
@@ -121,8 +170,8 @@ const CartPage = () => {
             Xoá toàn bộ
           </Button>
           <div className="text-xl font-bold">
-            Tổng:{" "}
-            <span className="text-red-600">{cart.totalPrice.toLocaleString()}₫</span>
+            Tổng: {" "}
+            <span className="text-red-600">{Number(cart.totalPrice).toLocaleString()}₫</span>
           </div>
           <Button className="bg-green-600 hover:bg-green-700">
             Đặt hàng

@@ -33,7 +33,6 @@ const OnSale = () => {
     };
   }, []);
 
-  // Tự động trượt 3s/lần, dừng khi hover
   useEffect(() => {
     if (!items.length) return;
     if (isHovering) return;
@@ -90,14 +89,14 @@ const OnSale = () => {
         <div className="flex gap-2">
           <button
             className="p-2 bg-gray-800 hover:bg-gray-700 rounded-full disabled:opacity-50"
-            onClick={prev}
+            onClick={next}
             disabled={n <= 1}
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             className="p-2 bg-gray-800 hover:bg-gray-700 rounded-full disabled:opacity-50"
-            onClick={next}
+            onClick={prev}
             disabled={n <= 1}
           >
             <ChevronRight className="w-5 h-5" />
@@ -105,7 +104,6 @@ const OnSale = () => {
         </div>
       </div>
 
-      {/* Slider content */}
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {Array.from({ length: 5 }).map((_, i) => (

@@ -20,10 +20,12 @@ const Sidebar = () => {
         setLoading(true);
         const data = await getCategories();
         if (!mounted) return;
-        // Normalize to array of { id, name }
-        const list = Array.isArray(data)
-          ? data.map((c) => ({ id: c.id ?? c.category_id ?? c.ID, name: c.name ?? c.category_name ?? c.Name }))
-          : [];
+        // Normalize to array of { id, name } supporting both array or wrapped object
+        const raw = Array.isArray(data) ? data : (data?.categories || []);
+        const list = raw.map((c) => ({
+          id: c.id ?? c.category_id ?? c.ID,
+          name: c.name ?? c.category_name ?? c.Name,
+        }));
         setCategories(list.filter((c) => c && c.name));
       } catch (e) {
         console.error("Lỗi tải danh mục ở Sidebar:", e);
@@ -37,7 +39,17 @@ const Sidebar = () => {
     };
   }, []);
 
-  const toCategoryPath = (name) => `/category/${encodeURIComponent(name)}`;
+  // Generate slug path to be consistent with ProductsByCategoryPage resolver
+  const slugify = (s = "") =>
+    s
+      .toString()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+  const toCategoryPath = (name) => `/category/${slugify(name)}`;
 
   return (
     <aside

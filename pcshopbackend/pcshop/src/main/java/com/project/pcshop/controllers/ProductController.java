@@ -71,12 +71,7 @@ public class ProductController {
         }
     }
 
-    @GetMapping("")
-    public ResponseEntity<ProductListResponse> getProducts(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int limit,
-            @RequestParam(required = false) String sort
-    ) {
+    private Sort sortProductsBy(String sort) {
         Sort sortSpec = Sort.by("createdAt").descending();
         if (sort != null) {
             String s = sort.trim().toLowerCase();
@@ -86,7 +81,16 @@ public class ProductController {
                 sortSpec = Sort.by("isFeatured").descending();
             }
         }
+        return sortSpec;
+    }
 
+    @GetMapping("")
+    public ResponseEntity<ProductListResponse> getProducts(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(required = false) String sort
+    ) {
+        Sort sortSpec = sortProductsBy(sort);
         PageRequest pageRequest = PageRequest.of(page - 1, limit, sortSpec);
 
         Page<Product> productPage = productService.getAllProducts(pageRequest);
@@ -105,6 +109,29 @@ public class ProductController {
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<ProductListResponse> getProductsByCategory(
             @PathVariable Long categoryId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String sort
+    ) {
+        Sort sortSpec = sortProductsBy(sort);
+
+        PageRequest pageRequest = PageRequest.of(page - 1, size, sortSpec);
+        Page<Product> productPage = productService.getProductsByCategory(categoryId, pageRequest);
+
+        List<ProductResponse> products = productPage
+                .map(ProductResponse::fromProduct)
+                .getContent();
+
+        return ResponseEntity.ok(ProductListResponse.builder()
+                .products(products)
+                .currentPage(page)
+                .totalPages(productPage.getTotalPages())
+                .build());
+    }
+
+    @GetMapping("/brand/{brandId}")
+    public ResponseEntity<ProductListResponse> getProductsByBrand(
+            @PathVariable Long brandId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String sort
@@ -128,7 +155,7 @@ public class ProductController {
         }
 
         PageRequest pageRequest = PageRequest.of(page - 1, size, sortSpec);
-        Page<Product> productPage = productService.getProductsByCategory(categoryId, pageRequest);
+        Page<Product> productPage = productService.getProductsByBrand(brandId, pageRequest);
 
         List<ProductResponse> products = productPage
                 .map(ProductResponse::fromProduct)
