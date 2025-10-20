@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import MainLayout from "@/components/Layouts/MainLayout";
 import { useLocation, useNavigate, useParams } from "react-router";
-import { getProductById, getProductImages } from "@/services/productsService";
+import { getProductById, getProductImages } from "@/services/productService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { productImageUrl, resolveAssetUrl } from "@/config/env";
-import { addToCart } from "@/services/cartItemsService";
+import { addToCart } from "@/services/cartItemService";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
@@ -27,13 +27,11 @@ const ProductPage = () => {
 	const [images, setImages] = useState([]);
 	const [imgIndex, setImgIndex] = useState(0);
 
-	// Resolve userId: prefer ?uid= in URL, then localStorage 'user_id'
 	const userId = useMemo(() => {
 		const params = new URLSearchParams(location.search);
 		const qUid = params.get("uid");
 		let stored = null;
 		try { stored = localStorage.getItem("user_id"); } catch (_) {}
-		// try to decode from token on the fly as a fallback
 		let decodedUid = null;
 		try {
 			const tok = token || localStorage.getItem("token");
@@ -108,7 +106,6 @@ const ProductPage = () => {
 	}, [product]);
 
 	const handleAddToCart = async () => {
-		// Call backend cart API with auth; fall back to auth page if not identified
 		if (!isAuthenticated) {
 			toast.warning("Vui lòng đăng nhập để thêm vào giỏ hàng");
 			navigate("/users/auth", { replace: true });
@@ -152,9 +149,7 @@ const ProductPage = () => {
 						</Card>
 					) : product ? (
 						<>
-							{/* Product top section */}
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-								{/* Left: image carousel */}
 								<Card className="bg-white">
 									<CardContent className="p-6">
 										<div className="relative w-full h-[420px] bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden">
@@ -210,7 +205,6 @@ const ProductPage = () => {
 									</CardContent>
 								</Card>
 
-								{/* Right: info */}
 								<Card className="bg-white">
 									<CardContent className="p-6 space-y-4">
 										<h1 className="text-2xl font-bold">{product.name}</h1>
@@ -245,7 +239,6 @@ const ProductPage = () => {
 								</Card>
 							</div>
 
-							{/* Comments */}
 							<Card className="mt-10 bg-white">
 								<CardContent className="p-6">
 									<h2 className="text-xl font-semibold mb-4">Bình luận</h2>

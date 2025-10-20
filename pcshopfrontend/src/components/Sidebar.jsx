@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router";
 
 const Sidebar = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, isAdmin, user, logout } = useAuth();
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -119,18 +119,28 @@ const Sidebar = () => {
                 {user?.fullname || user?.phoneNumber || "Người dùng"}
               </div>
             </div>
-            <button
-              onClick={() => {
-                try { localStorage.removeItem("user_fullname"); } catch (_) {}
-                logout();
-                navigate("/users/auth", { replace: true });
-              }}
-              className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white"
-              title="Đăng xuất"
-            >
-              <LogOut className="w-3 h-3" />
-              <span>Thoát</span>
-            </button>
+            <div className="flex items-center gap-2">
+              {isAdmin && (
+                <Link
+                  to="/admin/orders"
+                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white"
+                >
+                  Trang admin
+                </Link>
+              )}
+              <button
+                onClick={() => {
+                  try { localStorage.removeItem("user_fullname"); } catch (_) {}
+                  logout();
+                  navigate("/users/auth", { replace: true });
+                }}
+                className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white"
+                title="Đăng xuất"
+              >
+                <LogOut className="w-3 h-3" />
+                <span>Thoát</span>
+              </button>
+            </div>
           </div>
         ) : (
           <Link

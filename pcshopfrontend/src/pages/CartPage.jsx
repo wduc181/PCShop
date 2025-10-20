@@ -16,7 +16,8 @@ import {
   updateCartItemQuantity,
   removeCartItem,
   clearCart as clearCartApi,
-} from "@/services/cartItemsService";
+} from "@/services/cartItemService";
+import ConfirmOrderDialog from "@/components/common/ConfirmOrderDialog";
 
 const CartPage = () => {
   const { isAuthenticated } = useAuth();
@@ -24,8 +25,8 @@ const CartPage = () => {
   const [cart, setCart] = useState({ userId: null, items: [], totalPrice: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [openConfirm, setOpenConfirm] = useState(false);
 
-  // Resolve userId: prefer ?uid= in URL, then localStorage 'user_id'
   const userId = useMemo(() => {
     const params = new URLSearchParams(location.search);
     const qUid = params.get("uid");
@@ -67,7 +68,6 @@ const CartPage = () => {
       return;
     }
     loadCart();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, userId]);
 
   const updateQuantity = async (id, newQuantity) => {
@@ -173,10 +173,12 @@ const CartPage = () => {
             Tổng: {" "}
             <span className="text-red-600">{Number(cart.totalPrice).toLocaleString()}₫</span>
           </div>
-          <Button className="bg-green-600 hover:bg-green-700">
+          <Button className="bg-green-600 hover:bg-green-700" onClick={() => setOpenConfirm(true)}>
             Đặt hàng
           </Button>
         </div>
+
+        <ConfirmOrderDialog open={openConfirm} onOpenChange={setOpenConfirm} userId={userId} />
       </div>
     </MainLayout>
   );

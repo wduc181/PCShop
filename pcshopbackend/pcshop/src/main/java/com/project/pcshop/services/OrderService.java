@@ -83,6 +83,7 @@ public class OrderService implements IOrderService {
         order.setPhoneNumber(orderDTO.getPhoneNumber());
         order.setShippingAddress(orderDTO.getShippingAddress());
         order.setNote(orderDTO.getNote());
+        order.setStatus(orderDTO.getStatus());
         order.setPaymentMethod(orderDTO.getPaymentMethod());
         order.setShippingMethod(orderDTO.getShippingMethod());
         order.setTrackingNumber(orderDTO.getTrackingNumber());

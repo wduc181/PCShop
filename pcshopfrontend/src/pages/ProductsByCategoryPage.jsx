@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import MainLayout from "@/components/Layouts/MainLayout";
 import { useParams } from "react-router";
-import { getProductsByCategory } from "@/services/productsService";
+import { getProductsByCategory } from "@/services/productService";
 import { getCategories } from "@/services/categoryService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import CustomPagination from "@/components/ProductsPages/CustomPagination";
 import ProductIsFeatured from "@/components/common/ProductIsFeatured";
 
-// Simple slugify to match ":categoryName" with category.name
 const slugify = (s = "") =>
   s
     .toString()
@@ -29,7 +28,7 @@ const ProductsByCategory = () => {
 
   const [page, setPage] = useState(1);
   const pageSize = 15;
-  const [sort, setSort] = useState(""); // "", "asc", "desc", "alphabet"
+  const [sort, setSort] = useState("");
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +52,7 @@ const ProductsByCategory = () => {
           setCategoryLabel("");
           setNotFound(true);
         }
-        setPage(1); // reset page when category changes
+        setPage(1);
       } catch (e) {
         if (active) setNotFound(true);
         console.error("Lỗi tải danh mục:", e);
@@ -67,7 +66,6 @@ const ProductsByCategory = () => {
     };
   }, [categoryName]);
 
-  // Fetch products by category
   useEffect(() => {
     let active = true;
     const fetchProducts = async () => {

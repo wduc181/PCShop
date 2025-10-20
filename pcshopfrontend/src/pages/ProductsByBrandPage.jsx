@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import MainLayout from "@/components/Layouts/MainLayout";
 import { useParams } from "react-router";
 import { getAllBrands } from "@/services/brandService";
-import { getProductsByBrand } from "@/services/productsService";
+import { getProductsByBrand } from "@/services/productService";
 import { brandImageUrl } from "@/config/env";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ const ProductsByBrand = () => {
 
   const [page, setPage] = useState(1);
   const pageSize = 15;
-  const [sort, setSort] = useState(""); // "", "asc", "desc", "alphabet"
+  const [sort, setSort] = useState("");
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +37,6 @@ const ProductsByBrand = () => {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)+/g, "");
 
-  // Resolve brandId from route param via brands list
   useEffect(() => {
     let active = true;
     const run = async () => {
@@ -74,7 +73,6 @@ const ProductsByBrand = () => {
     };
   }, [brandName]);
 
-  // Fetch products by brand
   useEffect(() => {
     let active = true;
     const fetchProducts = async () => {
@@ -110,7 +108,6 @@ const ProductsByBrand = () => {
 
   return (
     <MainLayout>
-      {/* Brand Header */}
       <div className="flex flex-col items-center justify-center py-12 bg-gradient-to-r from-slate-900 to-slate-700 text-white rounded-2xl mb-10">
         {loadingBrand ? (
           <Skeleton className="h-20 w-40 mb-4" />

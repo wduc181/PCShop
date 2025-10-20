@@ -51,7 +51,12 @@ public class User extends BaseEntity implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_" + getRole().getName().toUpperCase()));
+        String name = getRole() != null ? getRole().getName() : null;
+        String roleName = name != null ? name.trim().toUpperCase() : "USER";
+        if (!roleName.startsWith("ROLE_")) {
+            roleName = "ROLE_" + roleName;
+        }
+        authorities.add(new SimpleGrantedAuthority(roleName));
         return authorities;
     }
 

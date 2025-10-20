@@ -1,45 +1,60 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import AdminLayout from "@/components/Layouts/AdminLayout";
 import AdminTable from "@/components/Admin/AdminTable";
 import AdminPagination from "@/components/Admin/AdminPagination";
+import { useAuth } from "@/context/AuthContext";
+import { getAllOrders } from "@/services/OrderService";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router";
 
 const OrderHistoryPage = () => {
+  const navigate = useNavigate();
+  const { token } = useAuth();
   const [page, setPage] = useState(1);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Dữ liệu mẫu (thông thường bạn sẽ lấy từ API /orders)
-  const orders = [
-    {
-      id: 201,
-      customer: "Nguyễn Văn A",
-      total_price: 29990000,
-      status: "Đã giao",
-      created_at: "2025-09-15",
-      updated_at: "2025-09-20",
-    },
-    {
-      id: 202,
-      customer: "Trần Thị B",
-      total_price: 18990000,
-      status: "Đã hủy",
-      created_at: "2025-09-10",
-      updated_at: "2025-09-12",
-    },
-    {
-      id: 203,
-      customer: "Phạm Văn C",
-      total_price: 35990000,
-      status: "Đang vận chuyển",
-      created_at: "2025-10-03",
-      updated_at: "2025-10-04",
-    },
-  ];
+  const pageSize = 10;
+  const finalStatuses = new Set(["delivered", "cancelled"]);
 
-  // Chỉ lấy đơn có trạng thái "Đã giao" hoặc "Đã hủy"
-  const filteredOrders = orders.filter(
-    (o) => o.status === "Đã giao" || o.status === "Đã hủy"
-  );
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const res = await getAllOrders(token);
+        const list = Array.isArray(res) ? res : Array.isArray(res?.content) ? res.content : [];
+        setOrders(list);
+        setError("");
+      } catch (e) {
+        console.error("Load order history failed:", e);
+        const msg = String(e?.message || "");
+        if (msg.includes("API Error 403")) setError("Bạn không có quyền truy cập trang này.");
+        else if (msg.includes("API Error 401")) setError("Bạn cần đăng nhập để truy cập trang này.");
+        else setError("Không thể tải lịch sử đơn hàng.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (!token) {
+      setLoading(false);
+      setError("Bạn cần đăng nhập để truy cập trang này.");
+      return;
+    }
+    load();
+  }, [token]);
 
-  const handleView = (id) => console.log("Xem chi tiết đơn hàng:", id);
+  const filteredOrders = useMemo(() => {
+    return orders.filter((o) => finalStatuses.has(String(o.status).toLowerCase()));
+  }, [orders]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
+  const pageData = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredOrders.slice(start, start + pageSize);
+  }, [filteredOrders, page]);
+
+  const handleView = (id) => navigate(`/orders/${id}`);
   const handleDelete = (id) => console.log("Xóa khỏi lịch sử:", id);
 
   return (
@@ -61,22 +76,33 @@ const OrderHistoryPage = () => {
           <h1 className="text-2xl font-bold">Lịch sử đơn hàng</h1>
         </div>
 
-        <AdminTable
-          columns={["Mã đơn", "Khách hàng", "Tổng tiền (VNĐ)", "Trạng thái", "Ngày tạo", "Cập nhật"]}
-          data={filteredOrders.map((o) => ({
-            id: o.id,
-            customer: o.customer,
-            total_price: o.total_price.toLocaleString("vi-VN"),
-            status: o.status,
-            created_at: o.created_at,
-            updated_at: o.updated_at,
-          }))}
-          onEdit={handleView}
-          onDelete={handleDelete}
-        />
+        {loading ? (
+          <div className="py-10 text-center text-gray-500">Đang tải lịch sử đơn hàng...</div>
+        ) : error ? (
+          <div className="py-10 text-center text-red-600">{error}</div>
+        ) : (
+          <AdminTable
+            columns={["Mã đơn", "Khách hàng", "Tổng tiền (VNĐ)", "Trạng thái", "Ngày tạo", "Thanh toán"]}
+            data={pageData.map((o) => ({
+              id: o.id,
+              customer: o.fullName || o.user?.fullName || o.email || "—",
+              total_price: Number(o.totalPrice || 0).toLocaleString("vi-VN"),
+              status: String(o.status || "").toUpperCase(),
+              created_at: o.orderDate ? new Date(o.orderDate).toLocaleString("vi-VN") : "—",
+              updated_at: String(o.paymentStatus || "").toUpperCase(),
+            }))}
+            renderActions={(item) => (
+              <div className="flex items-center gap-2 justify-center">
+                <Button size="sm" variant="outline" onClick={() => handleView(item.id)}>
+                  Xem
+                </Button>
+              </div>
+            )}
+          />
+        )}
 
         <div className="mt-4">
-          <AdminPagination currentPage={page} totalPages={2} onPageChange={setPage} />
+          <AdminPagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       </div>
     </AdminLayout>

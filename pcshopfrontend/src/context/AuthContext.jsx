@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { ADMIN_ALLOWLIST } from "@/config/env";
 
 const decodeJwt = (token) => {
   if (!token || typeof token !== "string") return null;
@@ -41,8 +42,8 @@ export const AuthProvider = ({ children }) => {
       try { localStorage.removeItem("user_id"); } catch (_) {}
       return;
     }
-    const payload = decodeJwt(token);
-    const phone = payload?.phoneNumber || payload?.sub || null;
+  const payload = decodeJwt(token);
+  const phone = payload?.phoneNumber || payload?.phone || payload?.phone_number || payload?.sub || null;
     let roles = payload?.roles || payload?.authorities || payload?.scope || [];
     if (typeof roles === "string") roles = roles.split(/\s|,/).filter(Boolean);
     if (!Array.isArray(roles)) roles = [];
@@ -62,8 +63,45 @@ export const AuthProvider = ({ children }) => {
 
     setUser({ phoneNumber: phone, fullname, roles });
     const adminByRole = roles.some((r) => String(r).toUpperCase().includes("ADMIN"));
-    const adminByPhone = phone === "0000000002"; // fallback heuristic
-    setIsAdmin(adminByRole || adminByPhone);
+
+    // Normalize identifiers for robust allowlist matching
+    const normalizeId = (s) => {
+      const raw = (s ?? "").toString().trim();
+      const lower = raw.toLowerCase();
+      const digits = raw.replace(/\D/g, "");
+      const digitsNoZ = digits.replace(/^0+/, "");
+      return { raw, lower, digits, digitsNoZ };
+    };
+
+  const allow = (ADMIN_ALLOWLIST || []).filter(Boolean).map(normalizeId);
+  const phoneN = normalizeId(phone);
+  const emailN = normalizeId(payload?.email);
+  const usernameRaw = payload?.username || payload?.user_name || payload?.preferred_username;
+  const usernameN = normalizeId(usernameRaw);
+
+    const adminByAllowlist = allow.length > 0 && allow.some((a) =>
+      // exact raw match
+      (phoneN.raw && a.raw === phoneN.raw) ||
+      // digits-only match (ignore non-digits)
+      (phoneN.digits && a.digits && a.digits === phoneN.digits) ||
+      // match ignoring leading zeros
+      (phoneN.digitsNoZ && a.digitsNoZ && a.digitsNoZ === phoneN.digitsNoZ) ||
+      // email/username case-insensitive
+      (emailN.lower && a.lower === emailN.lower) ||
+      (usernameN.lower && a.lower === usernameN.lower)
+    );
+    // Backward-compat fallback if allowlist is not configured
+    const adminByPhoneFallback = (!ADMIN_ALLOWLIST?.length) && (phone === "000000001" || phone === "0000000002");
+    setIsAdmin(adminByRole || adminByAllowlist || adminByPhoneFallback);
+
+    // DEV diagnostics to verify allowlist matching in local environment only
+    try {
+      if (import.meta?.env?.DEV) {
+        console.log("[Auth] allowlist:", ADMIN_ALLOWLIST);
+        console.log("[Auth] identifiers:", { phone, email: payload?.email, username: usernameRaw });
+        console.log("[Auth] computed:", { adminByRole, adminByAllowlist, adminByPhoneFallback });
+      }
+    } catch (_) {}
   }, [token]);
 
   const login = (newToken) => setToken(newToken ?? null);

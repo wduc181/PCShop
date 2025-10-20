@@ -10,7 +10,7 @@ const AuthPage = () => {
 
   return (
     <div className="min-h-screen w-full bg-[#fafafa] relative flex flex-col">
-      {/* Nền caro */}
+      {/* bg */}
       <div
         className="absolute inset-0 z-0 pointer-events-none"
         style={{
@@ -22,10 +22,8 @@ const AuthPage = () => {
         }}
       />
 
-      {/* Header */}
       <Header />
 
-      {/* Nội dung chính */}
       <div className="flex-1 flex items-center justify-center relative z-10 overflow-y-auto py-10 mt-2">
         <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6">
           <Tabs value={tab} onValueChange={setTab} className="w-full">

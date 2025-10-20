@@ -16,3 +16,9 @@ export function resolveAssetUrl(u, defaultBasePath = "") {
 
 export const productImageUrl = (name) => resolveAssetUrl(name, UPLOADS_PRODUCTS);
 export const brandImageUrl = (name) => resolveAssetUrl(name, UPLOADS_BRANDS);
+
+const rawAllowlist = import.meta?.env?.VITE_ADMIN_ALLOWLIST || "";
+export const ADMIN_ALLOWLIST = String(rawAllowlist)
+  .split(/[,\s]+/)
+  .map((s) => s.trim())
+  .filter(Boolean);

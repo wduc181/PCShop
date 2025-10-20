@@ -21,7 +21,7 @@ import {
   createProduct,
   getProductById,
   updateProduct,
-} from "@/services/productsService";
+} from "@/services/productService";
 
 const ProductFormDialog = forwardRef(({ onSuccess, trigger }, ref) => {
   const [open, setOpen] = useState(false);

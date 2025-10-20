@@ -4,7 +4,7 @@ import AdminTable from "@/components/Admin/AdminTable";
 import AdminPagination from "@/components/Admin/AdminPagination";
 import { Button } from "@/components/ui/button";
 import ProductFormDialog from "@/components/Admin/ProductFormDialog";
-import { getAllProducts, deleteProduct, discountProduct, recommendProduct } from "@/services/productsService";
+import { getAllProducts, deleteProduct, discountProduct, recommendProduct } from "@/services/productService";
 import { productImageUrl } from "@/config/env";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";

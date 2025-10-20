@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Star } from "lucide-react";
-import { getAllProducts } from "@/services/productsService";
+import { getAllProducts } from "@/services/productService";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductIsFeatured from "@/components/common/ProductIsFeatured";
 import CardSlider from "@/components/common/CardSlider";

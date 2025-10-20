@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import MainLayout from "@/components/Layouts/MainLayout";
 import { useLocation, Link } from "react-router";
-import { getAllProducts } from "@/services/productsService";
+import { getAllProducts } from "@/services/productService";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductIsFeatured from "@/components/common/ProductIsFeatured";
 
@@ -9,7 +9,7 @@ const useQuery = () => new URLSearchParams(useLocation().search);
 
 const ProductsPage = () => {
   const query = useQuery();
-  const sort = query.get("sort") || undefined; // e.g., 'featured'
+  const sort = query.get("sort") || undefined;
   const [page, setPage] = useState(1);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);

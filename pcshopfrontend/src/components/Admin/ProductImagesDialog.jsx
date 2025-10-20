@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { uploadProductImages, getProductImages } from "@/services/productsService";
+import { uploadProductImages, getProductImages } from "@/services/productService";
 import { productImageUrl, UPLOADS_PRODUCTS } from "@/config/env";
 
 const ProductImagesDialog = ({ open, onOpenChange, productId }) => {

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Percent } from "lucide-react";
-import { getAllProducts } from "@/services/productsService";
+import { getAllProducts } from "@/services/productService";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductOnSale from "@/components/common/ProductOnSale";
 

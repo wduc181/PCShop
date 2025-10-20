@@ -1,6 +1,7 @@
 package com.project.pcshop.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.project.pcshop.models.OrderStatus;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -13,7 +14,6 @@ import lombok.*;
 @AllArgsConstructor
 public class OrderDTO {
     @JsonProperty("user_id")
-    @NotNull(message = "User ID can't be null")
     private Long userId;
 
     @JsonProperty("full_name")
@@ -31,6 +31,8 @@ public class OrderDTO {
 
     @Size(max = 500, message = "Your note is too long")
     private String note;
+
+    private OrderStatus status;
 
     @JsonProperty("total_price")
     @NotNull(message = "Price can't be null")
