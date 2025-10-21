@@ -48,7 +48,7 @@ function App() {
           <Route path="/admin/users" element={<UsersPage />} />
           <Route path="/admin/brands" element={<BrandsPage />} />
           <Route path="/admin/order-history" element={<OrdersHistoryPage />} />
-          <Route path="/admin/products" element={<AOrdersPage />} />
+          <Route path="/admin/products" element={<AProductsPage />} />
           <Route path="/admin/orders" element={<AOrdersPage />} />
 
           <Route path="/*" element={<NotFound />} />
