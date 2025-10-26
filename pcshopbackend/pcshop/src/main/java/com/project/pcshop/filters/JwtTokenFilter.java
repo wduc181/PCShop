@@ -5,7 +5,7 @@ import com.project.pcshop.models.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.NonNull;
+import org.springframework.lang.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
@@ -38,6 +38,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 Pair.of(String.format("%s/products/", apiPrefix), "GET"),
                 Pair.of(String.format("%s/brands", apiPrefix), "GET"),
                 Pair.of(String.format("%s/categories", apiPrefix), "GET"),
+                Pair.of(String.format("%s/comments/product/", apiPrefix), "GET"),
+                Pair.of(String.format("%s/comments/", apiPrefix), "GET"),
                 Pair.of("/uploads/", "GET"),
                 Pair.of(String.format("%s/auth/register", apiPrefix), "POST"),
                 Pair.of(String.format("%s/auth/login", apiPrefix), "POST")

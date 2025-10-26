@@ -5,14 +5,22 @@ import { getProductById, getProductImages } from "@/services/productService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { productImageUrl, resolveAssetUrl } from "@/config/env";
+import { productImageUrl } from "@/config/env";
 import { addToCart } from "@/services/cartItemService";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+} from "@/components/ui/pagination";
+import { getProductComments, createComment } from "@/services/commentService";
 
 const ProductPage = () => {
 	const { id } = useParams();
@@ -242,7 +250,7 @@ const ProductPage = () => {
 							<Card className="mt-10 bg-white">
 								<CardContent className="p-6">
 									<h2 className="text-xl font-semibold mb-4">Bình luận</h2>
-									<CommentBox productId={product.id} />
+									<CommentsSection productId={product.id} />
 								</CardContent>
 							</Card>
 						</>
@@ -252,62 +260,162 @@ const ProductPage = () => {
 		);
 };
 
-const CommentBox = ({ productId }) => {
-	const [comments, setComments] = useState([]);
+const CommentsSection = ({ productId }) => {
+	const { isAuthenticated } = useAuth();
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
+	const [items, setItems] = useState([]);
+	const [page, setPage] = useState(1);
+	const [size, setSize] = useState(10);
+	const [sort, setSort] = useState("desc");
+	const [totalPages, setTotalPages] = useState(1);
+	const [totalElements, setTotalElements] = useState(0);
 	const [text, setText] = useState("");
-	const [name, setName] = useState("");
+	const [submitting, setSubmitting] = useState(false);
 
-	const handleAdd = (e) => {
-		e.preventDefault();
-		if (!text.trim()) return;
-		const item = {
-			id: Date.now(),
-			author: name?.trim() || "Khách",
-			content: text.trim(),
-			createdAt: new Date().toISOString(),
+	useEffect(() => {
+		let ignore = false;
+		async function load() {
+			try {
+				setLoading(true);
+				setError(null);
+				const res = await getProductComments(productId, { page, size, sort });
+				if (ignore) return;
+				const content = Array.isArray(res?.content) ? res.content : [];
+				setItems(content);
+				setTotalPages(res?.totalPages != null ? Number(res.totalPages) : 1);
+				setTotalElements(res?.totalElements != null ? Number(res.totalElements) : content.length);
+			} catch (e) {
+				if (!ignore) setError(e?.message || "Không thể tải bình luận");
+			} finally {
+				if (!ignore) setLoading(false);
+			}
+		}
+		if (productId) load();
+		return () => { ignore = true; };
+	}, [productId, page, size, sort]);
+
+	const goPrev = (e) => { e?.preventDefault?.(); setPage((p) => Math.max(1, p - 1)); };
+	const goNext = (e) => { e?.preventDefault?.(); setPage((p) => Math.min(totalPages || 1, p + 1)); };
+
+		const handleSubmit = async (e) => {
+			e?.preventDefault?.();
+			if (!isAuthenticated) {
+				toast.warning("Vui lòng đăng nhập để bình luận");
+				return;
+			}
+			const content = text.trim();
+			if (!content) return;
+			try {
+				setSubmitting(true);
+				const created = await createComment({ productId, content });
+				toast.success("Đã gửi bình luận");
+				setText("");
+				// Nếu đang ở trang 1 và sort desc, chèn lên đầu để phản hồi nhanh
+				if (page === 1 && (sort || "desc").toLowerCase() === "desc") {
+					setItems((prev) => [created, ...prev]);
+					setTotalElements((n) => (Number.isFinite(n) ? n + 1 : 1));
+				} else {
+					// về trang 1 để thấy bình luận mới
+					setPage(1);
+				}
+			} catch (err) {
+				console.error("create comment error:", err);
+				toast.error(err?.message || "Không thể gửi bình luận");
+			} finally {
+				setSubmitting(false);
+			}
 		};
-		setComments((prev) => [item, ...prev]);
-		setText("");
-	};
 
 	return (
 		<div>
-			<form onSubmit={handleAdd} className="space-y-3 mb-6">
-				<div className="flex gap-3">
-					<Input
-						placeholder="Tên của bạn (không bắt buộc)"
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-					/>
-					<Button type="submit">Gửi</Button>
-				</div>
-				<Textarea
-					placeholder="Viết bình luận..."
-					value={text}
-					onChange={(e) => setText(e.target.value)}
-					rows={3}
-				/>
-			</form>
-
-			<Separator className="my-4" />
-
-			<div className="space-y-4">
-				{comments.length === 0 ? (
-					<div className="text-gray-500">Chưa có bình luận nào.</div>
-				) : (
-					comments.map((c) => (
-						<div key={c.id} className="border border-gray-200 rounded-lg p-4">
-							<div className="flex items-center justify-between mb-1">
-								<div className="font-medium">{c.author}</div>
-								<div className="text-xs text-gray-400">
-									{new Date(c.createdAt).toLocaleString("vi-VN")}
+					{/* Form viết bình luận */}
+					<div className="mb-6">
+						{isAuthenticated ? (
+							<form onSubmit={handleSubmit} className="space-y-3">
+								<textarea
+									className="w-full rounded-md border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-gray-900 min-h-[96px]"
+									placeholder="Viết bình luận..."
+									value={text}
+									onChange={(e) => setText(e.target.value)}
+									maxLength={5000}
+								/>
+								<div className="flex justify-end">
+									<Button type="submit" disabled={submitting || !text.trim()}>
+										{submitting ? "Đang gửi..." : "Gửi bình luận"}
+									</Button>
 								</div>
-							</div>
-							<div className="text-gray-700 whitespace-pre-line">{c.content}</div>
+							</form>
+						) : (
+							<Alert>
+								<AlertTitle>Đăng nhập để bình luận</AlertTitle>
+								<AlertDescription>Vui lòng đăng nhập để tham gia thảo luận về sản phẩm.</AlertDescription>
+							</Alert>
+						)}
+					</div>
+
+					{loading ? (
+				<div className="space-y-3">
+					<Skeleton className="h-6 w-40" />
+					<Skeleton className="h-20 w-full" />
+					<Skeleton className="h-20 w-full" />
+				</div>
+			) : error ? (
+				<Alert variant="destructive">
+					<AlertTitle>Lỗi</AlertTitle>
+					<AlertDescription>{error}</AlertDescription>
+				</Alert>
+			) : (
+				<>
+					<div className="text-sm text-gray-600 mb-3">
+						Có {totalElements} bình luận
+					</div>
+
+					{items.length === 0 ? (
+						<div className="text-gray-500">Chưa có bình luận nào.</div>
+					) : (
+						<div className="space-y-4">
+							{items.map((c) => (
+								<div key={c.id} className="border border-gray-200 rounded-lg p-4">
+									<div className="flex items-center justify-between mb-1">
+										<div className="font-medium">
+											{c.userName && String(c.userName).trim().length > 0
+												? c.userName
+												: c.userId
+												? `Người dùng #${c.userId}`
+												: "Ẩn danh"}
+											{c.edited ? <span className="ml-2 text-xs text-gray-400">(đã chỉnh sửa)</span> : null}
+										</div>
+										<div className="text-xs text-gray-400">
+											{c.createdAt ? new Date(c.createdAt).toLocaleString("vi-VN") : ""}
+										</div>
+									</div>
+									<div className="text-gray-700 whitespace-pre-line">{c.content}</div>
+								</div>
+							))}
 						</div>
-					))
-				)}
-			</div>
+					)}
+
+					{totalPages > 1 && (
+						<Pagination className="mt-6">
+							<PaginationContent>
+								<PaginationItem>
+									<PaginationPrevious href="#" onClick={goPrev} />
+								</PaginationItem>
+								{/* simple 1-page indicator */}
+								<PaginationItem>
+									<PaginationLink href="#" isActive>
+										{page}/{totalPages}
+									</PaginationLink>
+								</PaginationItem>
+								<PaginationItem>
+									<PaginationNext href="#" onClick={goNext} />
+								</PaginationItem>
+							</PaginationContent>
+						</Pagination>
+					)}
+				</>
+			)}
 		</div>
 	);
 };

@@ -122,3 +122,25 @@ CREATE TABLE order_details (
     FOREIGN KEY (order_id) REFERENCES orders(id),
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
+
+CREATE TABLE comments (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT NOT NULL,
+    user_id INT NULL,
+    root_comment_id BIGINT DEFAULT NULL,
+    content TEXT NOT NULL,
+    is_edited TINYINT(1) DEFAULT 0,
+    is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_comments_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_comments_product
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    CONSTRAINT fk_comments_root
+        FOREIGN KEY (root_comment_id) REFERENCES comments(id) ON DELETE CASCADE,
+    INDEX idx_comments_product (product_id),
+    INDEX idx_comments_user (user_id),
+    INDEX idx_comments_root (root_comment_id),
+    INDEX idx_comments_product_created (product_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -42,11 +42,28 @@ export const AuthProvider = ({ children }) => {
       try { localStorage.removeItem("user_id"); } catch (_) {}
       return;
     }
-  const payload = decodeJwt(token);
-  const phone = payload?.phoneNumber || payload?.phone || payload?.phone_number || payload?.sub || null;
-    let roles = payload?.roles || payload?.authorities || payload?.scope || [];
-    if (typeof roles === "string") roles = roles.split(/\s|,/).filter(Boolean);
-    if (!Array.isArray(roles)) roles = [];
+    const payload = decodeJwt(token);
+    const phone = payload?.phoneNumber || payload?.phone || payload?.phone_number || payload?.sub || null;
+
+    // Extract roles from common JWT claim shapes (Spring Security, Keycloak, custom)
+    const toArray = (v) => Array.isArray(v) ? v : (typeof v === "string" ? v.split(/\s|,/).filter(Boolean) : []);
+    const normalizeRole = (r) => String(r).toUpperCase().replace(/^ROLE_/, "").trim();
+
+    let roles = [
+      ...toArray(payload?.roles),
+      ...toArray(payload?.role),
+      ...toArray(payload?.authorities),
+      ...toArray(payload?.scope),
+    ];
+    const realmRoles = payload?.realm_access?.roles;
+    if (Array.isArray(realmRoles)) roles.push(...realmRoles);
+    const resourceAccess = payload?.resource_access;
+    if (resourceAccess && typeof resourceAccess === "object") {
+      Object.values(resourceAccess).forEach((entry) => {
+        if (entry?.roles && Array.isArray(entry.roles)) roles.push(...entry.roles);
+      });
+    }
+    roles = roles.map(normalizeRole).filter(Boolean);
 
     // try to persist numeric user id for cart API
     const rawUid = payload?.user_id ?? payload?.userId ?? payload?.id ?? payload?.uid ?? null;
@@ -61,8 +78,8 @@ export const AuthProvider = ({ children }) => {
       fullname = localStorage.getItem("user_fullname") || null;
     } catch (_) {}
 
-    setUser({ phoneNumber: phone, fullname, roles });
-    const adminByRole = roles.some((r) => String(r).toUpperCase().includes("ADMIN"));
+  setUser({ phoneNumber: phone, fullname, roles });
+  const adminByRole = roles.includes("ADMIN");
 
     // Normalize identifiers for robust allowlist matching
     const normalizeId = (s) => {

@@ -33,7 +33,6 @@ public class JwtTokenUtil {
 
     public String generateToken(User user) throws Exception {
         Map<String, Object> claims = new HashMap<>();
-        // Include essential user info for frontend/client usage
         claims.put("id", user.getId());
         claims.put("user_id", user.getId());
         claims.put("phoneNumber", user.getPhoneNumber());

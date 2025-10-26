@@ -15,7 +15,6 @@ public class BrandResponse {
     private String description;
     private String logoUrl;
 
-    // Convert từ Brand entity sang BrandResponse DTO
     public static BrandResponse fromBrand(Brand brand) {
         return BrandResponse.builder()
                 .id(brand.getId())

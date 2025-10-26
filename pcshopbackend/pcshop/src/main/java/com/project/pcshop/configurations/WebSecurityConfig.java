@@ -42,7 +42,12 @@ public class WebSecurityConfig {
                                 String.format("%s/products/**", apiPrefix),
                                 "/uploads/**"
                         ).permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers(
+                                String.format("%s/comments/product/*", apiPrefix),
+                                String.format("%s/comments/*/replies", apiPrefix)
+                        ).permitAll()
+                        .anyRequest()
+                        .authenticated()
                 );
 
         return http.build();
