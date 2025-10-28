@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router";
-import { createOrderFromCart } from "@/services/OrderService";
+import { createOrderFromCart } from "@/services/orderService";
 import { toast } from "sonner";
 
 const fieldCls = "w-full";

@@ -12,23 +12,12 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO {
+public class UserUpdateDTO {
     @JsonProperty("fullname")
     @Size(max = 100, message = "Max length is 100.")
     private String fullname;
 
-    @JsonProperty("phone_number")
-    @NotBlank(message = "Phone number can't be empty.")
-    @Size(min = 5, max = 15, message = "Invalid phone number's length.")
-    private String phoneNumber;
-
     private String address;
-
-    @NotBlank(message = "Password is required.")
-    private String password;
-
-    @JsonProperty("confirm_password")
-    private String confirmPassword;
 
     @NotBlank(message = "Email is required.")
     @Size(max = 150, message = "Invalid email's length.")
@@ -36,7 +25,4 @@ public class UserDTO {
 
     @JsonProperty("date_of_birth")
     private LocalDate dateOfBirth;
-
-    @JsonProperty("role_id")
-    private Long roleId;
 }

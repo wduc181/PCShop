@@ -1,10 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { List, ShoppingCart, User as UserIcon, LogOut } from "lucide-react";
+import { List, ShoppingCart, User as UserIcon, Menu } from "lucide-react";
 import { Link } from "react-router";
 import { getCategories } from "../services/categoryService";
 import { Skeleton } from "./ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { toast } from "sonner";
+import { updateUserInfo } from "@/services/userService";
+import { changePassword } from "@/services/auth";
 
 const Sidebar = () => {
   const { isAuthenticated, isAdmin, user, logout } = useAuth();
@@ -12,6 +19,42 @@ const Sidebar = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Popover + dialogs state
+  const [saving, setSaving] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
+
+  // Edit info form state
+  const toDateInputValue = (v) => {
+    if (!v) return "";
+    if (typeof v === "string") return v.split("T")[0] || v;
+    const d = new Date(v);
+    if (isNaN(d)) return "";
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+  const [infoForm, setInfoForm] = useState({
+    fullname: "",
+    email: "",
+    address: "",
+    dateOfBirth: "",
+  });
+
+  useEffect(() => {
+    // Prefill form when edit info dialog opens
+    if (infoOpen) {
+      setInfoForm({
+        fullname: user?.fullName ?? user?.fullname ?? "",
+        email: user?.email ?? "",
+        address: user?.address ?? "",
+        dateOfBirth: toDateInputValue(user?.dateOfBirth),
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [infoOpen]);
 
   useEffect(() => {
     let mounted = true;
@@ -128,18 +171,41 @@ const Sidebar = () => {
                   Trang admin
                 </Link>
               )}
-              <button
-                onClick={() => {
-                  try { localStorage.removeItem("user_fullname"); } catch (_) {}
-                  logout();
-                  navigate("/users/auth", { replace: true });
-                }}
-                className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white"
-                title="Đăng xuất"
-              >
-                <LogOut className="w-3 h-3" />
-                <span>Thoát</span>
-              </button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    title="Tài khoản"
+                    className="bg-gray-700 hover:bg-gray-600 text-white"
+                  >
+                    <Menu className="w-4 h-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-72 p-3">
+                  <div className="mb-3 text-sm">
+                    <div className="font-medium truncate">{user?.fullName ?? user?.fullname ?? "Người dùng"}</div>
+                    <div className="text-gray-400 truncate">{user?.phoneNumber ?? "-"}</div>
+                    <div className="text-gray-400 truncate">{user?.email ?? "-"}</div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Button size="sm" onClick={() => navigate("/orders")}>Đơn đã đặt</Button>
+                    <Button size="sm" variant="outline" onClick={() => setInfoOpen(true)}>Đổi thông tin</Button>
+                    <Button size="sm" variant="outline" onClick={() => setPwOpen(true)}>Đổi mật khẩu</Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => {
+                        try { localStorage.removeItem("user_fullname"); } catch (_) {}
+                        logout();
+                        navigate("/users/auth", { replace: true });
+                      }}
+                    >
+                      Đăng xuất
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         ) : (
@@ -151,8 +217,130 @@ const Sidebar = () => {
           </Link>
         )}
       </div>
+      {/* Edit Info Dialog */}
+      <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Đổi thông tin</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium">Họ tên</label>
+              <Input value={infoForm.fullname} onChange={(e) => setInfoForm((f) => ({ ...f, fullname: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Email</label>
+              <Input type="email" value={infoForm.email} onChange={(e) => setInfoForm((f) => ({ ...f, email: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Địa chỉ</label>
+              <Input value={infoForm.address} onChange={(e) => setInfoForm((f) => ({ ...f, address: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Ngày sinh</label>
+              <Input type="date" value={infoForm.dateOfBirth} onChange={(e) => setInfoForm((f) => ({ ...f, dateOfBirth: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Hủy</Button>
+            </DialogClose>
+            <Button
+              onClick={async () => {
+                if (!infoForm.email?.trim()) {
+                  toast.error("Email là bắt buộc");
+                  return;
+                }
+                try {
+                  setSaving(true);
+                  await updateUserInfo({
+                    // id có thể thiếu, service sẽ tự lấy từ token
+                    id: user?.id,
+                    fullname: infoForm.fullname,
+                    email: infoForm.email,
+                    address: infoForm.address,
+                    dateOfBirth: infoForm.dateOfBirth || undefined,
+                  });
+                  toast.success("Cập nhật thông tin thành công");
+                  setInfoOpen(false);
+                } catch (err) {
+                  toast.error(err?.message || "Cập nhật thất bại");
+                } finally {
+                  setSaving(false);
+                }
+              }}
+              disabled={saving}
+            >
+              Lưu
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={pwOpen} onOpenChange={setPwOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Đổi mật khẩu</DialogTitle>
+          </DialogHeader>
+          <ChangePasswordForm
+            onCancel={() => setPwOpen(false)}
+            onDone={() => { setPwOpen(false); toast.success("Đổi mật khẩu thành công"); }}
+          />
+        </DialogContent>
+      </Dialog>
     </aside>
   );
 };
 
 export default Sidebar;
+
+// Inline component: Change Password Form
+const ChangePasswordForm = ({ onCancel, onDone }) => {
+  const [oldPw, setOldPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!oldPw || !newPw) {
+      toast.error("Vui lòng nhập đủ mật khẩu cũ và mới");
+      return;
+    }
+    if (newPw !== confirmPw) {
+      toast.error("Mật khẩu mới và nhập lại không khớp");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await changePassword({ password: oldPw, newPassword: newPw, confirmNewPassword: confirmPw });
+      setOldPw(""); setNewPw(""); setConfirmPw("");
+      onDone?.();
+    } catch (err) {
+      toast.error(err?.message || "Đổi mật khẩu thất bại");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="text-sm font-medium">Mật khẩu hiện tại</label>
+        <Input type="password" value={oldPw} onChange={(e) => setOldPw(e.target.value)} />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Mật khẩu mới</label>
+        <Input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Nhập lại mật khẩu mới</label>
+        <Input type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} />
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={onCancel}>Hủy</Button>
+        <Button onClick={handleSubmit} disabled={submitting}>Đổi mật khẩu</Button>
+      </DialogFooter>
+    </div>
+  );
+};

@@ -3,7 +3,7 @@ import AdminLayout from "@/components/Layouts/AdminLayout";
 import AdminTable from "@/components/Admin/AdminTable";
 import AdminPagination from "@/components/Admin/AdminPagination";
 import { useAuth } from "@/context/AuthContext";
-import { getAllOrders } from "@/services/OrderService";
+import { getAllOrders } from "@/services/orderService";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 

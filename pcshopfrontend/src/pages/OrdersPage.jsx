@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router";
 import MainLayout from "@/components/Layouts/MainLayout";
 import { useAuth } from "@/context/AuthContext";
-import { getOrdersByUser } from "@/services/OrderService";
+import { getOrdersByUser } from "@/services/orderService";
 
 const OrdersPage = () => {
   const navigate = useNavigate();

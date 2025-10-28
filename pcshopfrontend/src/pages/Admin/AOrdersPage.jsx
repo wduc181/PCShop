@@ -5,7 +5,7 @@ import AdminPagination from "@/components/Admin/AdminPagination";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/context/AuthContext";
-import { getAllOrders, updateOrder, normalizeOrderUserId } from "@/services/OrderService";
+import { getAllOrders, updateOrder, normalizeOrderUserId } from "@/services/orderService";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 

@@ -1,7 +1,8 @@
 package com.project.pcshop.services;
 
 import com.project.pcshop.components.JwtTokenUtil;
-import com.project.pcshop.dtos.UserDTO;
+import com.project.pcshop.dtos.UserChangePwDTO;
+import com.project.pcshop.dtos.UserRegisterDTO;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.exceptions.PermissionDenyException;
 import com.project.pcshop.models.Role;
@@ -30,26 +31,26 @@ public class AuthService implements IAuthService {
     private final AuthenticationManager authenticationManager;
 
     @Override
-    public User createUser(UserDTO userDTO) throws Exception {
-        String phoneNumber = userDTO.getPhoneNumber();
+    public User createUser(UserRegisterDTO userRegisterDTO) throws Exception {
+        String phoneNumber = userRegisterDTO.getPhoneNumber();
         if(userRepository.existsByPhoneNumber(phoneNumber)) {
             throw new DataIntegrityViolationException("Phone number already exists.");
         }
-        Role role = roleRepository.findById(userDTO.getRoleId())
+        Role role = roleRepository.findById(userRegisterDTO.getRoleId())
                 .orElseThrow(() ->new DataNotFoundException("role not found."));
         if (role.getName().toUpperCase().equals(Role.ADMIN)) {
             throw new PermissionDenyException("You are not allowed to register an admin account");
         }
         User newUser = User.builder()
-                .fullName(userDTO.getFullname())
-                .phoneNumber(userDTO.getPhoneNumber())
-                .password(userDTO.getPassword())
-                .email(userDTO.getEmail())
-                .address(userDTO.getAddress())
-                .dateOfBirth(userDTO.getDateOfBirth())
+                .fullName(userRegisterDTO.getFullname())
+                .phoneNumber(userRegisterDTO.getPhoneNumber())
+                .password(userRegisterDTO.getPassword())
+                .email(userRegisterDTO.getEmail())
+                .address(userRegisterDTO.getAddress())
+                .dateOfBirth(userRegisterDTO.getDateOfBirth())
                 .build();
         newUser.setRole(role);
-        String password = userDTO.getPassword();
+        String password = userRegisterDTO.getPassword();
         String encodedPassword = passwordEncoder.encode(password);
         newUser.setPassword(encodedPassword);
         newUser.setIsActive(true);
@@ -72,5 +73,19 @@ public class AuthService implements IAuthService {
                 existingUser, password, existingUser.getAuthorities());
         authenticationManager.authenticate(authenticationToken);
         return jwtTokenUtil.generateToken(existingUser);
+    }
+
+    @Override
+    public User changePassword(Long id, UserChangePwDTO userChangePwDTO) throws Exception {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() ->new DataNotFoundException("User not found."));
+        String oldPassword = userChangePwDTO.getPassword();
+
+        if (!passwordEncoder.matches(oldPassword, existingUser.getPassword())) {
+            throw new BadCredentialsException("Wrong password");
+        }
+        String encodedPassword = passwordEncoder.encode(userChangePwDTO.getNewPassword());
+        existingUser.setPassword(encodedPassword);
+        return userRepository.save(existingUser);
     }
 }

@@ -37,6 +37,15 @@ public class JwtTokenUtil {
         claims.put("user_id", user.getId());
         claims.put("phoneNumber", user.getPhoneNumber());
         try {
+            String rn = user.getRole() != null ? user.getRole().getName() : null;
+            String roleName = rn != null ? rn.trim().toUpperCase() : "USER";
+            if (roleName.startsWith("ROLE_")) {
+                roleName = roleName.substring(5);
+            }
+            claims.put("roles", Collections.singletonList(roleName));
+            claims.put("authorities", Collections.singletonList("ROLE_" + roleName));
+        } catch (Exception ignored) {}
+        try {
             String token = Jwts.builder()
                     .setClaims(claims)
                     .setSubject(user.getPhoneNumber())

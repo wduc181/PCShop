@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import MainLayout from "@/components/Layouts/MainLayout";
-import { getOrderDetails } from "@/services/OrderService";
+import { getOrderDetails } from "@/services/orderService";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 
