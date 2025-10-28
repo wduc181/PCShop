@@ -8,4 +8,5 @@ import org.springframework.data.domain.Pageable;
 public interface IUserService {
     Page<User> getUsers(Pageable pageable);
     User updateUser(Long id, UserUpdateDTO userUpdateDTO) throws Exception;
+    User getUserById(Long id) throws Exception;
 }

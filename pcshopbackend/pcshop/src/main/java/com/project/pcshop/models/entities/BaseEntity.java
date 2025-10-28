@@ -1,4 +1,4 @@
-package com.project.pcshop.models;
+package com.project.pcshop.models.entities;
 
 import jakarta.persistence.*;
 import lombok.Getter;

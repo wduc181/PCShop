@@ -91,8 +91,33 @@ export const updateUserInfo = async ({ id, fullname, fullName, email, address, d
 	return parseResponse(res);
 };
 
+/**
+ * Lấy thông tin một user theo id (mặc định lấy từ JWT nếu không truyền id)
+ * @param {{ id?: number, token?: string }} params
+ * @returns {Promise<any>}
+ */
+export const getUser = async ({ id, token } = {}) => {
+	const t = getAuthToken(token);
+	if (!t) throw new Error("Missing auth token");
+
+	let uid = id;
+	if (!uid) uid = getUserIdFromToken(t);
+	if (!uid) throw new Error("Missing user id");
+
+	const res = await fetch(`${API_URL}/users/${uid}`, {
+		method: "GET",
+		headers: { Authorization: `Bearer ${t}` },
+	});
+	if (!res.ok) {
+		const err = await res.text();
+		throw new Error(err || "Lấy thông tin người dùng thất bại");
+	}
+	return parseResponse(res);
+};
+
 export default {
 	getUsers,
 	updateUserInfo,
+	getUser,
 };
 

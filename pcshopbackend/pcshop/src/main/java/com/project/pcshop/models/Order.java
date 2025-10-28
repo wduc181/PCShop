@@ -1,5 +1,7 @@
 package com.project.pcshop.models;
 
+import com.project.pcshop.models.entities.OrderStatus;
+import com.project.pcshop.models.entities.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

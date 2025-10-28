@@ -1,5 +1,6 @@
 package com.project.pcshop.models;
 
+import com.project.pcshop.models.entities.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 

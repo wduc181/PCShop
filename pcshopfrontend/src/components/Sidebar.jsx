@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { updateUserInfo } from "@/services/userService";
+import { updateUserInfo, getUser } from "@/services/userService";
 import { changePassword } from "@/services/auth";
 
 const Sidebar = () => {
@@ -24,6 +24,10 @@ const Sidebar = () => {
   const [saving, setSaving] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const [pwOpen, setPwOpen] = useState(false);
+
+  // User info fetched from backend for popover display
+  const [accountUser, setAccountUser] = useState(null);
+  const [accountLoading, setAccountLoading] = useState(false);
 
   // Edit info form state
   const toDateInputValue = (v) => {
@@ -44,17 +48,43 @@ const Sidebar = () => {
   });
 
   useEffect(() => {
-    // Prefill form when edit info dialog opens
+    // Prefill form when edit info dialog opens (prefer server-fetched accountUser)
     if (infoOpen) {
+      const src = accountUser ?? user;
       setInfoForm({
-        fullname: user?.fullName ?? user?.fullname ?? "",
-        email: user?.email ?? "",
-        address: user?.address ?? "",
-        dateOfBirth: toDateInputValue(user?.dateOfBirth),
+        fullname: src?.fullName ?? src?.fullname ?? "",
+        email: src?.email ?? "",
+        address: src?.address ?? "",
+        dateOfBirth: toDateInputValue(src?.dateOfBirth ?? src?.date_of_birth),
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [infoOpen]);
+
+  // Load current user info from API once authenticated
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (!isAuthenticated) {
+        setAccountUser(null);
+        return;
+      }
+      try {
+        setAccountLoading(true);
+        const data = await getUser();
+        if (!alive) return;
+        setAccountUser(data);
+      } catch (e) {
+        // Silent fail; we will fallback to context user in UI
+        console.warn("Không thể tải thông tin người dùng:", e);
+      } finally {
+        if (alive) setAccountLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     let mounted = true;
@@ -184,9 +214,25 @@ const Sidebar = () => {
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-72 p-3">
                   <div className="mb-3 text-sm">
-                    <div className="font-medium truncate">{user?.fullName ?? user?.fullname ?? "Người dùng"}</div>
-                    <div className="text-gray-400 truncate">{user?.phoneNumber ?? "-"}</div>
-                    <div className="text-gray-400 truncate">{user?.email ?? "-"}</div>
+                    {accountLoading ? (
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="h-3 w-40" />
+                        <Skeleton className="h-3 w-56" />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="font-medium truncate">
+                          {accountUser?.fullName ?? accountUser?.fullname ?? user?.fullName ?? user?.fullname ?? "Người dùng"}
+                        </div>
+                        <div className="text-gray-400 truncate">
+                          {accountUser?.phoneNumber ?? accountUser?.phone_number ?? user?.phoneNumber ?? "-"}
+                        </div>
+                        <div className="text-gray-400 truncate">
+                          {accountUser?.email ?? user?.email ?? "-"}
+                        </div>
+                      </>
+                    )}
                   </div>
                   <div className="grid gap-2">
                     <Button size="sm" onClick={() => navigate("/orders")}>Đơn đã đặt</Button>
@@ -262,6 +308,11 @@ const Sidebar = () => {
                     dateOfBirth: infoForm.dateOfBirth || undefined,
                   });
                   toast.success("Cập nhật thông tin thành công");
+                    // Refresh account info to reflect changes in popover
+                    try {
+                      const refreshed = await getUser();
+                      setAccountUser(refreshed);
+                    } catch (_) {}
                   setInfoOpen(false);
                 } catch (err) {
                   toast.error(err?.message || "Cập nhật thất bại");

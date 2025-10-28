@@ -21,6 +21,16 @@ import java.util.List;
 public class UserController {
     private final IUserService userService;
 
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUser(@PathVariable("id") Long id) {
+        try {
+            return ResponseEntity.ok(userService.getUserById(id));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("")
     public ResponseEntity<List<User>> getUsers(
