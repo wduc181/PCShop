@@ -20,7 +20,15 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from "@/components/ui/pagination";
-import { getProductComments, createComment } from "@/services/commentService";
+import { getProductComments, getReplies, createComment, updateComment, deleteComment } from "@/services/commentService";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 
 const ProductPage = () => {
 	const { id } = useParams();
@@ -261,7 +269,7 @@ const ProductPage = () => {
 };
 
 const CommentsSection = ({ productId }) => {
-	const { isAuthenticated } = useAuth();
+	const { isAuthenticated, isAdmin } = useAuth();
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [items, setItems] = useState([]);
@@ -272,6 +280,30 @@ const CommentsSection = ({ productId }) => {
 	const [totalElements, setTotalElements] = useState(0);
 	const [text, setText] = useState("");
 	const [submitting, setSubmitting] = useState(false);
+	const [editingId, setEditingId] = useState(null);
+	const [editText, setEditText] = useState("");
+	const [editSubmitting, setEditSubmitting] = useState(false);
+	const [deletingId, setDeletingId] = useState(null);
+	const [replyCounts, setReplyCounts] = useState({}); // { [commentId]: number }
+	const [expanded, setExpanded] = useState({}); // { [commentId]: boolean }
+	const [replies, setReplies] = useState({}); // { [commentId]: array }
+	const [repliesLoading, setRepliesLoading] = useState({}); // { [commentId]: boolean }
+	const [confirmOpen, setConfirmOpen] = useState(false);
+	const [confirmTarget, setConfirmTarget] = useState(null); // the comment/reply object
+	const [replyOpen, setReplyOpen] = useState({}); // { [rootId]: boolean }
+	const [replyText, setReplyText] = useState({}); // { [rootId]: string }
+	const [replySubmitting, setReplySubmitting] = useState({}); // { [rootId]: boolean }
+
+	// resolve current user id from localStorage (AuthContext persists it after login)
+	const currentUserId = useMemo(() => {
+		try {
+			const v = localStorage.getItem("user_id");
+			const n = v != null ? Number(v) : null;
+			return Number.isFinite(n) && n > 0 ? n : null;
+		} catch (_) {
+			return null;
+		}
+	}, []);
 
 	useEffect(() => {
 		let ignore = false;
@@ -285,6 +317,27 @@ const CommentsSection = ({ productId }) => {
 				setItems(content);
 				setTotalPages(res?.totalPages != null ? Number(res.totalPages) : 1);
 				setTotalElements(res?.totalElements != null ? Number(res.totalElements) : content.length);
+				// fetch reply counts for current page comments (best effort)
+				try {
+					const ids = content.map((c) => c.id).filter(Boolean);
+					if (ids.length) {
+						Promise.all(ids.map(async (cid) => {
+							try {
+								const r = await getReplies(cid, { page: 1, size: 1, sort: "asc" });
+								const n = r?.totalElements != null ? Number(r.totalElements) : 0;
+								return { cid, n: Number.isFinite(n) ? n : 0 };
+							} catch (_) {
+								return { cid, n: 0 };
+							}
+						})).then((arr) => {
+							setReplyCounts((prev) => {
+								const next = { ...prev };
+								for (const { cid, n } of arr) next[cid] = n;
+								return next;
+							});
+						}).catch(() => {});
+					}
+				} catch (_) {}
 			} catch (e) {
 				if (!ignore) setError(e?.message || "Không thể tải bình luận");
 			} finally {
@@ -326,6 +379,144 @@ const CommentsSection = ({ productId }) => {
 				setSubmitting(false);
 			}
 		};
+
+	const canModify = (c) => {
+		if (!isAuthenticated) return false;
+		if (isAdmin) return true;
+		if (currentUserId && c?.userId) return Number(c.userId) === Number(currentUserId);
+		return false;
+	};
+
+	const onEdit = (c) => {
+		setEditingId(c.id);
+		setEditText(c.content || "");
+	};
+
+	const onCancelEdit = () => {
+		setEditingId(null);
+		setEditText("");
+	};
+
+	const onSaveEdit = async (c) => {
+		const newContent = (editText || "").trim();
+		if (!newContent) return;
+		try {
+			setEditSubmitting(true);
+			const updated = await updateComment(c.id, { content: newContent });
+			// optimistic in-place update
+			setItems((prev) => prev.map((it) => it.id === c.id ? { ...it, content: updated?.content ?? newContent, edited: true } : it));
+			toast.success("Đã cập nhật bình luận");
+			onCancelEdit();
+		} catch (err) {
+			console.error("update comment error:", err);
+			toast.error(err?.message || "Không thể cập nhật bình luận");
+		} finally {
+			setEditSubmitting(false);
+		}
+	};
+
+	const onDelete = (c) => {
+		setConfirmTarget(c);
+		setConfirmOpen(true);
+	};
+
+	const doDelete = async () => {
+		const c = confirmTarget;
+		if (!c) return;
+		try {
+			setDeletingId(c.id);
+			await deleteComment(c.id);
+			// remove from comments list if it's a top-level comment
+			setItems((prev) => prev.filter((it) => it.id !== c.id));
+			// also remove from any replies collections
+			setReplies((prev) => {
+				const next = { ...prev };
+				for (const key of Object.keys(next)) {
+					next[key] = (next[key] || []).filter((it) => it.id !== c.id);
+				}
+				return next;
+			});
+			// adjust counters
+			setTotalElements((n) => Math.max(0, (Number.isFinite(n) ? n - 1 : 0)));
+			// if deleting a reply, decrement its parent's count
+			if (c.rootCommentId) {
+				setReplyCounts((prev) => ({ ...prev, [c.rootCommentId]: Math.max(0, (prev[c.rootCommentId] || 1) - 1) }));
+			}
+			toast.success("Đã xóa bình luận");
+		} catch (err) {
+			console.error("delete comment error:", err);
+			toast.error(err?.message || "Không thể xóa bình luận");
+		} finally {
+			setDeletingId(null);
+			setConfirmOpen(false);
+			setConfirmTarget(null);
+		}
+	};
+
+	const toggleReplies = async (commentId) => {
+		const isOpen = !!expanded[commentId];
+		if (isOpen) {
+			setExpanded((p) => ({ ...p, [commentId]: false }));
+			return;
+		}
+		setExpanded((p) => ({ ...p, [commentId]: true }));
+		// fetch if not loaded
+		if (!replies[commentId]) {
+			try {
+				setRepliesLoading((p) => ({ ...p, [commentId]: true }));
+				const r = await getReplies(commentId, { page: 1, size: 50, sort: "asc" });
+				const content = Array.isArray(r?.content) ? r.content : [];
+				setReplies((prev) => ({ ...prev, [commentId]: content }));
+				const n = r?.totalElements != null ? Number(r.totalElements) : content.length;
+				setReplyCounts((prev) => ({ ...prev, [commentId]: Number.isFinite(n) ? n : content.length }));
+			} catch (err) {
+				console.error("load replies error:", err);
+				toast.error(err?.message || "Không thể tải trả lời");
+			} finally {
+				setRepliesLoading((p) => ({ ...p, [commentId]: false }));
+			}
+		}
+	};
+
+	const toggleReplyForm = (target) => {
+		const rootId = target?.rootCommentId || target?.id;
+		if (!rootId) return;
+		// ensure replies panel is open to show the new reply after submit
+		setExpanded((p) => ({ ...p, [rootId]: true }));
+		setReplyOpen((prev) => ({ ...prev, [rootId]: !prev[rootId] }));
+	};
+
+	const onChangeReplyText = (rootId, val) => {
+		setReplyText((prev) => ({ ...prev, [rootId]: val }));
+	};
+
+	const submitReply = async (rootId) => {
+		if (!isAuthenticated) {
+			toast.warning("Vui lòng đăng nhập để trả lời");
+			return;
+		}
+		const content = (replyText[rootId] || "").trim();
+		if (!content) return;
+		try {
+			setReplySubmitting((p) => ({ ...p, [rootId]: true }));
+			const created = await createComment({ productId, content, rootCommentId: rootId });
+			setReplies((prev) => {
+				const list = Array.isArray(prev[rootId]) ? [...prev[rootId]] : [];
+				list.push(created);
+				return { ...prev, [rootId]: list };
+			});
+			setReplyCounts((prev) => ({ ...prev, [rootId]: (prev[rootId] || 0) + 1 }));
+			setExpanded((p) => ({ ...p, [rootId]: true }));
+			setReplyText((p) => ({ ...p, [rootId]: "" }));
+			setReplyOpen((p) => ({ ...p, [rootId]: false }));
+			toast.success("Đã gửi trả lời");
+		} catch (err) {
+			console.error("create reply error:", err);
+			toast.error(err?.message || "Không thể gửi trả lời");
+		} finally {
+			setReplySubmitting((p) => ({ ...p, [rootId]: false }));
+		}
+	};
 
 	return (
 		<div>
@@ -386,11 +577,156 @@ const CommentsSection = ({ productId }) => {
 												: "Ẩn danh"}
 											{c.edited ? <span className="ml-2 text-xs text-gray-400">(đã chỉnh sửa)</span> : null}
 										</div>
-										<div className="text-xs text-gray-400">
-											{c.createdAt ? new Date(c.createdAt).toLocaleString("vi-VN") : ""}
+										<div className="flex items-center gap-2 text-xs text-gray-400">
+											<span>{c.createdAt ? new Date(c.createdAt).toLocaleString("vi-VN") : ""}</span>
+											{canModify(c) && (
+												<>
+													{editingId === c.id ? (
+														<>
+															<Button size="sm" variant="default" disabled={editSubmitting || !(editText || "").trim()} onClick={() => onSaveEdit(c)}>
+																{editSubmitting ? "Đang lưu..." : "Lưu"}
+															</Button>
+															<Button size="sm" variant="secondary" onClick={onCancelEdit}>Hủy</Button>
+														</>
+													) : (
+														<>
+															<Button size="sm" variant="outline" onClick={() => onEdit(c)}>Sửa</Button>
+															<Button size="sm" variant="destructive" onClick={() => onDelete(c)} disabled={deletingId === c.id}>
+																{deletingId === c.id ? "Đang xóa..." : "Xóa"}
+															</Button>
+														</>
+													)}
+												</>
+											)}
 										</div>
 									</div>
-									<div className="text-gray-700 whitespace-pre-line">{c.content}</div>
+									{editingId === c.id ? (
+										<textarea
+											className="w-full rounded-md border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-gray-900 min-h-[96px]"
+											value={editText}
+											onChange={(e) => setEditText(e.target.value)}
+											maxLength={5000}
+										/>
+									) : (
+										<div className="text-gray-700 whitespace-pre-line">{c.content}</div>
+									)}
+
+									{/* Reply button and form (top-level comments) */}
+									<div className="mt-2">
+										<button
+											type="button"
+											className="text-sm text-blue-600 hover:underline"
+											onClick={() => toggleReplyForm(c)}
+										>
+											Trả lời
+										</button>
+										{replyOpen[c.id] && (
+											<div className="mt-2">
+												<textarea
+													className="w-full rounded-md border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-gray-900 min-h-[72px]"
+													placeholder="Viết trả lời..."
+													value={replyText[c.id] || ""}
+													onChange={(e) => onChangeReplyText(c.id, e.target.value)}
+													maxLength={5000}
+												/>
+												<div className="flex gap-2 justify-end mt-2">
+													<Button
+														variant="secondary"
+														onClick={() => setReplyOpen((p) => ({ ...p, [c.id]: false }))}
+													>
+														Hủy
+													</Button>
+													<Button
+														onClick={() => submitReply(c.id)}
+														disabled={replySubmitting[c.id] || !(replyText[c.id] || "").trim()}
+													>
+														{replySubmitting[c.id] ? "Đang gửi..." : "Gửi trả lời"}
+													</Button>
+												</div>
+											</div>
+										)}
+									</div>
+
+									{/* Replies toggle */}
+									<div className="mt-2">
+										{replyCounts[c.id] > 0 && !expanded[c.id] && (
+											<button
+												className="text-sm text-blue-600 hover:underline"
+												onClick={() => toggleReplies(c.id)}
+											>
+												{`Hiển thị ${replyCounts[c.id]} trả lời`}
+											</button>
+										)}
+										{expanded[c.id] && (
+											<div className="mt-2">
+												<div className="mb-1">
+													<button
+														className="text-sm text-blue-600 hover:underline"
+														onClick={() => toggleReplies(c.id)}
+													>
+														{`Ẩn trả lời${replyCounts[c.id] != null ? ` (${replyCounts[c.id]})` : ""}`}
+													</button>
+												</div>
+												{repliesLoading[c.id] ? (
+													<div className="space-y-2">
+														<Skeleton className="h-4 w-1/3" />
+														<Skeleton className="h-14 w-full" />
+													</div>
+												) : (Array.isArray(replies[c.id]) && replies[c.id].length > 0 ? (
+													<div className="space-y-3 pl-4 border-l border-gray-200">
+														{replies[c.id].map((r) => (
+															<div key={r.id} className="rounded-md p-3 bg-gray-50">
+																<div className="flex items-center justify-between mb-1">
+																	<div className="text-sm font-medium">
+																		{r.userName && String(r.userName).trim().length > 0
+																			? r.userName
+																			: r.userId
+																			? `Người dùng #${r.userId}`
+																			: "Ẩn danh"}
+																		{r.edited ? <span className="ml-2 text-xs text-gray-400">(đã chỉnh sửa)</span> : null}
+																	</div>
+																	<div className="flex items-center gap-2 text-xs text-gray-400">
+																		<span>{r.createdAt ? new Date(r.createdAt).toLocaleString("vi-VN") : ""}</span>
+																		{canModify(r) && (
+																			<>
+																				{editingId === r.id ? (
+																					<>
+																						<Button size="sm" variant="default" disabled={editSubmitting || !(editText || "").trim()} onClick={() => onSaveEdit(r)}>
+																							{editSubmitting ? "Đang lưu..." : "Lưu"}
+																						</Button>
+																						<Button size="sm" variant="secondary" onClick={onCancelEdit}>Hủy</Button>
+																					</>
+																				) : (
+																					<>
+																						<Button size="sm" variant="outline" onClick={() => onEdit(r)}>Sửa</Button>
+																						<Button size="sm" variant="destructive" onClick={() => onDelete(r)} disabled={deletingId === r.id}>
+																							{deletingId === r.id ? "Đang xóa..." : "Xóa"}
+																						</Button>
+																					</>
+																				)}
+																			</>
+																		)}
+																	</div>
+																</div>
+																{editingId === r.id ? (
+																	<textarea
+																		className="w-full rounded-md border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-gray-900 min-h-[72px]"
+																		value={editText}
+																		onChange={(e) => setEditText(e.target.value)}
+																		maxLength={5000}
+																	/>
+																) : (
+																	<div className="text-sm text-gray-700 whitespace-pre-line">{r.content}</div>
+																)}
+															</div>
+														))}
+													</div>
+												) : (
+													<div className="text-sm text-gray-500 pl-4">Chưa có trả lời.</div>
+												))}
+											</div>
+										)}
+									</div>
 								</div>
 							))}
 						</div>
@@ -416,7 +752,35 @@ const CommentsSection = ({ productId }) => {
 					)}
 				</>
 			)}
-		</div>
+		{/* Confirm delete dialog */}
+		<ConfirmDeleteDialog
+			open={confirmOpen}
+			onOpenChange={setConfirmOpen}
+			onConfirm={doDelete}
+			loading={deletingId === (confirmTarget?.id)}
+			title="Xác nhận xóa bình luận"
+			description="Bạn có chắc chắn muốn xóa bình luận này? Hành động không thể hoàn tác."
+		/>
+	</div>
+	);
+};
+
+const ConfirmDeleteDialog = ({ open, onOpenChange, onConfirm, loading, title = "Xác nhận xóa", description = "Hành động này không thể hoàn tác." }) => {
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>{title}</DialogTitle>
+					<DialogDescription>{description}</DialogDescription>
+				</DialogHeader>
+				<DialogFooter>
+					<Button variant="secondary" onClick={() => onOpenChange?.(false)} disabled={loading}>Hủy</Button>
+					<Button variant="destructive" onClick={onConfirm} disabled={loading}>
+						{loading ? "Đang xóa..." : "Xóa"}
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 };
 
