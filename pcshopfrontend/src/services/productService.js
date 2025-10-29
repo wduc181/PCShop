@@ -151,3 +151,19 @@ export const getProductImages = async (id) => {
     throw error;
   }
 };
+
+export const searchProduct = async (keyword) => {
+  try {
+    if (!keyword || !keyword.toString().trim()) {
+      throw new Error("Nhập để tìm kiếm");
+    }
+    const params = new URLSearchParams({ keyword: keyword.toString().trim() });
+    const response = await apiRequest(`${BASE_URL}/search?${params.toString()}`, {
+      method: "GET",
+    });
+    return response;
+  } catch (error) {
+    console.error("Error searching products:", error);
+    throw error;
+  }
+};

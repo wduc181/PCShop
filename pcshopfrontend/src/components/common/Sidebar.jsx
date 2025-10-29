@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { List, ShoppingCart, User as UserIcon, Menu } from "lucide-react";
 import { Link } from "react-router";
-import { getCategories } from "../services/categoryService";
-import { Skeleton } from "./ui/skeleton";
+import { getCategories } from "../../services/categoryService";
+import { Skeleton } from "../ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
