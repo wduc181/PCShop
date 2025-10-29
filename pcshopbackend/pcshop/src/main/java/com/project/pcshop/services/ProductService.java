@@ -166,4 +166,11 @@ public class ProductService implements IProductService {
         product.setIsFeatured(productFeaturedDTO.isFeatured());
         return productRepository.save(product);
     }
+
+    @Override
+    public List<Product> searchProducts(String keyword) {
+        return productRepository.findByNameContainingIgnoreCase(keyword);
+    }
+
+
 }

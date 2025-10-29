@@ -332,6 +332,17 @@ public class ProductController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchProduct(
+            @RequestParam String keyword
+    ) {
+        List<Product> products = productService.searchProducts(keyword);
+        List<ProductResponse> productResponses = products.stream()
+                .map(ProductResponse::fromProduct)
+                .toList();
+        return ResponseEntity.ok(productResponses);
+    }
 }
 
 
