@@ -19,17 +19,11 @@ const Sidebar = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Popover + dialogs state
   const [saving, setSaving] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const [pwOpen, setPwOpen] = useState(false);
-
-  // User info fetched from backend for popover display
   const [accountUser, setAccountUser] = useState(null);
   const [accountLoading, setAccountLoading] = useState(false);
-
-  // Edit info form state
   const toDateInputValue = (v) => {
     if (!v) return "";
     if (typeof v === "string") return v.split("T")[0] || v;
@@ -48,7 +42,6 @@ const Sidebar = () => {
   });
 
   useEffect(() => {
-    // Prefill form when edit info dialog opens (prefer server-fetched accountUser)
     if (infoOpen) {
       const src = accountUser ?? user;
       setInfoForm({
@@ -58,10 +51,8 @@ const Sidebar = () => {
         dateOfBirth: toDateInputValue(src?.dateOfBirth ?? src?.date_of_birth),
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [infoOpen]);
 
-  // Load current user info from API once authenticated
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -75,7 +66,6 @@ const Sidebar = () => {
         if (!alive) return;
         setAccountUser(data);
       } catch (e) {
-        // Silent fail; we will fallback to context user in UI
         console.warn("Không thể tải thông tin người dùng:", e);
       } finally {
         if (alive) setAccountLoading(false);
@@ -93,7 +83,6 @@ const Sidebar = () => {
         setLoading(true);
         const data = await getCategories();
         if (!mounted) return;
-        // Normalize to array of { id, name } supporting both array or wrapped object
         const raw = Array.isArray(data) ? data : (data?.categories || []);
         const list = raw.map((c) => ({
           id: c.id ?? c.category_id ?? c.ID,
@@ -112,7 +101,6 @@ const Sidebar = () => {
     };
   }, []);
 
-  // Generate slug path to be consistent with ProductsByCategoryPage resolver
   const slugify = (s = "") =>
     s
       .toString()
@@ -138,7 +126,7 @@ const Sidebar = () => {
           <span>Giỏ hàng</span>
         </Link>
 
-        {/* Header danh mục */}
+        {/* danh mục */}
         <div className="flex items-center gap-2 px-6 py-3 border-b border-gray-700">
           <List className="w-4 h-4" />
           <span className="uppercase font-semibold tracking-wide text-sm">
@@ -147,8 +135,7 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Category list (scrollable) */}
-  <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {loading && (
           <div className="mt-2 space-y-2 px-6">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -180,7 +167,7 @@ const Sidebar = () => {
         )}
       </div>
 
-      {/* Bottom user card or login */}
+      {/* Phần người dùng */}
       <div className="px-6 py-3 border-t border-gray-700 shrink-0">
         {isAuthenticated ? (
           <div className="bg-gray-800 rounded-md px-3 py-2 flex items-center justify-between">
@@ -226,10 +213,16 @@ const Sidebar = () => {
                           {accountUser?.fullName ?? accountUser?.fullname ?? user?.fullName ?? user?.fullname ?? "Người dùng"}
                         </div>
                         <div className="text-gray-400 truncate">
-                          {accountUser?.phoneNumber ?? accountUser?.phone_number ?? user?.phoneNumber ?? "-"}
+                          SĐT: {accountUser?.phoneNumber ?? accountUser?.phone_number ?? user?.phoneNumber ?? "-"}
                         </div>
                         <div className="text-gray-400 truncate">
-                          {accountUser?.email ?? user?.email ?? "-"}
+                          Email: {accountUser?.email ?? user?.email ?? "-"}
+                        </div>
+                        <div className="text-gray-400 truncate">
+                          Địa chỉ: {accountUser?.address ?? user?.address ?? "-"}
+                        </div>
+                        <div className="text-gray-400 truncate">
+                          Sinh nhật: {toDateInputValue(accountUser?.dateOfBirth ?? accountUser?.date_of_birth ?? user?.dateOfBirth ?? user?.date_of_birth) || "-"}
                         </div>
                       </>
                     )}
@@ -263,7 +256,6 @@ const Sidebar = () => {
           </Link>
         )}
       </div>
-      {/* Edit Info Dialog */}
       <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
         <DialogContent>
           <DialogHeader>
@@ -308,7 +300,6 @@ const Sidebar = () => {
                     dateOfBirth: infoForm.dateOfBirth || undefined,
                   });
                   toast.success("Cập nhật thông tin thành công");
-                    // Refresh account info to reflect changes in popover
                     try {
                       const refreshed = await getUser();
                       setAccountUser(refreshed);
@@ -328,7 +319,6 @@ const Sidebar = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Change Password Dialog */}
       <Dialog open={pwOpen} onOpenChange={setPwOpen}>
         <DialogContent>
           <DialogHeader>
@@ -346,7 +336,6 @@ const Sidebar = () => {
 
 export default Sidebar;
 
-// Inline component: Change Password Form
 const ChangePasswordForm = ({ onCancel, onDone }) => {
   const [oldPw, setOldPw] = useState("");
   const [newPw, setNewPw] = useState("");

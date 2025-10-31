@@ -46,13 +46,12 @@ public class JwtTokenUtil {
             claims.put("authorities", Collections.singletonList("ROLE_" + roleName));
         } catch (Exception ignored) {}
         try {
-            String token = Jwts.builder()
+            return Jwts.builder()
                     .setClaims(claims)
                     .setSubject(user.getPhoneNumber())
                     .setExpiration(new Date(System.currentTimeMillis() + expiration * 1000L))
                     .signWith(getSecretKey(), SignatureAlgorithm.HS256)
                     .compact();
-            return token;
         } catch (Exception e) {
             throw new InvalidParamException("Error creating JWT token: " + e.getMessage());
         }
