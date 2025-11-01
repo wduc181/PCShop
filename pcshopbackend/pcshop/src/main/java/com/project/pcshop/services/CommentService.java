@@ -1,5 +1,6 @@
 package com.project.pcshop.services;
 
+import com.project.pcshop.components.SecurityUtil;
 import com.project.pcshop.dtos.CommentDTO;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.exceptions.PermissionDenyException;
@@ -12,86 +13,108 @@ import com.project.pcshop.repositories.UserRepository;
 import com.project.pcshop.services.interfaces.ICommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class CommentService implements ICommentService {
+
 	private final CommentRepository commentRepository;
 	private final ProductRepository productRepository;
 	private final UserRepository userRepository;
+	private final SecurityUtil securityUtil;
 
 	@Override
-	@Transactional
-	public Comment createComment(CommentDTO dto) throws DataNotFoundException {
-		if (dto == null) throw new IllegalArgumentException("CommentDTO is null");
+	public Comment createComment(CommentDTO commentDTO) throws Exception {
+		Long currentUserId = securityUtil.getCurrentUserId();
+		if (currentUserId == null) throw new PermissionDenyException("Unauthorized");
 
-		Product product = productRepository.findById(dto.getProductId())
+		Product product = productRepository.findById(commentDTO.getProductId())
 				.orElseThrow(() -> new DataNotFoundException("Product not found"));
-		User user = userRepository.findById(dto.getUserId())
+		User user = userRepository.findById(currentUserId)
 				.orElseThrow(() -> new DataNotFoundException("User not found"));
-
 		Comment root = null;
-		if (dto.getRootCommentId() != null) {
-			root = commentRepository.findById(dto.getRootCommentId())
+		if (commentDTO.getRootCommentId() != null) {
+			root = commentRepository.findById(commentDTO.getRootCommentId())
 					.orElseThrow(() -> new DataNotFoundException("Root comment not found"));
 			if (!root.getProduct().getId().equals(product.getId())) {
 				throw new IllegalArgumentException("Root comment does not belong to this product");
 			}
 		}
 
-		Comment c = Comment.builder()
+		Comment newComment = Comment.builder()
 				.product(product)
 				.user(user)
 				.rootComment(root)
-				.content(dto.getContent())
+				.content(commentDTO.getContent())
 				.edited(false)
 				.active(true)
 				.build();
-		return commentRepository.save(c);
+		return commentRepository.save(newComment);
 	}
 
 	@Override
-	public Page<Comment> getRootCommentsByProduct(Long productId, Pageable pageable) {
+	public Page<Comment> getRootCommentsByProduct(Long productId, int page, int size, String sort) {
+		Sort sortByCreatedAt = Sort.by("createdAt");
+		if ("asc".equalsIgnoreCase(sort)) sortByCreatedAt = sortByCreatedAt.ascending();
+        else sortByCreatedAt = sortByCreatedAt.descending();
+
+		Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, sortByCreatedAt);
+
 		return commentRepository.findByProduct_IdAndRootCommentIsNullAndActiveTrue(productId, pageable);
 	}
 
 	@Override
-	public Page<Comment> getReplies(Long rootCommentId, Pageable pageable) {
+	public Page<Comment> getReplies(Long rootCommentId, int page, int size, String sort) {
+		Sort sortByCreatedAt = Sort.by("createdAt");
+		if ("desc".equalsIgnoreCase(sort)) sortByCreatedAt = sortByCreatedAt.descending();
+        else sortByCreatedAt = sortByCreatedAt.ascending();
+
+        Pageable pageable = PageRequest.of(Math.max(page - 1, 0), size, sortByCreatedAt);
+
 		return commentRepository.findByRootComment_IdAndActiveTrue(rootCommentId, pageable);
 	}
 
 	@Override
-	@Transactional
-	public Comment updateComment(Long commentId, Long userId, String content, boolean isAdmin) throws DataNotFoundException {
-		Comment c = commentRepository.findById(commentId)
+	public Comment updateComment(Long commentId, String content) throws Exception {
+		Comment existingComment = commentRepository.findById(commentId)
 				.orElseThrow(() -> new DataNotFoundException("Comment not found"));
-		if (!c.isActive()) {
-			throw new DataNotFoundException("Comment is deactivated");
+		if (!existingComment.isActive()) {
+			throw new DataNotFoundException("Comment is unavailable to access");
 		}
-		Long ownerId = c.getUser() != null ? c.getUser().getId() : null;
-		boolean owner = ownerId != null && ownerId.equals(userId);
-		if (!(isAdmin || owner)) {
+
+		Long userId = securityUtil.getCurrentUserId();
+		boolean isAdmin = securityUtil.currentUserIsAdmin();
+		Long ownerId = existingComment.getUser() != null ? existingComment.getUser().getId() : null;
+		boolean isOwner = ownerId != null && ownerId.equals(userId);
+		if (!(isAdmin || isOwner)) {
 			throw new PermissionDenyException("You don't have permission to edit this comment");
 		}
-		c.setContent(content);
-		c.setEdited(true);
-		return commentRepository.save(c);
+
+        existingComment.setContent(content);
+        existingComment.setEdited(true);
+
+		return commentRepository.save(existingComment);
 	}
 
-	@Override
-	@Transactional
-	public void deleteComment(Long commentId, Long userId, boolean isAdmin) throws DataNotFoundException {
-		Comment c = commentRepository.findById(commentId)
+    @Override
+	public void deleteComment(Long commentId) throws Exception {
+		Comment existingComment = commentRepository.findById(commentId)
 				.orElseThrow(() -> new DataNotFoundException("Comment not found"));
-		Long ownerId = c.getUser() != null ? c.getUser().getId() : null;
-		boolean owner = ownerId != null && ownerId.equals(userId);
-		if (!(isAdmin || owner)) {
+
+		Long userId = securityUtil.getCurrentUserId();
+		boolean isAdmin = securityUtil.currentUserIsAdmin();
+		Long ownerId = existingComment.getUser() != null ? existingComment.getUser().getId() : null;
+		boolean isOwner = ownerId != null && ownerId.equals(userId);
+		if (!(isAdmin || isOwner)) {
 			throw new PermissionDenyException("You don't have permission to delete this comment");
 		}
-		c.setActive(false);
-		commentRepository.save(c);
+        existingComment.setActive(false);
+
+		commentRepository.save(existingComment);
 	}
 }
