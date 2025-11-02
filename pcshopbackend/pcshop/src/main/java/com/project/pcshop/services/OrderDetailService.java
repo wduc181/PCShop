@@ -1,6 +1,6 @@
 package com.project.pcshop.services;
 
-import com.project.pcshop.models.OrderDetail;
+import com.project.pcshop.models.entities.OrderDetail;
 import com.project.pcshop.repositories.OrderDetailRepository;
 import com.project.pcshop.services.interfaces.IOrderDetailService;
 import lombok.RequiredArgsConstructor;

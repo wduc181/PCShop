@@ -1,6 +1,6 @@
 package com.project.pcshop.responses;
 
-import com.project.pcshop.models.Comment;
+import com.project.pcshop.models.entities.Comment;
 import lombok.*;
 
 import java.time.LocalDateTime;

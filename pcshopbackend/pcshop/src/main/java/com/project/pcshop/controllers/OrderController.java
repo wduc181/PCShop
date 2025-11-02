@@ -1,7 +1,7 @@
 package com.project.pcshop.controllers;
 
 import com.project.pcshop.dtos.OrderDTO;
-import com.project.pcshop.models.Order;
+import com.project.pcshop.models.entities.Order;
 import com.project.pcshop.responses.OrderResponse;
 import com.project.pcshop.services.interfaces.IOrderService;
 import jakarta.validation.Valid;

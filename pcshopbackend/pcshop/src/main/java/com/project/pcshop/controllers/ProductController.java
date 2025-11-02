@@ -4,8 +4,8 @@ import com.project.pcshop.dtos.ProductDTO;
 import com.project.pcshop.dtos.ProductDiscountDTO;
 import com.project.pcshop.dtos.ProductFeaturedDTO;
 import com.project.pcshop.dtos.ProductImageDTO;
-import com.project.pcshop.models.Product;
-import com.project.pcshop.models.ProductImage;
+import com.project.pcshop.models.entities.Product;
+import com.project.pcshop.models.entities.ProductImage;
 import com.project.pcshop.responses.ApiMessageResponse;
 import com.project.pcshop.responses.ProductListResponse;
 import com.project.pcshop.responses.ProductResponse;
@@ -75,11 +75,14 @@ public class ProductController {
         Sort sortSpec = Sort.by("createdAt").descending();
         if (sort != null) {
             String s = sort.trim().toLowerCase();
-            if (s.equals("discount")) {
-                sortSpec = Sort.by("discount").descending();
-            } else if (s.equals("featured")) {
-                sortSpec = Sort.by("isFeatured").descending();
-            }
+            sortSpec = switch (s) {
+                case "discount" -> Sort.by("discount").descending();
+                case "featured" -> Sort.by("isFeatured").descending();
+                case "price_asc" -> Sort.by("price").ascending();
+                case "price_desc" -> Sort.by("price").descending();
+                case "alphabet" -> Sort.by("name").ascending();
+                default -> sortSpec;
+            };
         }
         return sortSpec;
     }
@@ -87,13 +90,14 @@ public class ProductController {
     @GetMapping("")
     public ResponseEntity<ProductListResponse> getProducts(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int limit,
-            @RequestParam(required = false) String sort
+            @RequestParam(defaultValue = "15") int limit,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String searchKey
     ) {
         Sort sortSpec = sortProductsBy(sort);
         PageRequest pageRequest = PageRequest.of(page - 1, limit, sortSpec);
 
-        Page<Product> productPage = productService.getAllProducts(pageRequest);
+        Page<Product> productPage = productService.getAllProducts(pageRequest, searchKey);
 
         List<ProductResponse> products = productPage
                 .map(ProductResponse::fromProduct)

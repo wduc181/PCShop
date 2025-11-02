@@ -1,9 +1,9 @@
 package com.project.pcshop.services;
 
 import com.project.pcshop.dtos.CartItemsDTO;
-import com.project.pcshop.models.CartItems;
-import com.project.pcshop.models.Product;
-import com.project.pcshop.models.User;
+import com.project.pcshop.models.entities.CartItems;
+import com.project.pcshop.models.entities.Product;
+import com.project.pcshop.models.entities.User;
 import com.project.pcshop.repositories.CartItemsRepository;
 import com.project.pcshop.repositories.ProductRepository;
 import com.project.pcshop.repositories.UserRepository;

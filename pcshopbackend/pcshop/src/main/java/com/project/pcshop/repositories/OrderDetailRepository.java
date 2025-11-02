@@ -1,6 +1,6 @@
 package com.project.pcshop.repositories;
 
-import com.project.pcshop.models.OrderDetail;
+import com.project.pcshop.models.entities.OrderDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

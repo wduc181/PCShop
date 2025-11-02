@@ -1,6 +1,6 @@
 package com.project.pcshop.repositories;
 
-import com.project.pcshop.models.Product;
+import com.project.pcshop.models.entities.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,5 +12,6 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByCategory_Id(Long categoryId, Pageable pageable);
     Page<Product> findByBrand_Id(Long brandId, Pageable pageable);
+    Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
     List<Product> findByNameContainingIgnoreCase(String name);
 }

@@ -1,7 +1,7 @@
 package com.project.pcshop.components;
 
 import com.project.pcshop.exceptions.InvalidParamException;
-import com.project.pcshop.models.User;
+import com.project.pcshop.models.entities.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

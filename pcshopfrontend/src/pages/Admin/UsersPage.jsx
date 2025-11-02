@@ -18,7 +18,7 @@ import { getUsers, updateUserInfo } from "@/services/userService";
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
   const [page, setPage] = useState(1);
-  const limit = 10; // backend default limit
+  const limit = 10;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -68,7 +68,6 @@ const UsersPage = () => {
     });
     setEditOpen(true);
   };
-  // Bỏ nút xóa: không còn xử lý xóa tại đây
 
   const handleSubmitEdit = async () => {
     if (!editingUser) return;
@@ -97,7 +96,6 @@ const UsersPage = () => {
 
   return (
     <AdminLayout>
-      {/* Nền caro */}
       <div
         className="absolute inset-0 z-0 pointer-events-none"
         style={{
@@ -109,7 +107,6 @@ const UsersPage = () => {
         }}
       />
 
-      {/* Nội dung */}
       <div className="relative z-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Người dùng</h1>
@@ -132,14 +129,11 @@ const UsersPage = () => {
             email: u.email,
             phoneNumber: u.phoneNumber,
             address: u.address,
-            // Hiển thị ngày sinh dạng YYYY-MM-DD nếu có
             dateOfBirth: toDateInputValue(u.dateOfBirth),
-            // Backend trả về 'authority' trong UserResponse
             role: u.authority || "USER",
             createdAt: u.createdAt ? new Date(u.createdAt).toLocaleString("vi-VN") : "",
           }))}
           onEdit={handleEdit}
-          // Bỏ nút xóa bằng cách tùy biến actions chỉ có nút Sửa
           actionHeader="Hành động"
           renderActions={(item) => (
             <Button variant="outline" size="sm" onClick={() => handleEdit(item.id)}>
@@ -156,7 +150,6 @@ const UsersPage = () => {
           />
         </div>
 
-        {/* Edit dialog */}
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
           <DialogContent>
             <DialogHeader>

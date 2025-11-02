@@ -1,23 +1,24 @@
-package com.project.pcshop.models;
+package com.project.pcshop.models.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
 
+@Table(name = "roles")
+@Data
 @Entity
-@Table(name = "categories")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Category {
+public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    public static String ADMIN = "ADMIN";
+    public static String USER = "USER";
 }

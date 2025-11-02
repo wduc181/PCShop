@@ -3,7 +3,7 @@ package com.project.pcshop.controllers;
 import com.project.pcshop.dtos.UserChangePwDTO;
 import com.project.pcshop.dtos.UserRegisterDTO;
 import com.project.pcshop.dtos.UserLoginDTO;
-import com.project.pcshop.models.User;
+import com.project.pcshop.models.entities.User;
 import com.project.pcshop.responses.UserResponse;
 import com.project.pcshop.services.interfaces.IAuthService;
 import jakarta.validation.Valid;

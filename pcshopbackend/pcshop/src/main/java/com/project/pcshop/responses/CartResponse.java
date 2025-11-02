@@ -1,6 +1,6 @@
 package com.project.pcshop.responses;
 
-import com.project.pcshop.models.CartItems;
+import com.project.pcshop.models.entities.CartItems;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

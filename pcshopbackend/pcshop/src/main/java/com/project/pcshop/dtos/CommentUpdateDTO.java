@@ -9,7 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UpdateCommentDTO {
+public class CommentUpdateDTO {
     @NotBlank(message = "invalid comment")
     @Size(max = 5000, message = "comment is too long")
     private String content;

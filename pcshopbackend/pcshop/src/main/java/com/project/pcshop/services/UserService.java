@@ -4,7 +4,7 @@ import com.project.pcshop.components.SecurityUtil;
 import com.project.pcshop.dtos.UserUpdateDTO;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.exceptions.PermissionDenyException;
-import com.project.pcshop.models.User;
+import com.project.pcshop.models.entities.User;
 import com.project.pcshop.repositories.UserRepository;
 import com.project.pcshop.services.interfaces.IUserService;
 import lombok.RequiredArgsConstructor;

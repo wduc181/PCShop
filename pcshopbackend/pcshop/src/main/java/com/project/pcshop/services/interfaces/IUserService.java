@@ -1,7 +1,7 @@
 package com.project.pcshop.services.interfaces;
 
 import com.project.pcshop.dtos.UserUpdateDTO;
-import com.project.pcshop.models.User;
+import com.project.pcshop.models.entities.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

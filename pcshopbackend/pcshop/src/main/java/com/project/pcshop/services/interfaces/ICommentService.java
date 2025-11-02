@@ -1,8 +1,7 @@
 package com.project.pcshop.services.interfaces;
 
 import com.project.pcshop.dtos.CommentDTO;
-import com.project.pcshop.exceptions.DataNotFoundException;
-import com.project.pcshop.models.Comment;
+import com.project.pcshop.models.entities.Comment;
 import org.springframework.data.domain.Page;
 
 public interface ICommentService {

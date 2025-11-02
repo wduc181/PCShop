@@ -1,6 +1,6 @@
 package com.project.pcshop.responses;
 
-import com.project.pcshop.models.Category;
+import com.project.pcshop.models.entities.Category;
 import lombok.*;
 
 @Data

@@ -6,10 +6,10 @@ import com.project.pcshop.dtos.ProductFeaturedDTO;
 import com.project.pcshop.dtos.ProductImageDTO;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.exceptions.InvalidParamException;
-import com.project.pcshop.models.Brand;
-import com.project.pcshop.models.Category;
-import com.project.pcshop.models.Product;
-import com.project.pcshop.models.ProductImage;
+import com.project.pcshop.models.entities.Brand;
+import com.project.pcshop.models.entities.Category;
+import com.project.pcshop.models.entities.Product;
+import com.project.pcshop.models.entities.ProductImage;
 import com.project.pcshop.repositories.BrandRepository;
 import com.project.pcshop.repositories.CategoryRepository;
 import com.project.pcshop.repositories.ProductImageRepository;
@@ -104,8 +104,11 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public Page<Product> getAllProducts(Pageable pageable) {
-        return productRepository.findAll(pageable);
+    public Page<Product> getAllProducts(Pageable pageable, String searchKey) {
+        if (searchKey == null || searchKey.trim().isEmpty()) {
+            return productRepository.findAll(pageable);
+        }
+        return productRepository.findByNameContainingIgnoreCase(searchKey.trim(), pageable);
     }
 
     @Override

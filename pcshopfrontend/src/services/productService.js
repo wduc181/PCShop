@@ -2,10 +2,11 @@ import { apiRequest } from "./api";
 
 const BASE_URL = "/products";
 
-export const getAllProducts = async (page = 1, limit = 20, sort) => {
+export const getAllProducts = async (page = 1, limit = 20, sort, searchKey) => {
   try {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (sort) params.set("sort", sort);
+    if (searchKey && String(searchKey).trim()) params.set("searchKey", String(searchKey).trim());
     const response = await apiRequest(`${BASE_URL}?${params.toString()}`, {
       method: "GET",
     });

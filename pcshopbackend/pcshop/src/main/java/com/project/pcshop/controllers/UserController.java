@@ -1,7 +1,7 @@
 package com.project.pcshop.controllers;
 
 import com.project.pcshop.dtos.UserUpdateDTO;
-import com.project.pcshop.models.User;
+import com.project.pcshop.models.entities.User;
 import com.project.pcshop.responses.UserResponse;
 import com.project.pcshop.services.interfaces.IUserService;
 import lombok.RequiredArgsConstructor;

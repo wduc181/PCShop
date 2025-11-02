@@ -138,22 +138,22 @@ const ProductsByCategory = () => {
               Mới nhất
             </Button>
             <Button
-              variant={sort === "asc" ? "default" : "outline"}
+              variant={sort === "price_asc" ? "default" : "outline"}
               size="sm"
               className="!text-black"
               onClick={() => {
-                setSort("asc");
+                setSort("price_asc");
                 setPage(1);
               }}
             >
               Giá tăng
             </Button>
             <Button
-              variant={sort === "desc" ? "default" : "outline"}
+              variant={sort === "price_desc" ? "default" : "outline"}
               size="sm"
               className="!text-black"
               onClick={() => {
-                setSort("desc");
+                setSort("price_desc");
                 setPage(1);
               }}
             >

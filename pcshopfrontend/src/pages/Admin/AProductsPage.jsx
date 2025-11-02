@@ -15,19 +15,21 @@ const ProductsPage = () => {
   const [products, setProducts] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [sortKey, setSortKey] = useState("");
   const productFormRef = useRef();
   const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
-  const [discountTarget, setDiscountTarget] = useState(null); // { id, name, currentDiscount }
+  const [discountTarget, setDiscountTarget] = useState(null); 
   const [discountValue, setDiscountValue] = useState(0);
 
   useEffect(() => {
-    fetchProducts(page);
+    fetchProducts(page, searchText, sortKey);
   }, [page]);
 
-  const fetchProducts = async (pageNumber) => {
+  const fetchProducts = async (pageNumber, keyword = "", sort = "") => {
     try {
       setLoading(true);
-      const res = await getAllProducts(pageNumber, 10);
+      const res = await getAllProducts(pageNumber, 10, sort || undefined, keyword);
       setProducts(res.products || []);
       setTotalPages(res.totalPages || 1);
     } catch (error) {
@@ -37,6 +39,19 @@ const ProductsPage = () => {
     }
   };
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setPage(1);
+      fetchProducts(1, searchText, sortKey);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchText]);
+
+  useEffect(() => {
+    setPage(1);
+    fetchProducts(1, searchText, sortKey);
+  }, [sortKey]);
+
   const handleEdit = (id) => {
     productFormRef.current?.openEdit(id);
   };
@@ -45,9 +60,9 @@ const ProductsPage = () => {
     if (!window.confirm("Bạn có chắc muốn xóa sản phẩm này không?")) return;
     try {
       setLoading(true);
-      await deleteProduct(id);
-      alert("Đã xóa sản phẩm thành công!");
-      await fetchProducts(page);
+  await deleteProduct(id);
+  alert("Đã xóa sản phẩm thành công!");
+  await fetchProducts(page, searchText, sortKey);
     } catch (error) {
       console.error("Lỗi xóa sản phẩm:", error);
       alert(error.response?.data?.message || "Không thể xóa sản phẩm.");
@@ -63,12 +78,11 @@ const ProductsPage = () => {
   };
 
   const toggleRecommend = async (product) => {
-    // cố gắng đọc cờ từ cả featured và isFeatured để tương thích backend
     const isFeatured = Boolean(product?.featured ?? product?.isFeatured ?? false);
     try {
       setLoading(true);
-      await recommendProduct(product.id, !isFeatured);
-      await fetchProducts(page);
+  await recommendProduct(product.id, !isFeatured);
+  await fetchProducts(page, searchText, sortKey);
     } catch (error) {
       console.error("Lỗi cập nhật recommend:", error);
       alert(error.response?.data?.message || "Không thể cập nhật recommend.");
@@ -86,9 +100,9 @@ const ProductsPage = () => {
     }
     try {
       setLoading(true);
-      await discountProduct(discountTarget.id, value);
-      setDiscountDialogOpen(false);
-      await fetchProducts(page);
+  await discountProduct(discountTarget.id, value);
+  setDiscountDialogOpen(false);
+  await fetchProducts(page, searchText, sortKey);
     } catch (error) {
       console.error("Lỗi áp dụng giảm giá:", error);
       alert(error.response?.data?.message || "Không thể áp dụng giảm giá.");
@@ -99,7 +113,6 @@ const ProductsPage = () => {
 
   return (
     <AdminLayout>
-      {/* Nền hoa văn */}
       <div
         className="absolute inset-0 z-0 pointer-events-none"
         style={{
@@ -112,15 +125,33 @@ const ProductsPage = () => {
       />
 
       <div className="relative z-10">
-        {/* Tiêu đề + nút thêm */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
           <h1 className="text-2xl font-bold">Sản phẩm</h1>
-          <Button onClick={() => productFormRef.current?.openCreate()}>
-            + Thêm sản phẩm
-          </Button>
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <Input
+              placeholder="Tìm kiếm sản phẩm..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-full md:w-72"
+            />
+            <select
+              className="border rounded-md px-3 py-2 text-sm bg-white"
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value)}
+              title="Sắp xếp"
+            >
+              <option value="">Mặc định</option>
+              <option value="featured">Nổi bật</option>
+              <option value="discount">Giảm giá</option>
+              <option value="price_asc">Giá tăng dần</option>
+              <option value="price_desc">Giá giảm dần</option>
+            </select>
+            <Button onClick={() => productFormRef.current?.openCreate()}>
+              + Thêm sản phẩm
+            </Button>
+          </div>
         </div>
 
-        {/* Bảng sản phẩm */}
         <div className="bg-white rounded-xl shadow-md p-6">
           {loading ? (
             <div className="text-center py-8">
@@ -207,7 +238,6 @@ const ProductsPage = () => {
             />
           )}
 
-          {/* Phân trang */}
           <div className="mt-4">
             <AdminPagination
               currentPage={page}
@@ -218,13 +248,11 @@ const ProductsPage = () => {
         </div>
       </div>
 
-      {/* Form thêm/sửa sản phẩm */}
       <ProductFormDialog
         ref={productFormRef}
-        onSuccess={() => fetchProducts(page)}
+        onSuccess={() => fetchProducts(page, searchText, sortKey)}
       />
 
-      {/* Dialog áp dụng giảm giá */}
       <Dialog open={discountDialogOpen} onOpenChange={setDiscountDialogOpen}>
         <DialogContent>
           <DialogHeader>

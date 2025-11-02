@@ -1,7 +1,7 @@
 package com.project.pcshop.services;
 
 import com.project.pcshop.dtos.BrandDTO;
-import com.project.pcshop.models.Brand;
+import com.project.pcshop.models.entities.Brand;
 import com.project.pcshop.repositories.BrandRepository;
 import com.project.pcshop.services.interfaces.IBrandService;
 import lombok.RequiredArgsConstructor;

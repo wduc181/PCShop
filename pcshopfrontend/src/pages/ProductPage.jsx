@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import MainLayout from "@/components/Layouts/MainLayout";
-import { useLocation, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { getProductById, getProductImages } from "@/services/productService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,7 +32,6 @@ import {
 
 const ProductPage = () => {
 	const { id } = useParams();
-	const location = useLocation();
 	const navigate = useNavigate();
 	const { isAuthenticated, token } = useAuth();
 	const [product, setProduct] = useState(null);
@@ -43,9 +42,8 @@ const ProductPage = () => {
 	const [images, setImages] = useState([]);
 	const [imgIndex, setImgIndex] = useState(0);
 
+	// Resolve current user id without exposing it in the URL
 	const userId = useMemo(() => {
-		const params = new URLSearchParams(location.search);
-		const qUid = params.get("uid");
 		let stored = null;
 		try { stored = localStorage.getItem("user_id"); } catch (_) {}
 		let decodedUid = null;
@@ -60,10 +58,10 @@ const ProductPage = () => {
 				}
 			}
 		} catch (_) {}
-		const val = qUid ?? stored ?? decodedUid ?? null;
+		const val = stored ?? decodedUid ?? null;
 		const num = val != null ? Number(val) : null;
 		return Number.isFinite(num) && num > 0 ? num : null;
-	}, [location.search, token]);
+	}, [token]);
 
 	useEffect(() => {
 		let ignore = false;
@@ -460,7 +458,6 @@ const CommentsSection = ({ productId }) => {
 			return;
 		}
 		setExpanded((p) => ({ ...p, [commentId]: true }));
-		// fetch if not loaded
 		if (!replies[commentId]) {
 			try {
 				setRepliesLoading((p) => ({ ...p, [commentId]: true }));

@@ -1,6 +1,5 @@
-package com.project.pcshop.models;
+package com.project.pcshop.models.entities;
 
-import com.project.pcshop.models.entities.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;

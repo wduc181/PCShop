@@ -1,7 +1,7 @@
 package com.project.pcshop.services;
 
 import com.project.pcshop.dtos.OrderDTO;
-import com.project.pcshop.models.*;
+import com.project.pcshop.models.entities.*;
 import com.project.pcshop.repositories.*;
 import com.project.pcshop.services.interfaces.IOrderService;
 import lombok.RequiredArgsConstructor;

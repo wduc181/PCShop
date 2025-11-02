@@ -1,8 +1,8 @@
 package com.project.pcshop.controllers;
 
 import com.project.pcshop.dtos.CommentDTO;
-import com.project.pcshop.dtos.UpdateCommentDTO;
-import com.project.pcshop.models.Comment;
+import com.project.pcshop.dtos.CommentUpdateDTO;
+import com.project.pcshop.models.entities.Comment;
 import com.project.pcshop.responses.ApiMessageResponse;
 import com.project.pcshop.responses.CommentResponse;
 import com.project.pcshop.services.interfaces.ICommentService;
@@ -72,7 +72,7 @@ public class CommentController {
     @PutMapping("/{commentId}")
     public ResponseEntity<?> updateComment(
             @PathVariable Long commentId,
-            @Valid @RequestBody UpdateCommentDTO body
+            @Valid @RequestBody CommentUpdateDTO body
     ) {
         try {
             Comment existingComment = commentService.updateComment(commentId, body.getContent());

@@ -1,7 +1,7 @@
 package com.project.pcshop.controllers;
 
 import com.project.pcshop.dtos.CategoryDTO;
-import com.project.pcshop.models.Category;
+import com.project.pcshop.models.entities.Category;
 import com.project.pcshop.responses.CategoryResponse;
 import com.project.pcshop.services.interfaces.ICategoryService;
 import jakarta.validation.Valid;

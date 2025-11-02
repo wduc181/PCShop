@@ -1,7 +1,7 @@
 package com.project.pcshop.services.interfaces;
 
 import com.project.pcshop.dtos.CartItemsDTO;
-import com.project.pcshop.models.CartItems;
+import com.project.pcshop.models.entities.CartItems;
 
 import java.util.List;
 

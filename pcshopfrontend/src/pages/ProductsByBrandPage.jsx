@@ -129,8 +129,8 @@ const ProductsByBrand = () => {
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Sắp xếp:</span>
             <Button variant={sort === "" ? "default" : "outline"} size="sm" onClick={() => { setSort(""); setPage(1); }}>Mới nhất</Button>
-            <Button variant={sort === "asc" ? "default" : "outline"} size="sm" onClick={() => { setSort("asc"); setPage(1); }}>Giá tăng</Button>
-            <Button variant={sort === "desc" ? "default" : "outline"} size="sm" onClick={() => { setSort("desc"); setPage(1); }}>Giá giảm</Button>
+            <Button variant={sort === "price_asc" ? "default" : "outline"} size="sm" onClick={() => { setSort("price_asc"); setPage(1); }}>Giá tăng</Button>
+            <Button variant={sort === "price_desc" ? "default" : "outline"} size="sm" onClick={() => { setSort("price_desc"); setPage(1); }}>Giá giảm</Button>
             <Button variant={sort === "alphabet" ? "default" : "outline"} size="sm" onClick={() => { setSort("alphabet"); setPage(1); }}>A-Z</Button>
           </div>
         </div>

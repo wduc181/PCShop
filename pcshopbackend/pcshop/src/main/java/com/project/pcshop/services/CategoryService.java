@@ -1,7 +1,7 @@
 package com.project.pcshop.services;
 
 import com.project.pcshop.dtos.CategoryDTO;
-import com.project.pcshop.models.Category;
+import com.project.pcshop.models.entities.Category;
 import com.project.pcshop.repositories.CategoryRepository;
 import com.project.pcshop.services.interfaces.ICategoryService;
 import lombok.RequiredArgsConstructor;

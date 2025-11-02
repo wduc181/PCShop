@@ -1,7 +1,7 @@
 package com.project.pcshop.controllers;
 
 import com.project.pcshop.dtos.CartItemsDTO;
-import com.project.pcshop.models.CartItems;
+import com.project.pcshop.models.entities.CartItems;
 import com.project.pcshop.responses.CartResponse;
 import com.project.pcshop.services.interfaces.ICartItemsService;
 import jakarta.validation.Valid;

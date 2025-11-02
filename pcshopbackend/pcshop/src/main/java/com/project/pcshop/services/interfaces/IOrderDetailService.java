@@ -1,6 +1,6 @@
 package com.project.pcshop.services.interfaces;
 
-import com.project.pcshop.models.OrderDetail;
+import com.project.pcshop.models.entities.OrderDetail;
 
 import java.util.List;
 
