@@ -144,3 +144,15 @@ CREATE TABLE comments (
     INDEX idx_comments_root (root_comment_id),
     INDEX idx_comments_product_created (product_id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE product_images
+DROP FOREIGN KEY product_images_ibfk_1,
+ADD FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE;
+
+ALTER TABLE cart_items
+DROP FOREIGN KEY cart_items_ibfk_2,
+ADD FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE;
+
+ALTER TABLE order_details
+DROP FOREIGN KEY order_details_ibfk_2,
+ADD FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE;

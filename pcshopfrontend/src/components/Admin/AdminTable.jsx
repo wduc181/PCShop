@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 
-const AdminTable = ({ columns, data, onEdit, onDelete, renderActions }) => {
+const AdminTable = ({ columns, data, onEdit, onDelete, renderActions, actionHeader = "Actions" }) => {
   return (
     <div className="overflow-x-auto bg-white shadow rounded-lg">
       <table className="w-full border-collapse">
@@ -10,7 +10,7 @@ const AdminTable = ({ columns, data, onEdit, onDelete, renderActions }) => {
             {columns.map((col, idx) => (
               <th key={idx} className="p-3 border-b">{col}</th>
             ))}
-            <th className="p-3 border-b text-center">Actions</th>
+            <th className="p-3 border-b text-center">{actionHeader}</th>
           </tr>
         </thead>
         <tbody>

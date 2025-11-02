@@ -14,7 +14,7 @@ public class SecurityUtil {
 
     private final UserRepository userRepository;
 
-    public Long getCurrentUserId() {
+    public Long getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) return null;
 

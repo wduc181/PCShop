@@ -6,6 +6,7 @@ import com.project.pcshop.dtos.ProductFeaturedDTO;
 import com.project.pcshop.dtos.ProductImageDTO;
 import com.project.pcshop.models.Product;
 import com.project.pcshop.models.ProductImage;
+import com.project.pcshop.responses.ApiMessageResponse;
 import com.project.pcshop.responses.ProductListResponse;
 import com.project.pcshop.responses.ProductResponse;
 import com.project.pcshop.services.interfaces.IProductService;
@@ -37,7 +38,6 @@ import java.util.UUID;
 @RequestMapping("${api.prefix}/products")
 @RequiredArgsConstructor
 public class ProductController {
-
     private final IProductService productService;
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -136,27 +136,9 @@ public class ProductController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String sort
     ) {
-        Sort sortSpec = Sort.by("createdAt").descending();
-        if (sort != null) {
-            String s = sort.trim().toLowerCase();
-            switch (s) {
-                case "asc":
-                    sortSpec = Sort.by("price").ascending();
-                    break;
-                case "desc":
-                    sortSpec = Sort.by("price").descending();
-                    break;
-                case "alphabet":
-                    sortSpec = Sort.by("name").ascending();
-                    break;
-                default:
-                    break;
-            }
-        }
-
+        Sort sortSpec = sortProductsBy(sort);
         PageRequest pageRequest = PageRequest.of(page - 1, size, sortSpec);
         Page<Product> productPage = productService.getProductsByBrand(brandId, pageRequest);
-
         List<ProductResponse> products = productPage
                 .map(ProductResponse::fromProduct)
                 .getContent();
@@ -166,6 +148,17 @@ public class ProductController {
                 .currentPage(page)
                 .totalPages(productPage.getTotalPages())
                 .build());
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchProduct(
+            @RequestParam String keyword
+    ) {
+        List<Product> products = productService.searchProducts(keyword);
+        List<ProductResponse> productResponses = products.stream()
+                .map(ProductResponse::fromProduct)
+                .toList();
+        return ResponseEntity.ok(productResponses);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -191,11 +184,55 @@ public class ProductController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/discount")
+    public ResponseEntity<?> discountProduct(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductDiscountDTO  productDiscountDTO,
+            BindingResult result
+    ) {
+        try {
+            if (result.hasErrors()) {
+                List<String> errorMessages = result.getFieldErrors()
+                        .stream()
+                        .map(FieldError::getDefaultMessage)
+                        .toList();
+                return ResponseEntity.badRequest().body(errorMessages);
+            }
+            Product updated = productService.discountProduct(id, productDiscountDTO);
+            return ResponseEntity.ok(ProductResponse.fromProduct(updated));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/recommend")
+    public ResponseEntity<?> recommendProduct(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductFeaturedDTO productFeaturedDTO,
+            BindingResult result
+    ) {
+        try {
+            if (result.hasErrors()) {
+                List<String> errorMessages = result.getFieldErrors()
+                        .stream()
+                        .map(FieldError::getDefaultMessage)
+                        .toList();
+                return ResponseEntity.badRequest().body(errorMessages);
+            }
+            Product updated = productService.recommendProduct(id, productFeaturedDTO);
+            return ResponseEntity.ok(ProductResponse.fromProduct(updated));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         try {
             productService.deleteProduct(id);
-            return ResponseEntity.ok("Product deleted successfully");
+            return ResponseEntity.ok(new ApiMessageResponse("Product deleted successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -285,63 +322,8 @@ public class ProductController {
                     .toList();
             return ResponseEntity.ok(imageFileNames);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}/discount")
-    public ResponseEntity<?> discountProduct(
-            @PathVariable Long id,
-            @Valid @RequestBody ProductDiscountDTO  productDiscountDTO,
-            BindingResult result
-    ) {
-        try {
-            if (result.hasErrors()) {
-                List<String> errorMessages = result.getFieldErrors()
-                        .stream()
-                        .map(FieldError::getDefaultMessage)
-                        .toList();
-                return ResponseEntity.badRequest().body(errorMessages);
-            }
-            Product updated = productService.discountProduct(id, productDiscountDTO);
-            return ResponseEntity.ok(ProductResponse.fromProduct(updated));
-        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}/recommend")
-    public ResponseEntity<?> recommendProduct(
-            @PathVariable Long id,
-            @Valid @RequestBody ProductFeaturedDTO productFeaturedDTO,
-            BindingResult result
-    ) {
-        try {
-            if (result.hasErrors()) {
-                List<String> errorMessages = result.getFieldErrors()
-                        .stream()
-                        .map(FieldError::getDefaultMessage)
-                        .toList();
-                return ResponseEntity.badRequest().body(errorMessages);
-            }
-            Product updated = productService.recommendProduct(id, productFeaturedDTO);
-            return ResponseEntity.ok(ProductResponse.fromProduct(updated));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<?> searchProduct(
-            @RequestParam String keyword
-    ) {
-        List<Product> products = productService.searchProducts(keyword);
-        List<ProductResponse> productResponses = products.stream()
-                .map(ProductResponse::fromProduct)
-                .toList();
-        return ResponseEntity.ok(productResponses);
     }
 }
 

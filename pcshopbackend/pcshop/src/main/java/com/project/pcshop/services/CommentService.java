@@ -17,7 +17,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +29,7 @@ public class CommentService implements ICommentService {
 
 	@Override
 	public Comment createComment(CommentDTO commentDTO) throws Exception {
-		Long currentUserId = securityUtil.getCurrentUserId();
+		Long currentUserId = securityUtil.getCurrentUser();
 		if (currentUserId == null) throw new PermissionDenyException("Unauthorized");
 
 		Product product = productRepository.findById(commentDTO.getProductId())
@@ -83,15 +82,11 @@ public class CommentService implements ICommentService {
 	public Comment updateComment(Long commentId, String content) throws Exception {
 		Comment existingComment = commentRepository.findById(commentId)
 				.orElseThrow(() -> new DataNotFoundException("Comment not found"));
-		if (!existingComment.isActive()) {
-			throw new DataNotFoundException("Comment is unavailable to access");
-		}
 
-		Long userId = securityUtil.getCurrentUserId();
-		boolean isAdmin = securityUtil.currentUserIsAdmin();
+		Long userId = securityUtil.getCurrentUser();
 		Long ownerId = existingComment.getUser() != null ? existingComment.getUser().getId() : null;
 		boolean isOwner = ownerId != null && ownerId.equals(userId);
-		if (!(isAdmin || isOwner)) {
+		if (!isOwner) {
 			throw new PermissionDenyException("You don't have permission to edit this comment");
 		}
 
@@ -106,15 +101,13 @@ public class CommentService implements ICommentService {
 		Comment existingComment = commentRepository.findById(commentId)
 				.orElseThrow(() -> new DataNotFoundException("Comment not found"));
 
-		Long userId = securityUtil.getCurrentUserId();
+		Long userId = securityUtil.getCurrentUser();
 		boolean isAdmin = securityUtil.currentUserIsAdmin();
 		Long ownerId = existingComment.getUser() != null ? existingComment.getUser().getId() : null;
 		boolean isOwner = ownerId != null && ownerId.equals(userId);
 		if (!(isAdmin || isOwner)) {
 			throw new PermissionDenyException("You don't have permission to delete this comment");
 		}
-        existingComment.setActive(false);
-
-		commentRepository.save(existingComment);
+        commentRepository.delete(existingComment);
 	}
 }

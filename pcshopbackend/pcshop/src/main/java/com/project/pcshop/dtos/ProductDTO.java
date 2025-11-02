@@ -29,6 +29,7 @@ public class ProductDTO {
 
     private String description;
 
+    @NotBlank(message = "category id can't be null")
     @JsonProperty("category_id")
     private Long categoryId;
 

@@ -25,32 +25,23 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomePage />} />
-
           <Route path="/users/auth" element={<AuthPage />} />
-
           <Route
             path="/category/:categoryName"
             element={<ProductsByCategory />}
           />
-
           <Route path="/brand/:brandName" element={<ProductsByBrand />} />
-
           <Route path="/products/:id" element={<ProductPage />} />
           <Route path="/products" element={<ProductsPage />} />
-
           <Route path="/cart-items*" element={<CartPage />} />
-
-          
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:id" element={<OrderDetailPage />} />
-
           <Route path="/admin/categories" element={<CategoriesPage />} />
           <Route path="/admin/users" element={<UsersPage />} />
           <Route path="/admin/brands" element={<BrandsPage />} />
           <Route path="/admin/order-history" element={<OrdersHistoryPage />} />
           <Route path="/admin/products" element={<AProductsPage />} />
           <Route path="/admin/orders" element={<AOrdersPage />} />
-
           <Route path="/*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -2,6 +2,7 @@ package com.project.pcshop.controllers;
 
 import com.project.pcshop.dtos.UserUpdateDTO;
 import com.project.pcshop.models.User;
+import com.project.pcshop.responses.UserResponse;
 import com.project.pcshop.services.interfaces.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,11 +22,13 @@ import java.util.List;
 public class UserController {
     private final IUserService userService;
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<?> getUser(@PathVariable("id") Long id) {
         try {
-            return ResponseEntity.ok(userService.getUserById(id));
+            User user = userService.getUserById(id);
+            UserResponse userResponse = UserResponse.fromUser(user);
+            return ResponseEntity.ok(userResponse);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -33,7 +36,7 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("")
-    public ResponseEntity<List<User>> getUsers(
+    public ResponseEntity<List<UserResponse>> getUsers(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit
     ) {
@@ -43,11 +46,12 @@ public class UserController {
                 Sort.by("createdAt").descending()
         );
 
-        Page<User> productPage = userService.getUsers(pageRequest);
-
-        return ResponseEntity.ok(productPage.getContent());
+        Page<User> usersPage = userService.getUsers(pageRequest);
+        Page<UserResponse> userResponsesPage = usersPage.map(UserResponse::fromUser);
+        return ResponseEntity.ok(userResponsesPage.getContent());
     }
 
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PutMapping("/changeInfo/{id}")
     public ResponseEntity<?> updateUser(
             @PathVariable("id") Long id,
@@ -63,7 +67,8 @@ public class UserController {
                 return ResponseEntity.badRequest().body(errorMessages);
             }
             User user = userService.updateUser(id, userUpdateDTO);
-            return ResponseEntity.ok(user);
+            UserResponse userResponse = UserResponse.fromUser(user);
+            return ResponseEntity.ok(userResponse);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

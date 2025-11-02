@@ -23,6 +23,7 @@ const ProductsByCategory = () => {
 
   const [categoryId, setCategoryId] = useState(null);
   const [categoryLabel, setCategoryLabel] = useState("");
+  const [categoryDesc, setCategoryDesc] = useState("");
   const [loadingCategory, setLoadingCategory] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -47,9 +48,12 @@ const ProductsByCategory = () => {
         if (match) {
           setCategoryId(match.id);
           setCategoryLabel(match.name);
+          const desc = match.description ?? match.desc ?? match.details ?? match.note ?? match.Description ?? "";
+          setCategoryDesc(typeof desc === "string" ? desc : "");
         } else {
           setCategoryId(null);
           setCategoryLabel("");
+          setCategoryDesc("");
           setNotFound(true);
         }
         setPage(1);
@@ -109,7 +113,13 @@ const ProductsByCategory = () => {
               {loadingCategory ? "Đang tải danh mục..." : notFound ? "Không tìm thấy danh mục" : title}
             </h1>
             {!loadingCategory && !notFound && (
-              <p className="text-white/70 text-sm mt-1">Lọc và sắp xếp sản phẩm theo nhu cầu của bạn</p>
+              <>
+                {categoryDesc ? (
+                  <p className="text-white/80 text-sm mt-1 line-clamp-2">{categoryDesc}</p>
+                ) : (
+                  <p className="text-white/70 text-sm mt-1">Lọc và sắp xếp sản phẩm theo nhu cầu của bạn</p>
+                )}
+              </>
             )}
           </div>
 

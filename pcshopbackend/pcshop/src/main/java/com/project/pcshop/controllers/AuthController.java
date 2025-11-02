@@ -4,6 +4,7 @@ import com.project.pcshop.dtos.UserChangePwDTO;
 import com.project.pcshop.dtos.UserRegisterDTO;
 import com.project.pcshop.dtos.UserLoginDTO;
 import com.project.pcshop.models.User;
+import com.project.pcshop.responses.UserResponse;
 import com.project.pcshop.services.interfaces.IAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +36,8 @@ public class AuthController {
                 return ResponseEntity.badRequest().body("Password doesn't match.");
             }
             User newUser = authService.createUser(userRegisterDTO);
-            return ResponseEntity.ok(newUser);
+            UserResponse newUserResponse = UserResponse.fromUser(newUser);
+            return ResponseEntity.ok(newUserResponse);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -45,7 +47,6 @@ public class AuthController {
     public ResponseEntity<String> login(@Valid @RequestBody UserLoginDTO userLoginDTO) {
         try {
             String token = authService.login(userLoginDTO.getPhoneNumber(), userLoginDTO.getPassword());
-
             return ResponseEntity.ok(token);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -67,7 +68,8 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(errorMessages);
             }
             User user = authService.changePassword(id, userChangePwDTO);
-            return ResponseEntity.ok(user);
+            UserResponse userResponse = UserResponse.fromUser(user);
+            return ResponseEntity.ok(userResponse);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

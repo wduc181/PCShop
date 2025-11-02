@@ -1,7 +1,6 @@
 export const API_BASE_URL = (import.meta?.env?.VITE_API_BASE_URL || "http://localhost:8088").replace(/\/$/, "");
 export const API_PREFIX = (import.meta?.env?.VITE_API_PREFIX || "/api/ver1").replace(/\/$/, "");
 export const API_URL = `${API_BASE_URL}${API_PREFIX}`;
-
 export const UPLOADS_PRODUCTS = (import.meta?.env?.VITE_UPLOADS_PRODUCTS || "/uploads/products").replace(/\/$/, "");
 export const UPLOADS_BRANDS = (import.meta?.env?.VITE_UPLOADS_BRANDS || "/uploads/brands").replace(/\/$/, "");
 

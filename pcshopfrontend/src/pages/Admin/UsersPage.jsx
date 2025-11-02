@@ -68,9 +68,7 @@ const UsersPage = () => {
     });
     setEditOpen(true);
   };
-  const handleDelete = (id) => {
-    toast("Chức năng xóa người dùng chưa được hỗ trợ");
-  };
+  // Bỏ nút xóa: không còn xử lý xóa tại đây
 
   const handleSubmitEdit = async () => {
     if (!editingUser) return;
@@ -115,7 +113,6 @@ const UsersPage = () => {
       <div className="relative z-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Người dùng</h1>
-          <Button>Thêm người dùng</Button>
         </div>
 
         <AdminTable
@@ -135,12 +132,20 @@ const UsersPage = () => {
             email: u.email,
             phoneNumber: u.phoneNumber,
             address: u.address,
-            dateOfBirth: u.dateOfBirth,
-            role: u.role?.name || "UNKNOWN",
-            createdAt: new Date(u.createdAt).toLocaleString("vi-VN"),
+            // Hiển thị ngày sinh dạng YYYY-MM-DD nếu có
+            dateOfBirth: toDateInputValue(u.dateOfBirth),
+            // Backend trả về 'authority' trong UserResponse
+            role: u.authority || "USER",
+            createdAt: u.createdAt ? new Date(u.createdAt).toLocaleString("vi-VN") : "",
           }))}
           onEdit={handleEdit}
-          onDelete={handleDelete}
+          // Bỏ nút xóa bằng cách tùy biến actions chỉ có nút Sửa
+          actionHeader="Hành động"
+          renderActions={(item) => (
+            <Button variant="outline" size="sm" onClick={() => handleEdit(item.id)}>
+              Sửa
+            </Button>
+          )}
         />
 
         <div className="mt-4">
