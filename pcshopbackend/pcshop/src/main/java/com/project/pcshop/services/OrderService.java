@@ -129,7 +129,7 @@ public class OrderService implements IOrderService {
         Order existingOrder = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         existingOrder.setStatus(orderUpdateStatusDTO.getStatus());
-        if (existingOrder.getStatus().equals(OrderStatus.shipped)) {
+        if (orderUpdateStatusDTO.getStatus().equals(OrderStatus.delivered)) {
             existingOrder.setPaymentStatus(PaymentStatus.paid);
         }
         return orderRepository.save(existingOrder);

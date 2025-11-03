@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router";
 import MainLayout from "@/components/Layouts/MainLayout";
 import { useAuth } from "@/context/AuthContext";
-import { getOrdersByUser, cancelOrder } from "@/services/orderService";
+import { getOrdersByUser, cancelOrder, updateOrderInfo } from "@/services/orderService";
 import {
   Pagination,
   PaginationContent,
@@ -13,6 +13,7 @@ import {
   PaginationNext,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
+import OrderInfoDialog from "@/components/common/OrderInfoDialog";
 
 const OrdersPage = () => {
   const navigate = useNavigate();
@@ -28,6 +29,18 @@ const OrdersPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const [cancellingId, setCancellingId] = useState(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [editForm, setEditForm] = useState({
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    shippingAddress: "",
+    note: "",
+    paymentMethod: "",
+    shippingMethod: "",
+  });
+  const [saving, setSaving] = useState(false);
 
   const userId = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -50,7 +63,6 @@ const OrdersPage = () => {
       const res = await getOrdersByUser(userId, page, size, token);
       const list = Array.isArray(res?.content) ? res.content : Array.isArray(res) ? res : [];
       setOrders(list);
-      // capture pagination meta when backend returns Page<>
       if (res && typeof res === "object") {
         const tp = Number(res.totalPages ?? 1);
         const te = Number(res.totalElements ?? list.length ?? 0);
@@ -76,18 +88,14 @@ const OrdersPage = () => {
       return;
     }
     loadOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, userId, page, size]);
 
-  // Sync page with querystring (?page=) for deep linking while preserving other params (e.g., uid)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const qPage = Number(params.get("page"));
     if (Number.isFinite(qPage) && qPage > 0 && qPage !== page) {
       setPage(qPage);
     }
-    // Only on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateQueryPage = (nextPage) => {
@@ -119,6 +127,49 @@ const OrdersPage = () => {
       return String(s);
     } catch (_) {
       return String(s);
+    }
+  };
+  const STATUS_EN2VI = {
+    pending: "Chờ xử lý",
+    processing: "Đang xử lý",
+    shipped: "Đã gửi",
+    delivered: "Đã giao",
+    cancelled: "Đã hủy",
+    canceled: "Đã hủy",
+  };
+  const statusToVI = (val) => {
+    if (!val) return "—";
+    const key = String(val).toLowerCase();
+    return STATUS_EN2VI[key] ?? String(val);
+  };
+
+  const openEdit = (order) => {
+    setEditingOrder(order);
+    setEditForm({
+      fullName: order.fullName ?? "",
+      email: order.email ?? "",
+      phoneNumber: order.phoneNumber ?? "",
+      shippingAddress: order.shippingAddress ?? "",
+      note: order.note ?? "",
+      paymentMethod: order.paymentMethod ?? "",
+      shippingMethod: order.shippingMethod ?? "",
+    });
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingOrder) return;
+    try {
+      setSaving(true);
+      await updateOrderInfo(editingOrder.id, editForm);
+      setEditOpen(false);
+      setEditingOrder(null);
+      await loadOrders();
+    } catch (e) {
+      console.error("Cập nhật đơn hàng thất bại", e);
+      alert("Cập nhật đơn hàng thất bại. Vui lòng thử lại sau.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -153,7 +204,7 @@ const OrdersPage = () => {
                     >
                       <td className="p-3 font-medium text-gray-800">{order.id}</td>
                       <td className="p-3">{formatDate(order.orderDate)}</td>
-                      <td className="p-3">{order.status}</td>
+                      <td className="p-3">{statusToVI(order.status)}</td>
                       <td className="p-3 text-red-600 font-semibold">{formatMoney(order.totalPrice)}</td>
                       <td className="p-3">
                         <div className="flex items-center justify-center gap-2">
@@ -171,6 +222,22 @@ const OrdersPage = () => {
                           >
                             Xem sản phẩm
                           </Button>
+                          {(() => {
+                            const status = String(order.status || "").toLowerCase();
+                            const isCancelled = status === "cancelled" || status === "canceled" || status === "cancel";
+                            const canEdit = status === "pending"; // backend only allows edit when pending
+                            return (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={!canEdit}
+                                title={canEdit ? "Sửa thông tin nhận hàng" : "Chỉ có thể sửa khi đơn ở trạng thái chờ xử lý"}
+                                onClick={() => openEdit(order)}
+                              >
+                                Sửa thông tin
+                              </Button>
+                            );
+                          })()}
                           {(() => {
                             const status = String(order.status || "").toLowerCase();
                             const isCancelled = status === "cancelled" || status === "canceled" || status === "cancel";
@@ -333,6 +400,14 @@ const OrdersPage = () => {
           </div>
         )}
       </div>
+      <OrderInfoDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        form={editForm}
+        setForm={setEditForm}
+        saving={saving}
+        onSave={handleSaveEdit}
+      />
     </MainLayout>
   );
 };

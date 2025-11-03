@@ -2,17 +2,17 @@ import { apiRequest } from "./api";
 
 const BASE_URL = "/orders";
 
-// Normalize a status string: lowercase, trim, remove Vietnamese diacritics
 const normalizeKey = (s) => {
 	if (s == null) return "";
 	return String(s)
 		.toLowerCase()
 		.trim()
 		.normalize("NFD")
-		.replace(/[\u0300-\u036f]/g, "");
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/đ/g, "d")
+		.replace(/Đ/g, "d");
 };
 
-// Map Vietnamese → English enum values for OrderStatus
 const ORDER_STATUS_MAP_VI2EN = {
 	// Vietnamese
 	"cho xu ly": "pending",
@@ -22,7 +22,6 @@ const ORDER_STATUS_MAP_VI2EN = {
 	"da huy": "cancelled",
 	"bi huy": "cancelled",
 	"huy": "cancelled",
-	// English passthroughs (in case callers use English already)
 	pending: "pending",
 	processing: "processing",
 	shipped: "shipped",
@@ -31,14 +30,12 @@ const ORDER_STATUS_MAP_VI2EN = {
 	cancelled: "cancelled",
 };
 
-// Map Vietnamese → English enum values for PaymentStatus
 const PAYMENT_STATUS_MAP_VI2EN = {
-	// Vietnamese
 	"cho thanh toan": "pending",
 	"chua thanh toan": "pending",
 	"da thanh toan": "paid",
 	"hoan tien": "refunded",
-	// English passthroughs
+
 	pending: "pending",
 	paid: "paid",
 	refunded: "refunded",
@@ -78,7 +75,6 @@ const toOrderDTO = (payload = {}) => {
 	const psEn = toEnglishPaymentStatus(paymentStatus);
 
 	return {
-		// một số backend có thể yêu cầu order_id trong body
 		...(orderId != null ? { order_id: Number(orderId) } : {}),
 		user_id: uid,
 		full_name: fullName ?? "",
@@ -204,7 +200,6 @@ export const cancelOrder = async (orderId, authToken) => {
   if (!orderId) throw new Error("orderId is required");
   try {
     const headers = authToken ? { Authorization: `Bearer ${authToken}` } : undefined;
-    // Using POST for cancel action; backend should handle status change and validation
     return await apiRequest(`${BASE_URL}/${orderId}/cancel`, {
 			method: "PUT",
       headers,
@@ -235,4 +230,3 @@ export const updateOrderStatus = async (orderId, status, authToken) => {
 		throw error;
 	}
 };
-

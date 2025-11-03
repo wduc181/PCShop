@@ -5,9 +5,11 @@ import AdminPagination from "@/components/Admin/AdminPagination";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/context/AuthContext";
-import { getAllOrders, updateOrder, normalizeOrderUserId } from "@/services/orderService";
+import { getAllOrders, updateOrderInfo, updateOrderStatus, cancelOrder, normalizeOrderUserId } from "@/services/orderService";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
+import OrderInfoDialog from "@/components/common/OrderInfoDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const AOrdersPage = () => {
   const navigate = useNavigate();
@@ -17,11 +19,43 @@ const AOrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [editingId, setEditingId] = useState(null);
-  const [draftStatus, setDraftStatus] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [editForm, setEditForm] = useState({
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    shippingAddress: "",
+    note: "",
+    paymentMethod: "",
+    shippingMethod: "",
+  });
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const [statusDlgOpen, setStatusDlgOpen] = useState(false);
+  const [statusDlgOrder, setStatusDlgOrder] = useState(null);
+  const [statusValue, setStatusValue] = useState("Chờ xử lý");
+  const [savingStatus, setSavingStatus] = useState(false);
 
   const finalStatuses = new Set(["delivered", "cancelled"]);
   const processingStatuses = ["pending", "processing", "shipped"];
+
+  // Display mappings for statuses
+  const ORDER_STATUS_EN2VI = {
+    pending: "Chờ xử lý",
+    processing: "Đang xử lý",
+    shipped: "Đã gửi",
+    delivered: "Đã giao",
+    cancelled: "Đã hủy",
+    canceled: "Đã hủy",
+  };
+  const PAYMENT_STATUS_EN2VI = {
+    pending: "Chưa thanh toán",
+    paid: "Đã thanh toán",
+    refunded: "Hoàn tiền",
+  };
+  const statusToVI = (s) => ORDER_STATUS_EN2VI[String(s || "").toLowerCase()] ?? (s || "—");
+  const paymentToVI = (s) => PAYMENT_STATUS_EN2VI[String(s || "").toLowerCase()] ?? (s || "—");
 
   const loadOrders = async () => {
     try {
@@ -58,49 +92,57 @@ const AOrdersPage = () => {
     return base.filter((o) => String(o.status).toLowerCase() === String(statusFilter).toLowerCase());
   }, [orders, statusFilter]);
 
-  const startEdit = (id) => {
-    setEditingId(id);
-    const o = orders.find((x) => x.id === id);
-    setDraftStatus(String(o?.status || "").toLowerCase());
+  const openEditInfo = (order) => {
+    setEditingOrder(order);
+    setEditForm({
+      fullName: order.fullName ?? "",
+      email: order.email ?? "",
+      phoneNumber: order.phoneNumber ?? "",
+      shippingAddress: order.shippingAddress ?? "",
+      note: order.note ?? "",
+      paymentMethod: order.paymentMethod ?? "",
+      shippingMethod: order.shippingMethod ?? "",
+    });
+    setEditOpen(true);
   };
 
-  const cancelEdit = () => {
-    setEditingId(null);
-    setDraftStatus("");
-  };
-
-  const saveEdit = async (id) => {
+  const saveEditInfo = async () => {
+    if (!editingOrder) return;
     try {
-      const o = orders.find((x) => x.id === id);
-      if (!o) return;
-      const current = String(o.status || "").toLowerCase();
-      if (!draftStatus || draftStatus === current) {
-        toast.info("Không có thay đổi để cập nhật");
-        cancelEdit();
-        return;
-      }
-      const dto = {
-        orderId: id,
-        userId: normalizeOrderUserId(o),
-        fullName: o.fullName,
-        email: o.email,
-        phoneNumber: o.phoneNumber,
-        shippingAddress: o.shippingAddress,
-        note: o.note,
-        totalPrice: o.totalPrice,
-        paymentMethod: o.paymentMethod,
-        shippingMethod: o.shippingMethod,
-        trackingNumber: o.trackingNumber,
-        status: draftStatus || o.status,
-      };
-      await updateOrder(id, dto);
-      toast.success("Cập nhật đơn hàng thành công");
-      setEditingId(null);
-      setDraftStatus("");
+      setSavingEdit(true);
+      await updateOrderInfo(editingOrder.id, editForm);
+      toast.success("Đã lưu thông tin nhận hàng");
+      setEditOpen(false);
+      setEditingOrder(null);
       loadOrders();
     } catch (e) {
-      console.error("Update order failed:", e);
+      console.error("Cập nhật thông tin nhận hàng thất bại:", e);
       toast.error(e?.message || "Cập nhật thất bại");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const openUpdateStatus = (order) => {
+    setStatusDlgOrder(order);
+    setStatusValue(statusToVI(order.status));
+    setStatusDlgOpen(true);
+  };
+
+  const saveUpdateStatus = async () => {
+    if (!statusDlgOrder) return;
+    try {
+      setSavingStatus(true);
+      await updateOrderStatus(statusDlgOrder.id, statusValue, token);
+      toast.success("Đã cập nhật trạng thái đơn hàng");
+      setStatusDlgOpen(false);
+      setStatusDlgOrder(null);
+      loadOrders();
+    } catch (e) {
+      console.error("Cập nhật trạng thái thất bại:", e);
+      toast.error(e?.message || "Cập nhật thất bại");
+    } finally {
+      setSavingStatus(false);
     }
   };
 
@@ -124,7 +166,7 @@ const AOrdersPage = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Đơn hàng (chưa hoàn tất)</h1>
           <div className="flex items-center gap-3">
-            {/* Bộ lọc trạng thái theo enum backend */}
+            {/* Bộ lọc trạng thái (hiển thị tiếng Việt, giữ giá trị tiếng Anh) */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[220px]">
                 <SelectValue placeholder="Lọc theo trạng thái" />
@@ -132,7 +174,7 @@ const AOrdersPage = () => {
               <SelectContent>
                 <SelectItem value="all">Tất cả</SelectItem>
                 {processingStatuses.map((s) => (
-                  <SelectItem key={s} value={s}>{s.toUpperCase()}</SelectItem>
+                  <SelectItem key={s} value={s}>{statusToVI(s)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -151,42 +193,55 @@ const AOrdersPage = () => {
               id: o.id,
               customer: o.fullName || o.user?.fullName || o.email || "—",
               total_price: Number(o.totalPrice || 0).toLocaleString("vi-VN"),
-              status: editingId === o.id ? (
-                <Select value={draftStatus} onValueChange={setDraftStatus}>
-                  <SelectTrigger className="w-[180px] h-8 text-sm">
-                    <SelectValue placeholder="Chọn trạng thái" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {processingStatuses.map((s) => (
-                      <SelectItem key={s} value={s}>{s.toUpperCase()}</SelectItem>
-                    ))}
-                    <SelectItem value="delivered">DELIVERED</SelectItem>
-                    <SelectItem value="cancelled">CANCELLED</SelectItem>
-                  </SelectContent>
-                </Select>
-              ) : (
-                <span>{String(o.status || "").toUpperCase()}</span>
-              ),
+              status: <span>{statusToVI(o.status)}</span>,
               created_at: o.orderDate ? new Date(o.orderDate).toLocaleString("vi-VN") : "—",
-              updated_at: String(o.paymentStatus || "").toUpperCase(),
+              updated_at: paymentToVI(o.paymentStatus),
             }))}
-            renderActions={(item) => (
-              editingId === item.id ? (
-                <div className="flex items-center gap-2">
-                  <Button size="sm" onClick={() => saveEdit(item.id)}>Lưu</Button>
-                  <Button size="sm" variant="ghost" onClick={cancelEdit}>Huỷ</Button>
-                </div>
-              ) : (
+            actionHeader="Hành động"
+            renderActions={(item) => {
+              const o = orders.find((x) => x.id === item.id);
+              const status = String(o?.status || "").toLowerCase();
+              const isFinal = finalStatuses.has(status);
+              return (
                 <div className="flex items-center gap-2 justify-center">
-                  <Button variant="outline" size="sm" onClick={() => startEdit(item.id)}>
-                    Sửa
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={isFinal}
+                    onClick={async () => {
+                      const ok = window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này?");
+                      if (!ok) return;
+                      try {
+                        await cancelOrder(item.id, token);
+                        toast.success("Đã hủy đơn hàng");
+                        loadOrders();
+                      } catch (e) {
+                        console.error("Hủy đơn thất bại:", e);
+                        toast.error(e?.message || "Hủy đơn thất bại");
+                      }
+                    }}
+                  >
+                    Hủy đơn
                   </Button>
-                  <Button variant="destructive" size="sm" onClick={() => console.log("Delete order:", item.id)}>
-                    Xóa
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={status !== "pending"}
+                    title={status !== "pending" ? "Chỉ sửa khi đơn ở trạng thái Chờ xử lý" : undefined}
+                    onClick={() => openEditInfo(o)}
+                  >
+                    Sửa thông tin nhận hàng
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => openUpdateStatus(o)}
+                  >
+                    Cập nhật trạng thái
                   </Button>
                 </div>
-              )
-            )}
+              );
+            }}
           />
         )}
 
@@ -194,6 +249,47 @@ const AOrdersPage = () => {
           <AdminPagination currentPage={page} totalPages={4} onPageChange={setPage} />
         </div>
       </div>
+
+      {/* Dialogs */}
+      <OrderInfoDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        form={editForm}
+        setForm={setEditForm}
+        saving={savingEdit}
+        onSave={saveEditInfo}
+      />
+
+      <Dialog open={statusDlgOpen} onOpenChange={setStatusDlgOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cập nhật trạng thái đơn hàng</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm text-gray-600">Trạng thái</label>
+            <Select value={statusValue} onValueChange={setStatusValue}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Chọn trạng thái" />
+              </SelectTrigger>
+              <SelectContent>
+                {[
+                  "Chờ xử lý",
+                  "Đang xử lý",
+                  "Đã gửi",
+                  "Đã giao",
+                  "Đã hủy",
+                ].map((vn) => (
+                  <SelectItem key={vn} value={vn}>{vn}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStatusDlgOpen(false)} disabled={savingStatus}>Hủy</Button>
+            <Button onClick={saveUpdateStatus} disabled={savingStatus}>{savingStatus ? "Đang lưu..." : "Lưu"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

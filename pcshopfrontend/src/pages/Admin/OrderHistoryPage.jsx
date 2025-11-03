@@ -57,9 +57,24 @@ const OrderHistoryPage = () => {
   const handleView = (id) => navigate(`/orders/${id}`);
   const handleDelete = (id) => console.log("Xóa khỏi lịch sử:", id);
 
+  const ORDER_STATUS_EN2VI = {
+    pending: "Chờ xử lý",
+    processing: "Đang xử lý",
+    shipped: "Đã gửi",
+    delivered: "Đã giao",
+    cancelled: "Đã hủy",
+    canceled: "Đã hủy",
+  };
+  const PAYMENT_STATUS_EN2VI = {
+    pending: "Chưa thanh toán",
+    paid: "Đã thanh toán",
+    refunded: "Hoàn tiền",
+  };
+  const statusToVI = (s) => ORDER_STATUS_EN2VI[String(s || "").toLowerCase()] ?? (s || "—");
+  const paymentToVI = (s) => PAYMENT_STATUS_EN2VI[String(s || "").toLowerCase()] ?? (s || "—");
+
   return (
     <AdminLayout>
-      {/* Nền caro */}
       <div
         className="absolute inset-0 z-0 pointer-events-none"
         style={{
@@ -87,10 +102,11 @@ const OrderHistoryPage = () => {
               id: o.id,
               customer: o.fullName || o.user?.fullName || o.email || "—",
               total_price: Number(o.totalPrice || 0).toLocaleString("vi-VN"),
-              status: String(o.status || "").toUpperCase(),
+              status: statusToVI(o.status),
               created_at: o.orderDate ? new Date(o.orderDate).toLocaleString("vi-VN") : "—",
-              updated_at: String(o.paymentStatus || "").toUpperCase(),
+              updated_at: paymentToVI(o.paymentStatus),
             }))}
+            actionHeader="Hành động"
             renderActions={(item) => (
               <div className="flex items-center gap-2 justify-center">
                 <Button size="sm" variant="outline" onClick={() => handleView(item.id)}>
