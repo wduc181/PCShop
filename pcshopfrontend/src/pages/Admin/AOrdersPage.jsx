@@ -5,11 +5,12 @@ import AdminPagination from "@/components/Admin/AdminPagination";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/context/AuthContext";
-import { getAllOrders, updateOrderInfo, updateOrderStatus, cancelOrder, normalizeOrderUserId } from "@/services/orderService";
+import { getAllOrders, updateOrderInfo, updateOrderStatus, cancelOrder } from "@/services/orderService";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import OrderInfoDialog from "@/components/common/OrderInfoDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toVIOrderStatus, toVIPaymentStatus } from "@/lib/statusMaps";
 
 const AOrdersPage = () => {
   const navigate = useNavigate();
@@ -40,22 +41,9 @@ const AOrdersPage = () => {
   const finalStatuses = new Set(["delivered", "cancelled"]);
   const processingStatuses = ["pending", "processing", "shipped"];
 
-  // Display mappings for statuses
-  const ORDER_STATUS_EN2VI = {
-    pending: "Chờ xử lý",
-    processing: "Đang xử lý",
-    shipped: "Đã gửi",
-    delivered: "Đã giao",
-    cancelled: "Đã hủy",
-    canceled: "Đã hủy",
-  };
-  const PAYMENT_STATUS_EN2VI = {
-    pending: "Chưa thanh toán",
-    paid: "Đã thanh toán",
-    refunded: "Hoàn tiền",
-  };
-  const statusToVI = (s) => ORDER_STATUS_EN2VI[String(s || "").toLowerCase()] ?? (s || "—");
-  const paymentToVI = (s) => PAYMENT_STATUS_EN2VI[String(s || "").toLowerCase()] ?? (s || "—");
+  // Display mapping helpers
+  const statusToVI = toVIOrderStatus;
+  const paymentToVI = toVIPaymentStatus;
 
   const loadOrders = async () => {
     try {
@@ -201,14 +189,15 @@ const AOrdersPage = () => {
             renderActions={(item) => {
               const o = orders.find((x) => x.id === item.id);
               const status = String(o?.status || "").toLowerCase();
-              const isFinal = finalStatuses.has(status);
+              const canCancel = status === "pending";
               return (
                 <div className="flex items-center gap-2 justify-center">
                   <Button
                     variant="destructive"
                     size="sm"
-                    disabled={isFinal}
+                    disabled={!canCancel}
                     onClick={async () => {
+                      if (!canCancel) return;
                       const ok = window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này?");
                       if (!ok) return;
                       try {

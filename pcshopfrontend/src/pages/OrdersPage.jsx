@@ -14,6 +14,8 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import OrderInfoDialog from "@/components/common/OrderInfoDialog";
+import { toast } from "sonner";
+import { toVIOrderStatus, toVIPaymentStatus } from "@/lib/statusMaps";
 
 const OrdersPage = () => {
   const navigate = useNavigate();
@@ -129,19 +131,7 @@ const OrdersPage = () => {
       return String(s);
     }
   };
-  const STATUS_EN2VI = {
-    pending: "Chờ xử lý",
-    processing: "Đang xử lý",
-    shipped: "Đã gửi",
-    delivered: "Đã giao",
-    cancelled: "Đã hủy",
-    canceled: "Đã hủy",
-  };
-  const statusToVI = (val) => {
-    if (!val) return "—";
-    const key = String(val).toLowerCase();
-    return STATUS_EN2VI[key] ?? String(val);
-  };
+  const statusToVI = toVIOrderStatus;
 
   const openEdit = (order) => {
     setEditingOrder(order);
@@ -162,6 +152,7 @@ const OrdersPage = () => {
     try {
       setSaving(true);
       await updateOrderInfo(editingOrder.id, editForm);
+      toast.success("Đã lưu thông tin nhận hàng");
       setEditOpen(false);
       setEditingOrder(null);
       await loadOrders();
@@ -241,10 +232,18 @@ const OrdersPage = () => {
                           {(() => {
                             const status = String(order.status || "").toLowerCase();
                             const isCancelled = status === "cancelled" || status === "canceled" || status === "cancel";
+                            const canCancel = status === "pending";
                             if (isCancelled) {
                               return (
                                 <Button variant="outline" size="sm" disabled>
                                   Đã hủy
+                                </Button>
+                              );
+                            }
+                            if (!canCancel) {
+                              return (
+                                <Button variant="outline" size="sm" disabled title="Chỉ có thể hủy khi đơn ở trạng thái Chờ xử lý">
+                                  Không thể hủy
                                 </Button>
                               );
                             }
@@ -254,11 +253,14 @@ const OrdersPage = () => {
                                 size="sm"
                                 disabled={cancellingId === order.id}
                                 onClick={async () => {
+                                  const currentStatus = String(order.status || "").toLowerCase();
+                                  if (currentStatus !== "pending") return; // guard
                                   const ok = window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này?");
                                   if (!ok) return;
                                   try {
                                     setCancellingId(order.id);
                                     await cancelOrder(order.id, token);
+                                    toast.success("Đã hủy đơn hàng");
                                     await loadOrders();
                                   } catch (e) {
                                     console.error("Hủy đơn thất bại", e);
@@ -286,7 +288,7 @@ const OrdersPage = () => {
                             </div>
                             <div>
                               <div><span className="font-medium">Địa chỉ giao:</span> {order.shippingAddress || "—"}</div>
-                              <div><span className="font-medium">Thanh toán:</span> {order.paymentMethod || "—"} • {order.paymentStatus || "—"}</div>
+                              <div><span className="font-medium">Thanh toán:</span> {order.paymentMethod || "—"} • {toVIPaymentStatus(order.paymentStatus)}</div>
                               <div><span className="font-medium">Vận chuyển:</span> {order.shippingMethod || "—"}</div>
                             </div>
                           </div>

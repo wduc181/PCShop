@@ -4,6 +4,7 @@ import MainLayout from "@/components/Layouts/MainLayout";
 import { getOrderDetails } from "@/services/orderService";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { toVIOrderStatus, toVIPaymentStatus } from "@/lib/statusMaps";
 
 const OrderDetailPage = () => {
   const { id } = useParams();
@@ -25,6 +26,10 @@ const OrderDetailPage = () => {
     try { const d = new Date(s); if (!isNaN(d)) return d.toLocaleString("vi-VN"); } catch (_) {}
     return String(s);
   };
+
+  // EN -> VI mappings for display
+  const statusToVI = toVIOrderStatus;
+  const paymentToVI = toVIPaymentStatus;
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -73,9 +78,9 @@ const OrderDetailPage = () => {
             {/* Thông tin đơn hàng */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-gray-700">
               <p><span className="font-semibold">Ngày đặt:</span> {formatDate(order.orderDate)}</p>
-              <p><span className="font-semibold">Trạng thái:</span> {order.status}</p>
+              <p><span className="font-semibold">Trạng thái:</span> {statusToVI(order.status)}</p>
               <p><span className="font-semibold">Địa chỉ giao hàng:</span> {order.shippingAddress}</p>
-              <p><span className="font-semibold">Phương thức thanh toán:</span> {order.paymentMethod} • {order.paymentStatus}</p>
+              <p><span className="font-semibold">Phương thức thanh toán:</span> {order.paymentMethod} • {paymentToVI(order.paymentStatus)}</p>
               <p className="md:col-span-2">
                 <span className="font-semibold">Tổng tiền:</span>{" "}
                 <span className="text-red-600 font-bold">{formatMoney(order.totalPrice)}</span>

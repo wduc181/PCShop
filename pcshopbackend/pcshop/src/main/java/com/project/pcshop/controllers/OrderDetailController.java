@@ -29,26 +29,4 @@ public class OrderDetailController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getDetailById(@PathVariable Long id) {
-        try {
-            OrderDetail detail = orderDetailService.getOrderDetailById(id);
-            return ResponseEntity.ok(OrderDetailResponse.fromOrderDetail(detail));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteDetail(@PathVariable Long id) {
-        try {
-            orderDetailService.deleteOrderDetail(id);
-            return ResponseEntity.ok("OrderDetail deleted successfully");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
 }

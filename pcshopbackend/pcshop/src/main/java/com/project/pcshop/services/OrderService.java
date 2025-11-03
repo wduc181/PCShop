@@ -142,6 +142,9 @@ public class OrderService implements IOrderService {
         if (!(securityUtil.currentUserIsAdmin() || securityUtil.currentUserIsValid(existingOrder.getUser().getId()))) {
             throw new PermissionDenyException("You don't have permission to cancel this order");
         }
+        if (!existingOrder.getStatus().equals(OrderStatus.pending)) {
+            throw new OrderStatusException("Order status didn't allowed to cancel this order");
+        }
         existingOrder.setStatus(OrderStatus.cancelled);
         orderRepository.save(existingOrder);
     }

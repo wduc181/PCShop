@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getAllOrders } from "@/services/orderService";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
+import { toVIOrderStatus, toVIPaymentStatus } from "@/lib/statusMaps";
 
 const OrderHistoryPage = () => {
   const navigate = useNavigate();
@@ -57,21 +58,8 @@ const OrderHistoryPage = () => {
   const handleView = (id) => navigate(`/orders/${id}`);
   const handleDelete = (id) => console.log("Xóa khỏi lịch sử:", id);
 
-  const ORDER_STATUS_EN2VI = {
-    pending: "Chờ xử lý",
-    processing: "Đang xử lý",
-    shipped: "Đã gửi",
-    delivered: "Đã giao",
-    cancelled: "Đã hủy",
-    canceled: "Đã hủy",
-  };
-  const PAYMENT_STATUS_EN2VI = {
-    pending: "Chưa thanh toán",
-    paid: "Đã thanh toán",
-    refunded: "Hoàn tiền",
-  };
-  const statusToVI = (s) => ORDER_STATUS_EN2VI[String(s || "").toLowerCase()] ?? (s || "—");
-  const paymentToVI = (s) => PAYMENT_STATUS_EN2VI[String(s || "").toLowerCase()] ?? (s || "—");
+  const statusToVI = toVIOrderStatus;
+  const paymentToVI = toVIPaymentStatus;
 
   return (
     <AdminLayout>
