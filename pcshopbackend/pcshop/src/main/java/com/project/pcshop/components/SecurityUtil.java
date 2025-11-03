@@ -37,4 +37,8 @@ public class SecurityUtil {
         }
         return false;
     }
+
+    public boolean currentUserIsValid(Long userId) {
+        return getCurrentUser().equals(userId);
+    }
 }

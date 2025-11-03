@@ -1,6 +1,8 @@
 package com.project.pcshop.services;
 
+import com.project.pcshop.components.SecurityUtil;
 import com.project.pcshop.dtos.CartItemsDTO;
+import com.project.pcshop.exceptions.PermissionDenyException;
 import com.project.pcshop.models.entities.CartItems;
 import com.project.pcshop.models.entities.Product;
 import com.project.pcshop.models.entities.User;
@@ -20,13 +22,18 @@ public class CartItemsService implements ICartItemsService {
     private final CartItemsRepository cartItemsRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final SecurityUtil securityUtil;
 
     @Override
-    public List<CartItems> addItemToCart(CartItemsDTO cartItemsDTO) {
+    public void addItemToCart(CartItemsDTO cartItemsDTO) {
         User user = userRepository.findById(cartItemsDTO.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         Product product = productRepository.findById(cartItemsDTO.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
+        if (!securityUtil.currentUserIsValid(user.getId())) {
+            throw new PermissionDenyException("You don't have permission to add an item to another user's cart");
+        }
 
         CartItems cartItems = cartItemsRepository.findByUserIdAndProductId(cartItemsDTO.getUserId(), cartItemsDTO.getProductId())
                 .map(existing -> {
@@ -40,36 +47,34 @@ public class CartItemsService implements ICartItemsService {
                         .build());
 
         cartItemsRepository.save(cartItems);
-        return cartItemsRepository.findByUserId(cartItemsDTO.getUserId());
-    }
-
-    @Override
-    public List<CartItems> updateItemQuantity(Long cartItemId, Integer quantity) {
-        CartItems cartItems = cartItemsRepository.findById(cartItemId)
-                .orElseThrow(() -> new EntityNotFoundException("Cart item not found"));
-        cartItems.setQuantity(quantity);
-        cartItemsRepository.save(cartItems);
-        return cartItemsRepository.findByUserId(cartItems.getUser().getId());
-    }
-
-    @Override
-    public List<CartItems> removeItem(Long cartItemId) {
-        CartItems cartItems = cartItemsRepository.findById(cartItemId)
-                .orElseThrow(() -> new EntityNotFoundException("Cart item not found"));
-        Long userId = cartItems.getUser().getId();
-        cartItemsRepository.delete(cartItems);
-        return cartItemsRepository.findByUserId(userId);
-    }
-
-    @Override
-    public List<CartItems> clearCart(Long userId) {
-        List<CartItems> items = cartItemsRepository.findByUserId(userId);
-        cartItemsRepository.deleteAll(items);
-        return cartItemsRepository.findByUserId(userId);
     }
 
     @Override
     public List<CartItems> getCartByUser(Long userId) {
+        if (!securityUtil.currentUserIsValid(userId)) {
+            throw new PermissionDenyException("You don't have permission to view an item from another user's cart");
+        }
         return cartItemsRepository.findByUserId(userId);
+    }
+
+    @Override
+    public void updateItemQuantity(Long cartItemId, Integer quantity) {
+        CartItems cartItems = cartItemsRepository.findById(cartItemId)
+                .orElseThrow(() -> new EntityNotFoundException("Cart item not found"));
+        cartItems.setQuantity(quantity);
+        cartItemsRepository.save(cartItems);
+    }
+
+    @Override
+    public void removeItem(Long cartItemId) {
+        CartItems cartItems = cartItemsRepository.findById(cartItemId)
+                .orElseThrow(() -> new EntityNotFoundException("Cart item not found"));
+        cartItemsRepository.delete(cartItems);
+    }
+
+    @Override
+    public void clearCart(Long userId) {
+        List<CartItems> items = cartItemsRepository.findByUserId(userId);
+        cartItemsRepository.deleteAll(items);
     }
 }

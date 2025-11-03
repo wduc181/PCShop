@@ -30,11 +30,11 @@ public class BrandController {
 
     private boolean isImageFile(MultipartFile file) {
         String contentType = file.getContentType();
-        return contentType != null && contentType.startsWith("image/");
+        return contentType == null || !contentType.startsWith("image/");
     }
 
     private String storeLogoImage(MultipartFile file) throws IOException {
-        if (!isImageFile(file) || file.getOriginalFilename() == null) {
+        if (isImageFile(file) || file.getOriginalFilename() == null) {
             throw new IOException("Invalid image format.");
         }
 
@@ -64,7 +64,7 @@ public class BrandController {
             }
 
             MultipartFile logo = brandDTO.getLogoUrl();
-            if (!isImageFile(logo)) {
+            if (isImageFile(logo)) {
                 return ResponseEntity.badRequest().body("Invalid logo, must be an image file.");
             }
             if (logo.getSize() > 10 * 1024 * 1024) {
@@ -98,7 +98,7 @@ public class BrandController {
             String storedFileName = null;
             if (brandDTO.getLogoUrl() != null) {
                 MultipartFile logo = brandDTO.getLogoUrl();
-                if (!isImageFile(logo)) {
+                if (isImageFile(logo)) {
                     return ResponseEntity.badRequest().body("Invalid logo, must be an image file.");
                 }
                 if (logo.getSize() > 10 * 1024 * 1024) {

@@ -1,7 +1,10 @@
 package com.project.pcshop.controllers;
 
 import com.project.pcshop.dtos.OrderDTO;
+import com.project.pcshop.dtos.OrderUpdateInfoDTO;
+import com.project.pcshop.dtos.OrderUpdateStatusDTO;
 import com.project.pcshop.models.entities.Order;
+import com.project.pcshop.responses.ApiMessageResponse;
 import com.project.pcshop.responses.OrderResponse;
 import com.project.pcshop.services.interfaces.IOrderService;
 import jakarta.validation.Valid;
@@ -25,7 +28,7 @@ public class OrderController {
 
     private final IOrderService orderService;
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PostMapping("/from-cart/{userId}")
     public ResponseEntity<?> createOrderFromCart(
             @PathVariable Long userId,
@@ -92,11 +95,11 @@ public class OrderController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateOrder(
+    public ResponseEntity<?> updateOrderInfo(
             @PathVariable Long id,
-            @Valid @RequestBody OrderDTO orderDTO,
+            @Valid @RequestBody OrderUpdateInfoDTO orderUpdateInfoDTO,
             BindingResult result
     ) {
         try {
@@ -107,7 +110,7 @@ public class OrderController {
                         .toList();
                 return ResponseEntity.badRequest().body(errors);
             }
-            Order order = orderService.updateOrder(id, orderDTO);
+            Order order = orderService.updateOrderInfo(id, orderUpdateInfoDTO);
             return ResponseEntity.ok(OrderResponse.fromOrderWithDetails(order));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -115,11 +118,25 @@ public class OrderController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteOrder(@PathVariable Long id) {
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> updateOrderStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody OrderUpdateStatusDTO orderUpdateStatusDTO
+    ) {
         try {
-            orderService.deleteOrder(id);
-            return ResponseEntity.ok("Order deleted successfully");
+            Order order = orderService.updateOrderStatus(id, orderUpdateStatusDTO);
+            return ResponseEntity.ok(OrderResponse.fromOrderWithDetails(order));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelOrder(@PathVariable Long id) {
+        try {
+            orderService.cancelOrder(id);
+            return ResponseEntity.ok(new ApiMessageResponse("Order has been cancelled"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

@@ -2,6 +2,58 @@ import { apiRequest } from "./api";
 
 const BASE_URL = "/orders";
 
+// Normalize a status string: lowercase, trim, remove Vietnamese diacritics
+const normalizeKey = (s) => {
+	if (s == null) return "";
+	return String(s)
+		.toLowerCase()
+		.trim()
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "");
+};
+
+// Map Vietnamese → English enum values for OrderStatus
+const ORDER_STATUS_MAP_VI2EN = {
+	// Vietnamese
+	"cho xu ly": "pending",
+	"dang xu ly": "processing",
+	"da gui": "shipped",
+	"da giao": "delivered",
+	"da huy": "cancelled",
+	"bi huy": "cancelled",
+	"huy": "cancelled",
+	// English passthroughs (in case callers use English already)
+	pending: "pending",
+	processing: "processing",
+	shipped: "shipped",
+	delivered: "delivered",
+	canceled: "cancelled",
+	cancelled: "cancelled",
+};
+
+// Map Vietnamese → English enum values for PaymentStatus
+const PAYMENT_STATUS_MAP_VI2EN = {
+	// Vietnamese
+	"cho thanh toan": "pending",
+	"chua thanh toan": "pending",
+	"da thanh toan": "paid",
+	"hoan tien": "refunded",
+	// English passthroughs
+	pending: "pending",
+	paid: "paid",
+	refunded: "refunded",
+};
+
+const toEnglishOrderStatus = (val) => {
+	const key = normalizeKey(val);
+	return key ? (ORDER_STATUS_MAP_VI2EN[key] ?? key) : undefined;
+};
+
+const toEnglishPaymentStatus = (val) => {
+	const key = normalizeKey(val);
+	return key ? (PAYMENT_STATUS_MAP_VI2EN[key] ?? key) : undefined;
+};
+
 const toOrderDTO = (payload = {}) => {
 	const {
 		orderId,
@@ -22,6 +74,9 @@ const toOrderDTO = (payload = {}) => {
 	const uid = userId != null ? Number(userId) : null;
 	const price = totalPrice != null ? Number(totalPrice) : 0;
 
+	const sEn = toEnglishOrderStatus(status);
+	const psEn = toEnglishPaymentStatus(paymentStatus);
+
 	return {
 		// một số backend có thể yêu cầu order_id trong body
 		...(orderId != null ? { order_id: Number(orderId) } : {}),
@@ -35,9 +90,41 @@ const toOrderDTO = (payload = {}) => {
 		payment_method: paymentMethod ?? "",
 		shipping_method: shippingMethod ?? "",
 		tracking_number: trackingNumber ?? "",
-		...(status ? { status: String(status).toLowerCase() } : {}),
-		...(paymentStatus ? { payment_status: String(paymentStatus).toLowerCase() } : {}),
+		...(sEn ? { status: sEn } : {}),
+		...(psEn ? { payment_status: psEn } : {}),
 	};
+};
+
+const toOrderInfoDTO = (payload = {}) => {
+	const {
+		userId,
+		fullName,
+		email,
+		phoneNumber,
+		shippingAddress,
+		note,
+		paymentMethod,
+		shippingMethod,
+	} = payload;
+
+	const uid = userId != null ? Number(userId) : null;
+
+	return {
+		user_id: uid,
+		full_name: fullName ?? "",
+		email: email ?? "",
+		phone_number: phoneNumber ?? "",
+		shipping_address: shippingAddress ?? "",
+		note: note ?? "",
+		payment_method: paymentMethod ?? "",
+		shipping_method: shippingMethod ?? "",
+	};
+};
+
+const toOrderStatusDTO = (status) => {
+	const sEn = toEnglishOrderStatus(status);
+	if (!sEn) throw new Error("Invalid order status");
+	return { status: sEn };
 };
 
 export const normalizeOrderUserId = (orderLike) => {
@@ -99,7 +186,7 @@ export const getOrderDetails = async (orderId) => {
 export const updateOrder = async (orderId, orderData = {}) => {
 	if (!orderId) throw new Error("orderId is required");
 	try {
-		const body = JSON.stringify(toOrderDTO(orderData));
+		const body = JSON.stringify(toOrderInfoDTO(orderData));
 		return await apiRequest(`${BASE_URL}/${orderId}`, {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
@@ -111,15 +198,41 @@ export const updateOrder = async (orderId, orderData = {}) => {
 	}
 };
 
-export const deleteOrder = async (orderId) => {
+export const placeOrder = createOrderFromCart;
+
+export const cancelOrder = async (orderId, authToken) => {
+  if (!orderId) throw new Error("orderId is required");
+  try {
+    const headers = authToken ? { Authorization: `Bearer ${authToken}` } : undefined;
+    // Using POST for cancel action; backend should handle status change and validation
+    return await apiRequest(`${BASE_URL}/${orderId}/cancel`, {
+			method: "PUT",
+      headers,
+    });
+  } catch (error) {
+    console.error("Error canceling order:", error);
+    throw error;
+  }
+};
+
+export const updateOrderInfo = updateOrder;
+
+export const updateOrderStatus = async (orderId, status, authToken) => {
 	if (!orderId) throw new Error("orderId is required");
 	try {
-		return await apiRequest(`${BASE_URL}/${orderId}`, { method: "DELETE" });
+		const headers = {
+			"Content-Type": "application/json",
+			...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+		};
+		const body = JSON.stringify(toOrderStatusDTO(status));
+		return await apiRequest(`${BASE_URL}/${orderId}/status`, {
+			method: "PUT",
+			headers,
+			body,
+		});
 	} catch (error) {
-		console.error("Error deleting order:", error);
+		console.error("Error updating order status:", error);
 		throw error;
 	}
 };
-
-export const placeOrder = createOrderFromCart;
 

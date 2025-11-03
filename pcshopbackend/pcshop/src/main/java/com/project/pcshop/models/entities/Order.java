@@ -5,7 +5,6 @@ import com.project.pcshop.models.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,14 +61,8 @@ public class Order {
     @Column(name = "shipping_method")
     private String shippingMethod;
 
-    @Column(name = "tracking_number")
-    private String trackingNumber;
-
     @Column(name = "shipping_address")
     private String shippingAddress;
-
-    @Column(name = "shipping_date")
-    private LocalDate shippingDate;
 
     @Builder.Default
     private Boolean active = true;

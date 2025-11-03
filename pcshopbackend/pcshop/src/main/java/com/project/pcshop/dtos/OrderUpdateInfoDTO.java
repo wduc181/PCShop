@@ -12,7 +12,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderDTO {
+public class OrderUpdateInfoDTO {
     @JsonProperty("user_id")
     private Long userId;
 
@@ -31,13 +31,6 @@ public class OrderDTO {
 
     @Size(max = 500, message = "Your note is too long")
     private String note;
-
-    private OrderStatus status;
-
-    @JsonProperty("total_price")
-    @NotNull(message = "Price can't be null")
-    @Min(value = 0, message = "invalid price")
-    private float totalPrice;
 
     @JsonProperty("payment_method")
     @Size(max = 100, message = "invalid length")

@@ -2,6 +2,7 @@ package com.project.pcshop.controllers;
 
 import com.project.pcshop.dtos.CartItemsDTO;
 import com.project.pcshop.models.entities.CartItems;
+import com.project.pcshop.responses.ApiMessageResponse;
 import com.project.pcshop.responses.CartResponse;
 import com.project.pcshop.services.interfaces.ICartItemsService;
 import jakarta.validation.Valid;
@@ -21,7 +22,7 @@ public class CartItemsController {
 
     private final ICartItemsService cartItemService;
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PostMapping
     public ResponseEntity<?> addItem(
             @Valid @RequestBody CartItemsDTO cartItemsDTO,
@@ -40,36 +41,35 @@ public class CartItemsController {
        }
     }
 
-    @PreAuthorize("hasRole('USER')")
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateQuantity(
-            @PathVariable Long id,
-            @RequestParam Integer quantity
-    ) {
-        List<CartItems> items = cartItemService.updateItemQuantity(id, quantity);
-        Long userId = items.isEmpty() ? null : items.getFirst().getUser().getId();
-        return ResponseEntity.ok("Updated item's quantity");
-    }
-
-    @PreAuthorize("hasRole('USER')")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> removeItem(@PathVariable Long id) {
-        List<CartItems> items = cartItemService.removeItem(id);
-        Long userId = items.isEmpty() ? null : id;
-        return ResponseEntity.ok("Removed item successfully");
-    }
-
-    @PreAuthorize("hasRole('USER')")
-    @DeleteMapping("/user/{userId}")
-    public ResponseEntity<?> clearCart(@PathVariable Long userId) {
-        List<CartItems> items = cartItemService.clearCart(userId);
-        return ResponseEntity.ok("Clear cart successfully");
-    }
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getCart(@PathVariable Long userId) {
         List<CartItems> items = cartItemService.getCartByUser(userId);
         return ResponseEntity.ok(CartResponse.fromCartItems(items, userId));
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateQuantity(
+            @PathVariable Long id,
+            @RequestParam Integer quantity
+    ) {
+        cartItemService.updateItemQuantity(id, quantity);
+        return ResponseEntity.ok(new ApiMessageResponse("Updated quantity successfully"));
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> removeItem(@PathVariable Long id) {
+        cartItemService.removeItem(id);
+        return ResponseEntity.ok(new ApiMessageResponse("Removed item successfully"));
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @DeleteMapping("/user/{userId}")
+    public ResponseEntity<?> clearCart(@PathVariable Long userId) {
+        cartItemService.clearCart(userId);
+        return ResponseEntity.ok(new ApiMessageResponse("Clear cart successfully"));
     }
 }

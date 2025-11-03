@@ -3,7 +3,16 @@ import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router";
 import MainLayout from "@/components/Layouts/MainLayout";
 import { useAuth } from "@/context/AuthContext";
-import { getOrdersByUser } from "@/services/orderService";
+import { getOrdersByUser, cancelOrder } from "@/services/orderService";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 
 const OrdersPage = () => {
   const navigate = useNavigate();
@@ -14,6 +23,11 @@ const OrdersPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState(() => new Set());
+  const [page, setPage] = useState(1);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
+  const [cancellingId, setCancellingId] = useState(null);
 
   const userId = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -33,9 +47,19 @@ const OrdersPage = () => {
     }
     try {
       setLoading(true);
-  const res = await getOrdersByUser(userId, 1, 20, token);
+      const res = await getOrdersByUser(userId, page, size, token);
       const list = Array.isArray(res?.content) ? res.content : Array.isArray(res) ? res : [];
       setOrders(list);
+      // capture pagination meta when backend returns Page<>
+      if (res && typeof res === "object") {
+        const tp = Number(res.totalPages ?? 1);
+        const te = Number(res.totalElements ?? list.length ?? 0);
+        setTotalPages(Number.isFinite(tp) && tp > 0 ? tp : 1);
+        setTotalElements(Number.isFinite(te) && te >= 0 ? te : list.length ?? 0);
+      } else {
+        setTotalPages(1);
+        setTotalElements(list.length ?? 0);
+      }
       setError("");
     } catch (e) {
       console.error("Lỗi tải đơn hàng:", e);
@@ -53,7 +77,25 @@ const OrdersPage = () => {
     }
     loadOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, userId]);
+  }, [isAuthenticated, userId, page, size]);
+
+  // Sync page with querystring (?page=) for deep linking while preserving other params (e.g., uid)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const qPage = Number(params.get("page"));
+    if (Number.isFinite(qPage) && qPage > 0 && qPage !== page) {
+      setPage(qPage);
+    }
+    // Only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const updateQueryPage = (nextPage) => {
+    const params = new URLSearchParams(location.search);
+    if (nextPage > 0) params.set("page", String(nextPage));
+    else params.delete("page");
+    navigate({ pathname: location.pathname, search: `?${params.toString()}` }, { replace: true });
+  };
 
   const toggleExpand = (id) => {
     setExpanded((prev) => {
@@ -71,7 +113,6 @@ const OrdersPage = () => {
 
   const formatDate = (s) => {
     if (!s) return "—";
-    // Try to format ISO-like string; fallback to raw
     try {
       const d = new Date(s);
       if (!isNaN(d.getTime())) return d.toLocaleString("vi-VN");
@@ -130,6 +171,40 @@ const OrdersPage = () => {
                           >
                             Xem sản phẩm
                           </Button>
+                          {(() => {
+                            const status = String(order.status || "").toLowerCase();
+                            const isCancelled = status === "cancelled" || status === "canceled" || status === "cancel";
+                            if (isCancelled) {
+                              return (
+                                <Button variant="outline" size="sm" disabled>
+                                  Đã hủy
+                                </Button>
+                              );
+                            }
+                            return (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                disabled={cancellingId === order.id}
+                                onClick={async () => {
+                                  const ok = window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này?");
+                                  if (!ok) return;
+                                  try {
+                                    setCancellingId(order.id);
+                                    await cancelOrder(order.id, token);
+                                    await loadOrders();
+                                  } catch (e) {
+                                    console.error("Hủy đơn thất bại", e);
+                                    alert("Hủy đơn thất bại. Vui lòng thử lại sau.");
+                                  } finally {
+                                    setCancellingId(null);
+                                  }
+                                }}
+                              >
+                                Hủy đơn
+                              </Button>
+                            );
+                          })()}
                         </div>
                       </td>
                     </tr>
@@ -158,6 +233,103 @@ const OrdersPage = () => {
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination controls + page size */}
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-sm text-gray-600">
+                Tổng cộng: <span className="font-medium">{totalElements.toLocaleString("vi-VN")}</span> đơn hàng
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <label htmlFor="page-size" className="text-gray-600">Mỗi trang</label>
+                  <select
+                    id="page-size"
+                    className="border rounded-md px-2 py-1 text-sm"
+                    value={size}
+                    onChange={(e) => {
+                      const next = Number(e.target.value);
+                      setSize(next);
+                      setPage(1);
+                      updateQueryPage(1);
+                    }}
+                  >
+                    {[10, 20, 50].map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => {
+                          if (page > 1) {
+                            const next = page - 1;
+                            setPage(next);
+                            updateQueryPage(next);
+                          }
+                        }}
+                        aria-disabled={page <= 1}
+                        className={page <= 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+
+                    {(() => {
+                      const items = [];
+                      const tp = Math.max(1, totalPages || 1);
+                      const makePage = (p) => (
+                        <PaginationItem key={p}>
+                          <PaginationLink
+                            isActive={p === page}
+                            onClick={() => {
+                              if (p !== page) {
+                                setPage(p);
+                                updateQueryPage(p);
+                              }
+                            }}
+                          >
+                            {p}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+
+                      if (tp <= 7) {
+                        for (let i = 1; i <= tp; i++) items.push(makePage(i));
+                        return items;
+                      }
+
+                      items.push(makePage(1));
+                      const start = Math.max(2, page - 1);
+                      const end = Math.min(tp - 1, page + 1);
+                      if (start > 2) items.push(
+                        <PaginationItem key="ellipsisa"><PaginationEllipsis /></PaginationItem>
+                      );
+                      for (let p = start; p <= end; p++) items.push(makePage(p));
+                      if (end < tp - 1) items.push(
+                        <PaginationItem key="ellipsisb"><PaginationEllipsis /></PaginationItem>
+                      );
+                      items.push(makePage(tp));
+                      return items;
+                    })()}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => {
+                          if (page < totalPages) {
+                            const next = page + 1;
+                            setPage(next);
+                            updateQueryPage(next);
+                          }
+                        }}
+                        aria-disabled={page >= totalPages}
+                        className={page >= totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            </div>
           </div>
         )}
       </div>

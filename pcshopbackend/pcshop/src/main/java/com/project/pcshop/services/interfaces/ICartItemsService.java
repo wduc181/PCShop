@@ -6,9 +6,9 @@ import com.project.pcshop.models.entities.CartItems;
 import java.util.List;
 
 public interface ICartItemsService {
-    List<CartItems> addItemToCart(CartItemsDTO cartItemsDTO);
-    List<CartItems> updateItemQuantity(Long cartItemId, Integer quantity);
-    List<CartItems> removeItem(Long cartItemId);
-    List<CartItems> clearCart(Long userId);
+    void addItemToCart(CartItemsDTO cartItemsDTO);
     List<CartItems> getCartByUser(Long userId);
+    void updateItemQuantity(Long cartItemId, Integer quantity);
+    void removeItem(Long cartItemId);
+    void clearCart(Long userId);
 }

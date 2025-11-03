@@ -24,7 +24,7 @@ ALTER TABLE users ADD FOREIGN KEY (role_id) REFERENCES roles(id);
 
 INSERT INTO roles (id, name) VALUES 
 (1, 'ADMIN'),
-(2, 'USER'),
+(2, 'USER');
 
 
 CREATE TABLE tokens (
@@ -156,3 +156,42 @@ ADD FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE;
 ALTER TABLE order_details
 DROP FOREIGN KEY order_details_ibfk_2,
 ADD FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE;
+
+ALTER TABLE users
+DROP FOREIGN KEY users_ibfk_1,
+ADD CONSTRAINT fk_users_role_new
+FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL;
+
+ALTER TABLE tokens
+DROP FOREIGN KEY tokens_ibfk_1,
+ADD CONSTRAINT fk_tokens_user
+FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE products
+DROP FOREIGN KEY products_ibfk_1,
+ADD CONSTRAINT fk_products_category
+FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE;
+
+ALTER TABLE products
+DROP FOREIGN KEY products_ibfk_2,
+ADD CONSTRAINT fk_products_brand
+FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE SET NULL;
+
+ALTER TABLE cart_items
+DROP FOREIGN KEY cart_items_ibfk_1,
+ADD CONSTRAINT fk_cart_items_user
+FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE orders
+DROP FOREIGN KEY orders_ibfk_1,
+ADD CONSTRAINT fk_orders_user
+FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE order_details
+DROP FOREIGN KEY order_details_ibfk_1,
+ADD CONSTRAINT fk_order_details_order
+FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE;
+
+ALTER TABLE orders
+DROP COLUMN tracking_number,
+DROP COLUMN shipping_date;

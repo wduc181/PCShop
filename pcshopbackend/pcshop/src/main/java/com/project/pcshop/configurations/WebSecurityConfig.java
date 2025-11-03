@@ -34,17 +34,17 @@ public class WebSecurityConfig {
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers(
-                                String.format("%s/auth/register", apiPrefix),
-                                String.format("%s/auth/login", apiPrefix),
-                                String.format("%s/categories", apiPrefix),
-                                String.format("%s/brands", apiPrefix),
-                                String.format("%s/products", apiPrefix),
-                                String.format("%s/products/**", apiPrefix),
+                                String.format("/%s/auth/register", apiPrefix),
+                                String.format("/%s/auth/login", apiPrefix),
+                                String.format("/%s/categories", apiPrefix),
+                                String.format("/%s/brands", apiPrefix),
+                                String.format("/%s/products", apiPrefix),
+                                String.format("/%s/products/**", apiPrefix),
                                 "/uploads/**"
                         ).permitAll()
                         .requestMatchers(
-                                String.format("%s/comments/product/*", apiPrefix),
-                                String.format("%s/comments/*/replies", apiPrefix)
+                                String.format("/%s/comments/product/*", apiPrefix),
+                                String.format("/%s/comments/*/replies", apiPrefix)
                         ).permitAll()
                         .anyRequest()
                         .authenticated()
