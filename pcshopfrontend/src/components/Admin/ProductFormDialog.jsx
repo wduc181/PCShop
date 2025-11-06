@@ -62,14 +62,23 @@ const ProductFormDialog = forwardRef(({ onSuccess, trigger }, ref) => {
       setOpen(true);
       try {
         const data = await getProductById(id);
+        // Prefer direct ids; fallback to nested objects
+        const rawBrandId =
+          data.brandId ?? data.brand_id ?? data.brand?.id ?? data.brand?.brandId ?? null;
+        const rawCategoryId =
+          data.categoryId ?? data.category_id ?? data.category?.id ?? data.category?.categoryId ?? null;
+
+        const brandId = rawBrandId != null ? String(rawBrandId) : "";
+        const categoryId = rawCategoryId != null ? String(rawCategoryId) : "";
+
         setForm({
           id: data.id,
           name: data.name,
           description: data.description || "",
-          price: data.price || 0,
-          stockQuantity: data.stockQuantity || 0,
-          brandId: data.brandId || "",
-          categoryId: data.categoryId || "",
+          price: Number(data.price) || 0,
+          stockQuantity: Number(data.stockQuantity) || 0,
+          brandId,
+          categoryId,
         });
       } catch (error) {
         console.error("Lỗi tải sản phẩm:", error);

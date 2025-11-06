@@ -1,6 +1,3 @@
-// Centralized English <-> Vietnamese mappings and helpers for order/payment statuses
-
-// English to Vietnamese mappings used for display
 export const ORDER_STATUS_EN2VI = {
   pending: "Chờ xử lý",
   processing: "Đang xử lý",

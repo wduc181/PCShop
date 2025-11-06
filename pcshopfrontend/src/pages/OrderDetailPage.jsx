@@ -27,7 +27,6 @@ const OrderDetailPage = () => {
     return String(s);
   };
 
-  // EN -> VI mappings for display
   const statusToVI = toVIOrderStatus;
   const paymentToVI = toVIPaymentStatus;
 
@@ -56,7 +55,6 @@ const OrderDetailPage = () => {
       }
     };
     run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, isAuthenticated]);
 
   return (

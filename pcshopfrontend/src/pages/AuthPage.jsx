@@ -10,7 +10,6 @@ const AuthPage = () => {
 
   return (
     <div className="min-h-screen w-full bg-[#fafafa] relative flex flex-col">
-      {/* bg */}
       <div
         className="absolute inset-0 z-0 pointer-events-none"
         style={{

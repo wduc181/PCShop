@@ -41,7 +41,6 @@ const AOrdersPage = () => {
   const finalStatuses = new Set(["delivered", "cancelled"]);
   const processingStatuses = ["pending", "processing", "shipped"];
 
-  // Display mapping helpers
   const statusToVI = toVIOrderStatus;
   const paymentToVI = toVIPaymentStatus;
 
@@ -64,14 +63,12 @@ const AOrdersPage = () => {
   };
 
   useEffect(() => {
-    // Đừng chặn theo cờ client-side; để backend quyết định quyền truy cập
     if (!token) {
       setLoading(false);
       setError("Bạn cần đăng nhập để truy cập trang này.");
       return;
     }
     loadOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const filteredOrders = useMemo(() => {
@@ -138,7 +135,6 @@ const AOrdersPage = () => {
 
   return (
     <AdminLayout>
-      {/* Nền caro */}
       <div
         className="absolute inset-0 z-0 pointer-events-none"
         style={{

@@ -84,7 +84,6 @@ const UsersPage = () => {
         return;
       }
       const updated = await updateUserInfo(payload);
-      // Cập nhật lại danh sách tại chỗ
       setUsers((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
       toast.success("Cập nhật người dùng thành công");
       setEditOpen(false);

@@ -21,6 +21,31 @@ VALUES
 ('Tai nghe', 'Phụ kiện âm thanh cho chơi game, làm việc'),
 ('Loa', 'Thiết bị phát âm thanh ngoài');
 
+INSERT INTO brands (id, name, description, created_at) VALUES
+(3, 'MSI', 'MSI là thương hiệu công nghệ Đài Loan chuyên về laptop gaming, bo mạch chủ và card đồ họa hiệu năng cao.', NOW()),
+(4, 'AMD', 'AMD là hãng công nghệ Mỹ nổi tiếng với bộ vi xử lý Ryzen và card đồ họa Radeon.', NOW()),
+(5, 'NVIDIA', 'NVIDIA là tập đoàn công nghệ Mỹ dẫn đầu trong lĩnh vực GPU và AI computing.', NOW()),
+(6, 'Asus', 'Thương hiệu công nghệ Đài Loan nổi tiếng với laptop, bo mạch chủ và card đồ họa.', NOW()),
+(7, 'Gigabyte', 'Thương hiệu Đài Loan nổi tiếng với laptop gaming, bo mạch chủ và phần cứng máy tính.', NOW()),
+(8, 'ASRock', 'Hãng sản xuất bo mạch chủ uy tín, nổi bật với thiết kế mạnh mẽ và độ bền cao.', NOW()),
+(9, 'Logitech', 'Thương hiệu Thụy Sĩ chuyên sản xuất chuột, bàn phím, tai nghe và thiết bị ngoại vi.', NOW()),
+(10, 'NZXT', 'Thương hiệu chuyên về case, tản nhiệt và phụ kiện PC cao cấp.', NOW()),
+(11, 'Thermaltake', 'Cung cấp giải pháp tản nhiệt, vỏ case và nguồn máy tính hàng đầu.', NOW()),
+(12, 'Intel', 'Tập đoàn công nghệ hàng đầu thế giới chuyên sản xuất CPU và chip xử lý.', NOW()),
+(13, 'Corsair', 'Nhà sản xuất thiết bị ngoại vi, RAM, nguồn máy tính và tản nhiệt chất lượng cao.', NOW()),
+(14, 'Cooler Master', 'Thương hiệu nổi tiếng về tản nhiệt, vỏ case và nguồn máy tính.', NOW()),
+(15, 'Seagate', 'Công ty lưu trữ dữ liệu hàng đầu thế giới, nổi tiếng với HDD và SSD.', NOW()),
+(16, 'Western Digital', 'Thương hiệu Mỹ chuyên sản xuất ổ cứng HDD và SSD hiệu suất cao.', NOW()),
+(17, 'Kingston', 'Thương hiệu nổi tiếng toàn cầu về RAM, SSD và USB.', NOW()),
+(18, 'G.Skill', 'Nhà sản xuất RAM hiệu năng cao, được ưa chuộng trong cộng đồng game thủ.', NOW()),
+(19, 'ADATA', 'Công ty chuyên sản xuất RAM, SSD và phụ kiện lưu trữ.', NOW()),
+(21, 'Razer', 'Công ty chuyên sản xuất gaming gear, laptop và phụ kiện chơi game cao cấp.', NOW()),
+(22, 'SteelSeries', 'Hãng sản xuất thiết bị ngoại vi và phụ kiện chơi game hàng đầu thế giới.', NOW()),
+(23, 'HyperX', 'Thương hiệu gaming gear và linh kiện hiệu năng cao thuộc Kingston.', NOW()),
+(24, 'ASUS ROG', 'Dòng sản phẩm gaming cao cấp của ASUS, nổi bật với hiệu năng và thiết kế.', NOW()),
+(25, 'PC build sẵn từ PCShop', 'PC build sẵn, đảm bảo hiệu năng vận hành giữa các linh kiện được chọn lọc.', NOW());
+
+
 -- ===== PC BUILD SẴN =====
 INSERT INTO products (name, price, discount, stock_quantity, description, warranty_months, is_active, is_featured, category_id, brand_id)
 VALUES

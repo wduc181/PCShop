@@ -75,7 +75,6 @@ const CategoryPage = () => {
 
   return (
       <AdminLayout>
-        {/* Nền caro */}
         <div
           className="absolute inset-0 z-0 pointer-events-none"
           style={{
