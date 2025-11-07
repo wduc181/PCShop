@@ -4,6 +4,7 @@ import AdminTable from "@/components/Admin/AdminTable";
 import AdminPagination from "@/components/Admin/AdminPagination";
 import { Button } from "@/components/ui/button";
 import ProductFormDialog from "@/components/Admin/ProductFormDialog";
+import ProductImagesDialog from "@/components/Admin/ProductImagesDialog";
 import { getAllProducts, deleteProduct, discountProduct, recommendProduct } from "@/services/productService";
 import { productImageUrl } from "@/config/env";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
@@ -21,6 +22,8 @@ const ProductsPage = () => {
   const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
   const [discountTarget, setDiscountTarget] = useState(null); 
   const [discountValue, setDiscountValue] = useState(0);
+  const [imagesDialogOpen, setImagesDialogOpen] = useState(false);
+  const [imagesProductId, setImagesProductId] = useState(null);
 
   useEffect(() => {
     fetchProducts(page, searchText, sortKey);
@@ -54,6 +57,11 @@ const ProductsPage = () => {
 
   const handleEdit = (id) => {
     productFormRef.current?.openEdit(id);
+  };
+
+  const openImagesDialog = (id) => {
+    setImagesProductId(id);
+    setImagesDialogOpen(true);
   };
 
   const handleDelete = async (id) => {
@@ -213,6 +221,9 @@ const ProductsPage = () => {
                     <Button variant="outline" size="sm" onClick={() => handleEdit(item.id)}>
                       Sửa
                     </Button>
+                    <Button variant="outline" size="sm" onClick={() => openImagesDialog(item.id)}>
+                      Sửa ảnh
+                    </Button>
                     <Button variant="destructive" size="sm" onClick={() => handleDelete(item.id)}>
                       Xóa
                     </Button>
@@ -279,6 +290,18 @@ const ProductsPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ProductImagesDialog
+        open={imagesDialogOpen}
+        onOpenChange={(open) => {
+          setImagesDialogOpen(open);
+          if (!open) {
+            // refresh list to reflect new thumbnail if changed
+            fetchProducts(page, searchText, sortKey);
+          }
+        }}
+        productId={imagesProductId}
+      />
     </AdminLayout>
   );
 };

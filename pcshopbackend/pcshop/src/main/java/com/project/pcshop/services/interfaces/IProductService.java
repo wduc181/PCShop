@@ -24,4 +24,5 @@ public interface IProductService {
     Product discountProduct(Long id, ProductDiscountDTO productDiscountDTO);
     Product recommendProduct(Long id, ProductFeaturedDTO productFeaturedDTO);
     List<Product> searchProducts(String keyword);
+    Product setThumbnail(Long id, String imageUrl) throws Exception;
 }

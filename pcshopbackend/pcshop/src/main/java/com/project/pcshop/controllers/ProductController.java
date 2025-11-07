@@ -329,6 +329,20 @@ public class ProductController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("{id}/set-thumbnail")
+    public ResponseEntity<?> setThumbnail (
+            @PathVariable("id") Long id,
+            @RequestParam("imageUrl") String imageUrl
+    ) {
+        try {
+            Product updatedProduct = productService.setThumbnail(id, imageUrl);
+            return ResponseEntity.ok(ProductResponse.fromProduct(updatedProduct));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
 
 

@@ -153,6 +153,21 @@ export const getProductImages = async (id) => {
   }
 };
 
+export const setProductThumbnail = async (id, imageUrl) => {
+  try {
+    if (!id) throw new Error("Product id is required");
+    if (!imageUrl || !String(imageUrl).trim()) throw new Error("imageUrl is required");
+    const params = new URLSearchParams({ imageUrl: String(imageUrl).trim() });
+    const response = await apiRequest(`${BASE_URL}/${id}/set-thumbnail?${params.toString()}`, {
+      method: "PUT",
+    });
+    return response;
+  } catch (error) {
+    console.error("Error setting product thumbnail:", error);
+    throw error;
+  }
+};
+
 export const searchProduct = async (keyword) => {
   try {
     if (!keyword || !keyword.toString().trim()) {

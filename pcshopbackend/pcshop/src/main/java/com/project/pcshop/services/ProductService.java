@@ -174,5 +174,14 @@ public class ProductService implements IProductService {
         return productRepository.findByNameContainingIgnoreCase(keyword);
     }
 
+    @Override
+    public Product setThumbnail(Long id, String imageUrl) throws Exception {
+        Product existingProduct =  productRepository.findById(id)
+                .orElseThrow(() -> new DataNotFoundException("Product not found"));
+
+        existingProduct.setThumbnail(imageUrl);
+        return productRepository.save(existingProduct);
+    }
+
 
 }
