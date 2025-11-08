@@ -1,3 +1,4 @@
+DROP DATABASE pcshop;
 CREATE DATABASE pcshop;
 USE pcshop;
 
@@ -41,7 +42,7 @@ CREATE TABLE tokens (
 CREATE TABLE brands (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL UNIQUE COMMENT 'Brand name (AMD, Intel, NVIDIA, etc.)',
-    description TEXT DEFAULT '',
+    description TEXT,
     logo_url VARCHAR(300) DEFAULT '',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -49,7 +50,7 @@ CREATE TABLE brands (
 CREATE TABLE categories (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL UNIQUE DEFAULT '' COMMENT 'Category name (CPU, GPU, RAM, etc.)',
-    description TEXT DEFAULT ''
+    description TEXT
 );
 
 CREATE TABLE products (
@@ -59,7 +60,7 @@ CREATE TABLE products (
     discount FLOAT DEFAULT 0 CHECK(discount >= 0 AND discount <= 100),
     stock_quantity INT DEFAULT 0 CHECK(stock_quantity >= 0),
     thumbnail VARCHAR(300) DEFAULT '',
-    description LONGTEXT DEFAULT '',
+    description LONGTEXT,
     warranty_months INT DEFAULT 12,
     is_active TINYINT DEFAULT 1,
     is_featured TINYINT DEFAULT 0,

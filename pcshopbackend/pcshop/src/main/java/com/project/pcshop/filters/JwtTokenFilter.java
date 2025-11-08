@@ -33,17 +33,21 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     private boolean isBypassToken(
             @NonNull HttpServletRequest request
     ) {
-        final List<Pair<String, String>> bypassTokens = Arrays.asList(
-                Pair.of(String.format("%s/products", apiPrefix), "GET"),
-                Pair.of(String.format("%s/products/", apiPrefix), "GET"),
-                Pair.of(String.format("%s/brands", apiPrefix), "GET"),
-                Pair.of(String.format("%s/categories", apiPrefix), "GET"),
-                Pair.of(String.format("%s/comments/product/", apiPrefix), "GET"),
-                Pair.of(String.format("%s/comments/", apiPrefix), "GET"),
-                Pair.of("/uploads/", "GET"),
-                Pair.of(String.format("%s/auth/register", apiPrefix), "POST"),
-                Pair.of(String.format("%s/auth/login", apiPrefix), "POST")
-        );
+    final List<Pair<String, String>> bypassTokens = Arrays.asList(
+        Pair.of(String.format("%s/products", apiPrefix), "GET"),
+        Pair.of(String.format("%s/products/", apiPrefix), "GET"),
+
+        Pair.of(String.format("%s/brands", apiPrefix), "GET"),
+        Pair.of(String.format("%s/categories", apiPrefix), "GET"),
+
+        Pair.of(String.format("%s/comments/product/", apiPrefix), "GET"),
+        Pair.of(String.format("%s/comments/", apiPrefix), "GET"),
+
+        Pair.of("/uploads/", "GET"),
+
+        Pair.of(String.format("%s/auth/register", apiPrefix), "POST"),
+        Pair.of(String.format("%s/auth/login", apiPrefix), "POST")
+    );
         for (Pair<String, String> bypassToken : bypassTokens) {
             if (request.getServletPath().contains(bypassToken.getFirst())
                     && request.getMethod().equals(bypassToken.getSecond())) {

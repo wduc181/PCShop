@@ -10,6 +10,7 @@ export const ORDER_STATUS_EN2VI = {
 export const PAYMENT_STATUS_EN2VI = {
   pending: "Chưa thanh toán",
   paid: "Đã thanh toán",
+  failed: "Đã hủy hoặc thanh toán thất bại",
   refunded: "Hoàn tiền",
 };
 

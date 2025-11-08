@@ -29,22 +29,22 @@ public class Comment extends BaseEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@ManyToOne
 	@JoinColumn(name = "product_id", nullable = false,
 		foreignKey = @ForeignKey(name = "fk_comments_product"))
 	private Product product;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne
 	@JoinColumn(name = "user_id",
 		foreignKey = @ForeignKey(name = "fk_comments_user"))
 	private User user;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne
 	@JoinColumn(name = "root_comment_id",
 		foreignKey = @ForeignKey(name = "fk_comments_root"))
 	private Comment rootComment;
 
-	@OneToMany(mappedBy = "rootComment", fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "rootComment")
 	private Set<Comment> replies = new LinkedHashSet<>();
 
 	@Lob

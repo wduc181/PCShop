@@ -43,7 +43,7 @@ public class WebSecurityConfig {
                                 "/uploads/**"
                         ).permitAll()
                         .requestMatchers(
-                                String.format("/%s/comments/product/*", apiPrefix),
+                                String.format("/%s/comments/product/**", apiPrefix),
                                 String.format("/%s/comments/*/replies", apiPrefix)
                         ).permitAll()
                         .anyRequest()
