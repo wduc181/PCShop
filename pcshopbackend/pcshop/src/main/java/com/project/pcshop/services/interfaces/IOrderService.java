@@ -5,7 +5,6 @@ import com.project.pcshop.dtos.OrderUpdateInfoDTO;
 import com.project.pcshop.dtos.OrderUpdateStatusDTO;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.models.entities.Order;
-import com.project.pcshop.models.enums.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

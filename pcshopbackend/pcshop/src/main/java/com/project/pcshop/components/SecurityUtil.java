@@ -39,6 +39,7 @@ public class SecurityUtil {
     }
 
     public boolean currentUserIsValid(Long userId) {
-        return getCurrentUser().equals(userId);
+        Long curr = getCurrentUser();
+        return curr != null && userId != null && curr.equals(userId);
     }
 }

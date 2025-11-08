@@ -5,6 +5,7 @@ import com.project.pcshop.dtos.OrderDTO;
 import com.project.pcshop.dtos.OrderUpdateInfoDTO;
 import com.project.pcshop.dtos.OrderUpdateStatusDTO;
 import com.project.pcshop.exceptions.DataNotFoundException;
+import com.project.pcshop.exceptions.InsufficientStockException;
 import com.project.pcshop.exceptions.OrderStatusException;
 import com.project.pcshop.exceptions.PermissionDenyException;
 import com.project.pcshop.models.entities.*;
@@ -27,6 +28,7 @@ public class OrderService implements IOrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final CartItemsRepository cartItemsRepository;
+    private final ProductRepository productRepository;
     private final SecurityUtil securityUtil;
 
     @Override
@@ -59,6 +61,12 @@ public class OrderService implements IOrderService {
             Product product = item.getProduct();
             float price = product.getPrice();
             int qty = item.getQuantity();
+            int stock = product.getStockQuantity();
+            if (qty > stock) {
+                throw new InsufficientStockException("Not enough product to make order");
+            }
+            product.setStockQuantity(stock - qty);
+            productRepository.save(product);
             float lineTotal = price * qty;
 
             return OrderDetail.builder()
@@ -77,6 +85,7 @@ public class OrderService implements IOrderService {
 
         order.setTotalPrice(totalOrderPrice);
         order.setOrderDetails(orderDetails);
+
 
         Order savedOrder = orderRepository.save(order);
         cartItemsRepository.deleteAll(cartItems);

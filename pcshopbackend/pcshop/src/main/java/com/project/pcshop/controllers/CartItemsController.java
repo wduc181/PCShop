@@ -49,7 +49,7 @@ public class CartItemsController {
         return ResponseEntity.ok(CartResponse.fromCartItems(items, userId));
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateQuantity(
             @PathVariable Long id,
@@ -59,14 +59,14 @@ public class CartItemsController {
         return ResponseEntity.ok(new ApiMessageResponse("Updated quantity successfully"));
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> removeItem(@PathVariable Long id) {
         cartItemService.removeItem(id);
         return ResponseEntity.ok(new ApiMessageResponse("Removed item successfully"));
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @DeleteMapping("/user/{userId}")
     public ResponseEntity<?> clearCart(@PathVariable Long userId) {
         cartItemService.clearCart(userId);

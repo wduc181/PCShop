@@ -19,6 +19,7 @@ const UsersPage = () => {
   const [users, setUsers] = useState([]);
   const [page, setPage] = useState(1);
   const limit = 10;
+  const [totalPages, setTotalPages] = useState(1);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -44,7 +45,16 @@ const UsersPage = () => {
       setError("");
       try {
         const data = await getUsers({ page, limit });
-        setUsers(Array.isArray(data) ? data : []);
+        const list = Array.isArray(data) ? data : [];
+        setUsers(list);
+        // If backend later returns total pages in headers or wrapper, adjust here.
+        // For now derive naive totalPages when the page is not full (last page) or default to page+1 assumption until empty.
+        if (list.length < limit) {
+          setTotalPages(page); // last page reached
+        } else {
+          // optimistic: allow next page until an empty/partial result updates totalPages
+          setTotalPages(Math.max(totalPages, page + 1));
+        }
       } catch (err) {
         console.error("Lỗi khi tải danh sách người dùng:", err);
         setError(err?.message || "Không thể tải người dùng");
@@ -144,8 +154,10 @@ const UsersPage = () => {
         <div className="mt-4">
           <AdminPagination
             currentPage={page}
-            totalPages={5}
-            onPageChange={setPage}
+            totalPages={totalPages}
+            onPageChange={(p)=>{
+              if (p !== page) setPage(p);
+            }}
           />
         </div>
 
