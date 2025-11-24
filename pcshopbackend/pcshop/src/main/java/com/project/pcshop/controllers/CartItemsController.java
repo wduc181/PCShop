@@ -1,10 +1,10 @@
 package com.project.pcshop.controllers;
 
-import com.project.pcshop.dtos.CartItemsDTO;
+import com.project.pcshop.dtos.cartItem.CartItemsDTO;
 import com.project.pcshop.models.entities.CartItems;
 import com.project.pcshop.responses.ApiMessageResponse;
 import com.project.pcshop.responses.CartResponse;
-import com.project.pcshop.services.interfaces.ICartItemsService;
+import com.project.pcshop.services.interfaces.CartItemsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CartItemsController {
 
-    private final ICartItemsService cartItemService;
+    private final CartItemsService cartItemService;
 
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PostMapping

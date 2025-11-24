@@ -1,9 +1,9 @@
 package com.project.pcshop.controllers;
 
-import com.project.pcshop.dtos.CategoryDTO;
+import com.project.pcshop.dtos.category.CategoryDTO;
 import com.project.pcshop.models.entities.Category;
 import com.project.pcshop.responses.CategoryResponse;
-import com.project.pcshop.services.interfaces.ICategoryService;
+import com.project.pcshop.services.interfaces.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,7 @@ import java.util.List;
 @RequestMapping("${api.prefix}/categories")
 @RequiredArgsConstructor
 public class CategoryController {
-    private final ICategoryService categoryService;
+    private final CategoryService categoryService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("")

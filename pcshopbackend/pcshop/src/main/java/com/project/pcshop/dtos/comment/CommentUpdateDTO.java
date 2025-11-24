@@ -1,0 +1,16 @@
+package com.project.pcshop.dtos.comment;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.*;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CommentUpdateDTO {
+    @NotBlank(message = "invalid comment")
+    @Size(max = 5000, message = "comment is too long")
+    private String content;
+}

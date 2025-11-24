@@ -1,6 +1,6 @@
 package com.project.pcshop.models.enums;
 
 public enum OrderStatus {
-    pending, processing, shipped, delivered, cancelled
+    pending, confirmed, processing, delivered, cancelled, return_requested, returned, refunded
 }
 

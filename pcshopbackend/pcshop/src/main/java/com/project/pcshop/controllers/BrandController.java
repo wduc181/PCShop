@@ -1,9 +1,9 @@
 package com.project.pcshop.controllers;
 
-import com.project.pcshop.dtos.BrandDTO;
+import com.project.pcshop.dtos.brand.BrandDTO;
 import com.project.pcshop.models.entities.Brand;
 import com.project.pcshop.responses.BrandResponse;
-import com.project.pcshop.services.interfaces.IBrandService;
+import com.project.pcshop.services.interfaces.BrandService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,7 +26,7 @@ import java.util.UUID;
 @RequestMapping("${api.prefix}/brands")
 @RequiredArgsConstructor
 public class BrandController {  
-    private final IBrandService brandService;
+    private final BrandService brandService;
 
     private boolean isImageFile(MultipartFile file) {
         String contentType = file.getContentType();

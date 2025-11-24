@@ -1,7 +1,6 @@
-// src/services/api.js
 import { API_URL } from "@/config/env";
 
-// Debug helper: only logs in development
+// Debug helper
 const dbg = (...args) => {
   try {
     if (import.meta?.env?.DEV) console.log("[apiRequest]", ...args);

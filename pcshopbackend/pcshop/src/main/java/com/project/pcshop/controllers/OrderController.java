@@ -1,12 +1,12 @@
 package com.project.pcshop.controllers;
 
-import com.project.pcshop.dtos.OrderDTO;
-import com.project.pcshop.dtos.OrderUpdateInfoDTO;
-import com.project.pcshop.dtos.OrderUpdateStatusDTO;
+import com.project.pcshop.dtos.order.OrderCreateDTO;
+import com.project.pcshop.dtos.order.OrderUpdateInfoDTO;
+import com.project.pcshop.dtos.order.OrderUpdateStatusDTO;
 import com.project.pcshop.models.entities.Order;
 import com.project.pcshop.responses.ApiMessageResponse;
 import com.project.pcshop.responses.OrderResponse;
-import com.project.pcshop.services.interfaces.IOrderService;
+import com.project.pcshop.services.interfaces.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,13 +26,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderController {
 
-    private final IOrderService orderService;
+    private final OrderService orderService;
 
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PostMapping("/from-cart/{userId}")
     public ResponseEntity<?> createOrderFromCart(
             @PathVariable Long userId,
-            @Valid @RequestBody OrderDTO orderDTO,
+            @Valid @RequestBody OrderCreateDTO orderCreateDTO,
             BindingResult result
     ) {
         try {
@@ -43,7 +43,7 @@ public class OrderController {
                         .toList();
                 return ResponseEntity.badRequest().body(errors);
             }
-            Order order = orderService.createOrderFromCart(userId, orderDTO);
+            Order order = orderService.createOrderFromCart(userId, orderCreateDTO);
             return ResponseEntity.ok(OrderResponse.fromOrderWithDetails(order));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

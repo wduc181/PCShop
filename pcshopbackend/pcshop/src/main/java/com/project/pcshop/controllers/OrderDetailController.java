@@ -2,7 +2,7 @@ package com.project.pcshop.controllers;
 
 import com.project.pcshop.models.entities.OrderDetail;
 import com.project.pcshop.responses.OrderDetailResponse;
-import com.project.pcshop.services.interfaces.IOrderDetailService;
+import com.project.pcshop.services.interfaces.OrderDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderDetailController {
 
-    private final IOrderDetailService orderDetailService;
+    private final OrderDetailService orderDetailService;
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/order/{orderId}")

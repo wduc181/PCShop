@@ -1,15 +1,15 @@
 package com.project.pcshop.controllers;
 
-import com.project.pcshop.dtos.ProductDTO;
-import com.project.pcshop.dtos.ProductDiscountDTO;
-import com.project.pcshop.dtos.ProductFeaturedDTO;
-import com.project.pcshop.dtos.ProductImageDTO;
+import com.project.pcshop.dtos.product.ProductDTO;
+import com.project.pcshop.dtos.product.ProductDiscountDTO;
+import com.project.pcshop.dtos.product.ProductFeaturedDTO;
+import com.project.pcshop.dtos.product.ProductImageDTO;
 import com.project.pcshop.models.entities.Product;
 import com.project.pcshop.models.entities.ProductImage;
 import com.project.pcshop.responses.ApiMessageResponse;
 import com.project.pcshop.responses.ProductListResponse;
 import com.project.pcshop.responses.ProductResponse;
-import com.project.pcshop.services.interfaces.IProductService;
+import com.project.pcshop.services.interfaces.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,7 +38,7 @@ import java.util.UUID;
 @RequestMapping("${api.prefix}/products")
 @RequiredArgsConstructor
 public class ProductController {
-    private final IProductService productService;
+    private final ProductService productService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("")

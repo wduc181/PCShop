@@ -1,5 +1,5 @@
 package com.project.pcshop.models.enums;
 
 public enum PaymentStatus {
-    pending, paid, refunded
+    unpaid, pending, paid, failed, refund_requested, refunded, cancelled
 }

@@ -1,11 +1,11 @@
 package com.project.pcshop.controllers;
 
-import com.project.pcshop.dtos.CommentDTO;
-import com.project.pcshop.dtos.CommentUpdateDTO;
+import com.project.pcshop.dtos.comment.CommentDTO;
+import com.project.pcshop.dtos.comment.CommentUpdateDTO;
 import com.project.pcshop.models.entities.Comment;
 import com.project.pcshop.responses.ApiMessageResponse;
 import com.project.pcshop.responses.CommentResponse;
-import com.project.pcshop.services.interfaces.ICommentService;
+import com.project.pcshop.services.interfaces.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CommentController {
 
-    private final ICommentService commentService;
+    private final CommentService commentService;
 
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PostMapping("")

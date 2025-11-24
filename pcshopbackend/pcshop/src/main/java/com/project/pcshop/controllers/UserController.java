@@ -1,9 +1,9 @@
 package com.project.pcshop.controllers;
 
-import com.project.pcshop.dtos.UserUpdateDTO;
+import com.project.pcshop.dtos.user.UserUpdateDTO;
 import com.project.pcshop.models.entities.User;
 import com.project.pcshop.responses.UserResponse;
-import com.project.pcshop.services.interfaces.IUserService;
+import com.project.pcshop.services.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,7 +20,7 @@ import java.util.List;
 @RequestMapping("${api.prefix}/users")
 @RequiredArgsConstructor
 public class UserController {
-    private final IUserService userService;
+    private final UserService userService;
 
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @GetMapping("/{id}")
