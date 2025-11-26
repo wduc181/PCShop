@@ -1,11 +1,13 @@
 package com.project.pcshop.services.interfaces;
 
 import com.project.pcshop.dtos.authentication.AuthenticateChangePasswordDTO;
+import com.project.pcshop.dtos.authentication.AuthenticateLoginDTO;
 import com.project.pcshop.dtos.authentication.AuthenticateRegisterDTO;
-import com.project.pcshop.models.entities.User;
+import com.project.pcshop.responses.TokenResponse;
+import com.project.pcshop.responses.UserResponse;
 
 public interface AuthService {
-    User createUser(AuthenticateRegisterDTO authenticateRegisterDTO) throws Exception;
-    String login(String phoneNumber, String password) throws Exception;
-    User changePassword(Long id, AuthenticateChangePasswordDTO authenticateChangePasswordDTO) throws Exception;
+    UserResponse createUser(AuthenticateRegisterDTO authenticateRegisterDTO) throws Exception;
+    TokenResponse login(AuthenticateLoginDTO authenticateLoginDTO) throws Exception;
+    UserResponse changePassword(Long id, AuthenticateChangePasswordDTO authenticateChangePasswordDTO) throws Exception;
 }
