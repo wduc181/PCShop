@@ -1,14 +1,13 @@
 package com.project.pcshop.services.interfaces;
 
 import com.project.pcshop.dtos.category.CategoryDTO;
-import com.project.pcshop.models.entities.Category;
+import com.project.pcshop.responses.CategoryResponse;
 
 import java.util.List;
 
 public interface CategoryService {
-    Category createCategory(CategoryDTO dto);
-    List<Category> getAllCategories();
-    Category getCategoryById(Long id);
-    Category updateCategory(Long id, CategoryDTO dto);
+    CategoryResponse createCategory(CategoryDTO dto) throws Exception;
+    List<CategoryResponse> getAllCategories();
+    CategoryResponse updateCategory(Long id, CategoryDTO dto) throws Exception;
     void deleteCategory(Long id);
 }

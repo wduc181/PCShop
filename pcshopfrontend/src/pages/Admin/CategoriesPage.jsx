@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import AdminLayout from "@/components/Layouts/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,22 +6,46 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { getCategories, createCategory, updateCategory, deleteCategory } from "../../services/categoryService";
+import { getAuthSnapshot } from "@/services/auth";
+import { useAuth } from "@/context/AuthContext";
 
 const CategoryPage = () => {
   const [categories, setCategories] = useState([]);
   const [category, setCategory] = useState({ id: null, name: "", description: "" });
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { token } = useAuth();
+  const [authSnapshot, setAuthSnapshot] = useState(() => getAuthSnapshot());
+
+  useEffect(() => {
+    setAuthSnapshot(getAuthSnapshot());
+  }, [token]);
 
   useEffect(() => {
     loadCategories();
   }, []);
 
+  const normalizeCategory = (item) => ({
+    id: item?.id ?? item?.category_id ?? null,
+    name: item?.name ?? item?.category_name ?? "",
+    description: item?.description ?? item?.desc ?? "",
+  });
+
+  const adminLabel = useMemo(() => {
+    const phone = authSnapshot?.phoneNumber;
+    const id = authSnapshot?.userId;
+    if (phone && id) return `Admin #${id} · ${phone}`;
+    if (phone) return `Admin ${phone}`;
+    if (id) return `Admin #${id}`;
+    return "Admin";
+  }, [authSnapshot]);
+
   const loadCategories = async () => {
     try {
       setLoading(true);
       const data = await getCategories();
-      setCategories(Array.isArray(data) ? data : data?.categories || []);
+      const list = Array.isArray(data) ? data : data?.categories || [];
+      setCategories(list.map(normalizeCategory).filter((c) => c.id && c.name));
     } catch (error) {
       console.error("Lỗi khi tải danh mục:", error);
     } finally {
@@ -56,7 +80,7 @@ const CategoryPage = () => {
   };
 
   const handleEdit = (cat) => {
-    setCategory(cat);
+    setCategory({ id: cat.id, name: cat.name, description: cat.description });
     setIsEditing(true);
   };
 
@@ -88,6 +112,7 @@ const CategoryPage = () => {
         <main className="relative z-10 flex-1 p-6 sm:p-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">Quản lý Danh mục</h2>
+            <span className="text-sm text-gray-500">{adminLabel}</span>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6 items-start">

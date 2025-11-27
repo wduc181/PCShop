@@ -11,10 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { updateUserInfo, getUser } from "@/services/userService";
-import { changePassword } from "@/services/auth";
+import { changePassword, getAuthSnapshot, clearAuthSnapshot } from "@/services/auth";
 
 const Sidebar = () => {
-  const { isAuthenticated, isAdmin, user, logout } = useAuth();
+  const { isAuthenticated, isAdmin, user, logout, token } = useAuth();
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,10 +40,15 @@ const Sidebar = () => {
     address: "",
     dateOfBirth: "",
   });
+  const [authSnapshot, setAuthSnapshot] = useState(() => getAuthSnapshot());
+
+  useEffect(() => {
+    setAuthSnapshot(getAuthSnapshot());
+  }, [token]);
 
   useEffect(() => {
     if (infoOpen) {
-      const src = accountUser ?? user;
+      const src = accountUser ?? user ?? { phoneNumber: authSnapshot?.phoneNumber };
       setInfoForm({
         fullname: src?.fullName ?? src?.fullname ?? "",
         email: src?.email ?? "",
@@ -51,7 +56,7 @@ const Sidebar = () => {
         dateOfBirth: toDateInputValue(src?.dateOfBirth ?? src?.date_of_birth),
       });
     }
-  }, [infoOpen]);
+  }, [infoOpen, accountUser, user, authSnapshot]);
 
   useEffect(() => {
     let alive = true;
@@ -176,7 +181,12 @@ const Sidebar = () => {
                 <UserIcon className="w-4 h-4 text-gray-300" />
               </div>
               <div className="text-sm font-medium truncate">
-                {user?.fullname || user?.phoneNumber || "Người dùng"}
+                {accountUser?.fullName
+                  ?? accountUser?.fullname
+                  ?? user?.fullName
+                  ?? user?.fullname
+                  ?? authSnapshot?.phoneNumber
+                  ?? "Người dùng"}
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -213,7 +223,7 @@ const Sidebar = () => {
                           {accountUser?.fullName ?? accountUser?.fullname ?? user?.fullName ?? user?.fullname ?? "Người dùng"}
                         </div>
                         <div className="text-gray-400 truncate">
-                          SĐT: {accountUser?.phoneNumber ?? accountUser?.phone_number ?? user?.phoneNumber ?? "-"}
+                          SĐT: {accountUser?.phoneNumber ?? accountUser?.phone_number ?? user?.phoneNumber ?? authSnapshot?.phoneNumber ?? "-"}
                         </div>
                         <div className="text-gray-400 truncate">
                           Email: {accountUser?.email ?? user?.email ?? "-"}
@@ -236,6 +246,7 @@ const Sidebar = () => {
                       variant="destructive"
                       onClick={() => {
                         try { localStorage.removeItem("user_fullname"); } catch (_) {}
+                        clearAuthSnapshot();
                         logout();
                         navigate("/users/auth", { replace: true });
                       }}
@@ -327,6 +338,7 @@ const Sidebar = () => {
           <ChangePasswordForm
             onCancel={() => setPwOpen(false)}
             onDone={() => { setPwOpen(false); toast.success("Đổi mật khẩu thành công"); }}
+            userId={authSnapshot?.userId}
           />
         </DialogContent>
       </Dialog>
@@ -336,7 +348,7 @@ const Sidebar = () => {
 
 export default Sidebar;
 
-const ChangePasswordForm = ({ onCancel, onDone }) => {
+const ChangePasswordForm = ({ onCancel, onDone, userId }) => {
   const [oldPw, setOldPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
@@ -353,7 +365,7 @@ const ChangePasswordForm = ({ onCancel, onDone }) => {
     }
     try {
       setSubmitting(true);
-      await changePassword({ password: oldPw, newPassword: newPw, confirmNewPassword: confirmPw });
+      await changePassword({ userId, password: oldPw, newPassword: newPw, confirmNewPassword: confirmPw });
       setOldPw(""); setNewPw(""); setConfirmPw("");
       onDone?.();
     } catch (err) {

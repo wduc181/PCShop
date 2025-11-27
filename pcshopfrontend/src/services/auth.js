@@ -1,5 +1,7 @@
 import { API_URL } from "@/config/env";
 
+const AUTH_KEYS = Object.freeze({ token: "token", userId: "userId", phone: "phoneNumber", roles: "roles" });
+
 const handleResponse = async (res) => {
     let data;
     const contentType = res.headers.get("content-type") || "";
@@ -21,25 +23,63 @@ const handleResponse = async (res) => {
 const persistAuthSnapshot = ({ token, id, phone_number, roles } = {}) => {
     try {
         if (typeof token === "string" && token.length > 0) {
-            localStorage.setItem("token", token);
+            localStorage.setItem(AUTH_KEYS.token, token);
         }
         if (typeof id === "number" && Number.isFinite(id)) {
-            localStorage.setItem("userId", String(id));
+            localStorage.setItem(AUTH_KEYS.userId, String(id));
         } else {
-            localStorage.removeItem("userId");
+            localStorage.removeItem(AUTH_KEYS.userId);
         }
         if (phone_number) {
-            localStorage.setItem("phoneNumber", phone_number);
+            localStorage.setItem(AUTH_KEYS.phone, phone_number);
         } else {
-            localStorage.removeItem("phoneNumber");
+            localStorage.removeItem(AUTH_KEYS.phone);
         }
         if (Array.isArray(roles) && roles.length > 0) {
-            localStorage.setItem("roles", JSON.stringify(roles));
+            localStorage.setItem(AUTH_KEYS.roles, JSON.stringify(roles));
         } else {
-            localStorage.removeItem("roles");
+            localStorage.removeItem(AUTH_KEYS.roles);
         }
     } catch (_) {
         // ignore storage errors (e.g. private browsing)
+    }
+};
+
+export const clearAuthSnapshot = () => {
+    try {
+        localStorage.removeItem(AUTH_KEYS.userId);
+        localStorage.removeItem(AUTH_KEYS.phone);
+        localStorage.removeItem(AUTH_KEYS.roles);
+        localStorage.removeItem(AUTH_KEYS.token);
+    } catch (_) {
+        // ignore
+    }
+};
+
+export const getAuthSnapshot = () => {
+    try {
+        const token = localStorage.getItem(AUTH_KEYS.token) || null;
+        const rawUserId = localStorage.getItem(AUTH_KEYS.userId);
+        const userId = rawUserId != null ? Number(rawUserId) : null;
+        const phoneNumber = localStorage.getItem(AUTH_KEYS.phone) || null;
+        const rolesRaw = localStorage.getItem(AUTH_KEYS.roles);
+        let roles = [];
+        if (rolesRaw) {
+            try {
+                const parsed = JSON.parse(rolesRaw);
+                roles = Array.isArray(parsed) ? parsed : [];
+            } catch (_) {
+                roles = [];
+            }
+        }
+        return {
+            token,
+            userId: Number.isFinite(userId) ? userId : null,
+            phoneNumber,
+            roles,
+        };
+    } catch (_) {
+        return { token: null, userId: null, phoneNumber: null, roles: [] };
     }
 };
 
@@ -139,13 +179,20 @@ export const changePassword = async ({ userId, password, newPassword, confirmNew
     if (typeof confirmNewPassword !== "undefined" && newPassword !== confirmNewPassword) {
         throw new Error("Mật khẩu mới và nhập lại mật khẩu mới không khớp");
     }
-    
+
+    let snapshot;
     let t = token;
-    try { if (!t) t = localStorage.getItem("token"); } catch (_) {}
+    if (!t) {
+        snapshot = getAuthSnapshot();
+        t = snapshot.token;
+    }
     if (!t) throw new Error("Bạn chưa đăng nhập");
 
     let uid = userId;
-    if (!uid) uid = getUserIdFromToken(t);
+    if (!uid) {
+        if (!snapshot) snapshot = getAuthSnapshot();
+        uid = snapshot.userId ?? getUserIdFromToken(t);
+    }
     if (!uid) throw new Error("Không tìm thấy ID người dùng");
 
     const res = await fetch(`${API_URL}/auth/${uid}/change-password`, {
