@@ -1,14 +1,13 @@
 package com.project.pcshop.services.interfaces;
 
 import com.project.pcshop.dtos.brand.BrandDTO;
-import com.project.pcshop.models.entities.Brand;
+import com.project.pcshop.responses.BrandResponse;
 
 import java.util.List;
 
 public interface BrandService {
-    Brand createBrand(BrandDTO brandDTO, String logoFileName);
-    List<Brand> getAllBrands();
-    Brand getBrandById(Long id);
-    Brand updateBrand(Long id, BrandDTO brandDTO, String logoFileName);
-    void deleteBrand(Long id);
+    BrandResponse createBrand(BrandDTO brandDTO) throws Exception;
+    List<BrandResponse> getAllBrands();
+    BrandResponse updateBrand(Long id, BrandDTO brandDTO) throws Exception;
+    void deleteBrand(Long id) throws Exception;
 }

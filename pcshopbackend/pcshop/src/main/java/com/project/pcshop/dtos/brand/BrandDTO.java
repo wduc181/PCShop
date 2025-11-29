@@ -18,6 +18,5 @@ public class BrandDTO {
     private String description;
 
     @JsonProperty("logo_url")
-    @NotNull(message = "Brand's logo is required.")
     private MultipartFile logoUrl;
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { apiRequest } from "@/services/api";
+import { getAllBrands } from "@/services/brandService";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router";
 import { brandImageUrl } from "@/config/env";
@@ -11,8 +11,7 @@ const Brands = () => {
   useEffect(() => {
     const fetchBrands = async () => {
       try {
-        const data = await apiRequest("/brands");
-        // Ẩn brand có id = 25
+        const data = await getAllBrands();
         const filtered = Array.isArray(data)
           ? data.filter((b) => Number(b?.id) !== 25)
           : [];
