@@ -7,6 +7,7 @@ import com.project.pcshop.models.entities.Category;
 import com.project.pcshop.repositories.CategoryRepository;
 import com.project.pcshop.responses.CategoryResponse;
 import com.project.pcshop.services.interfaces.CategoryService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import java.util.List;
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
 
+    @Transactional
     @Override
     public CategoryResponse createCategory(CategoryDTO categoryDTO) throws Exception {
         if (categoryRepository.existsByName(categoryDTO.getName())) {
@@ -37,6 +39,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .toList();
     }
 
+    @Transactional
     @Override
     public CategoryResponse updateCategory(Long id, CategoryDTO categoryDTO) throws Exception {
         Category category = categoryRepository.findById(id)
@@ -49,6 +52,7 @@ public class CategoryServiceImpl implements CategoryService {
         return CategoryResponse.fromCategory(category);
     }
 
+    @Transactional
     @Override
     public void deleteCategory(Long id) {
         if (!categoryRepository.existsById(id)) {
