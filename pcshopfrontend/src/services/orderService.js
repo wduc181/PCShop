@@ -2,6 +2,19 @@ import { apiRequest } from "./api";
 
 const BASE_URL = "/orders";
 
+const unwrapResponse = (res) => {
+	if (!res || typeof res !== "object") return res;
+	if (res.responseObject !== undefined) return res.responseObject;
+	if (res.response_object !== undefined) return res.response_object;
+	if (res.data !== undefined) return res.data;
+	return res;
+};
+
+const request = async (url, options) => {
+	const raw = await apiRequest(url, options);
+	return unwrapResponse(raw);
+};
+
 const normalizeKey = (s) => {
 	if (s == null) return "";
 	return String(s)
@@ -136,7 +149,7 @@ export const createOrderFromCart = async (userId, orderData = {}) => {
 	if (!userId) throw new Error("userId is required");
 	try {
 		const body = JSON.stringify(toOrderDTO({ ...orderData, userId }));
-		return await apiRequest(`${BASE_URL}/from-cart/${userId}`, {
+		return await request(`${BASE_URL}/from-cart/${userId}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body,
@@ -150,7 +163,7 @@ export const createOrderFromCart = async (userId, orderData = {}) => {
 export const getAllOrders = async (authToken) => {
 	try {
 		const headers = authToken ? { Authorization: `Bearer ${authToken}` } : undefined;
-		return await apiRequest(`${BASE_URL}`, { method: "GET", headers });
+		return await request(`${BASE_URL}`, { method: "GET", headers });
 	} catch (error) {
 		console.error("Error fetching all orders:", error);
 		throw error;
@@ -162,7 +175,7 @@ export const getOrdersByUser = async (userId, page = 1, size = 10, authToken) =>
 	try {
 		const params = new URLSearchParams({ page: String(page), size: String(size) });
 		const headers = authToken ? { Authorization: `Bearer ${authToken}` } : undefined;
-		return await apiRequest(`${BASE_URL}/user/${userId}?${params.toString()}`, { method: "GET", headers });
+		return await request(`${BASE_URL}/user/${userId}?${params.toString()}`, { method: "GET", headers });
 	} catch (error) {
 		console.error("Error fetching orders by user:", error);
 		throw error;
@@ -172,7 +185,7 @@ export const getOrdersByUser = async (userId, page = 1, size = 10, authToken) =>
 export const getOrderDetails = async (orderId) => {
 	if (!orderId) throw new Error("orderId is required");
 	try {
-		return await apiRequest(`${BASE_URL}/${orderId}/details`, { method: "GET" });
+		return await request(`${BASE_URL}/${orderId}/details`, { method: "GET" });
 	} catch (error) {
 		console.error("Error fetching order details:", error);
 		throw error;
@@ -183,7 +196,7 @@ export const updateOrder = async (orderId, orderData = {}) => {
 	if (!orderId) throw new Error("orderId is required");
 	try {
 		const body = JSON.stringify(toOrderInfoDTO(orderData));
-		return await apiRequest(`${BASE_URL}/${orderId}`, {
+		return await request(`${BASE_URL}/${orderId}`, {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
 			body,
@@ -200,7 +213,7 @@ export const cancelOrder = async (orderId, authToken) => {
   if (!orderId) throw new Error("orderId is required");
   try {
     const headers = authToken ? { Authorization: `Bearer ${authToken}` } : undefined;
-    return await apiRequest(`${BASE_URL}/${orderId}/cancel`, {
+		return await request(`${BASE_URL}/${orderId}/cancel`, {
 			method: "PUT",
       headers,
     });
@@ -220,7 +233,7 @@ export const updateOrderStatus = async (orderId, status, authToken) => {
 			...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
 		};
 		const body = JSON.stringify(toOrderStatusDTO(status));
-		return await apiRequest(`${BASE_URL}/${orderId}/status`, {
+		return await request(`${BASE_URL}/${orderId}/status`, {
 			method: "PUT",
 			headers,
 			body,

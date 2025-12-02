@@ -1,6 +1,6 @@
 package com.project.pcshop.security.components;
 
-import com.project.pcshop.models.entities.User;
+import com.project.pcshop.entities.User;
 import com.project.pcshop.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;

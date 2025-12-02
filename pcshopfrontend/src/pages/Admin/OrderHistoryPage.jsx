@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 import { toVIOrderStatus, toVIPaymentStatus } from "@/lib/statusMaps";
 
+const toOrderList = (raw) => {
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === "object" && Array.isArray(raw.content)) return raw.content;
+  return [];
+};
+
 const OrderHistoryPage = () => {
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -24,8 +30,7 @@ const OrderHistoryPage = () => {
       try {
         setLoading(true);
         const res = await getAllOrders(token);
-        const list = Array.isArray(res) ? res : Array.isArray(res?.content) ? res.content : [];
-        setOrders(list);
+        setOrders(toOrderList(res));
         setError("");
       } catch (e) {
         console.error("Load order history failed:", e);

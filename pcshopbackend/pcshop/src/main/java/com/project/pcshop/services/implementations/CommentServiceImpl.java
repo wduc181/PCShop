@@ -6,20 +6,20 @@ import com.project.pcshop.security.components.SecurityUtil;
 import com.project.pcshop.dtos.comment.CommentDTO;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.exceptions.PermissionDenyException;
-import com.project.pcshop.models.entities.Comment;
-import com.project.pcshop.models.entities.Product;
-import com.project.pcshop.models.entities.User;
+import com.project.pcshop.entities.Comment;
+import com.project.pcshop.entities.Product;
+import com.project.pcshop.entities.User;
 import com.project.pcshop.repositories.CommentRepository;
 import com.project.pcshop.repositories.ProductRepository;
 import com.project.pcshop.repositories.UserRepository;
 import com.project.pcshop.services.interfaces.CommentService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor

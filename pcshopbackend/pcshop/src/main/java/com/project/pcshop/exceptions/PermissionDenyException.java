@@ -1,6 +1,6 @@
 package com.project.pcshop.exceptions;
 
-public class PermissionDenyException extends RuntimeException {
+public class PermissionDenyException extends Exception {
     public PermissionDenyException(String message) {
         super(message);
     }

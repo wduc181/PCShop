@@ -1,6 +1,6 @@
 package com.project.pcshop.dtos.order;
 
-import com.project.pcshop.models.enums.OrderStatus;
+import com.project.pcshop.entities.enums.OrderStatus;
 import lombok.*;
 
 @Data

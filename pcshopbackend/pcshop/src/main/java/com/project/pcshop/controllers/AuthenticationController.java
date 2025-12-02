@@ -25,10 +25,6 @@ public class AuthenticationController {
     public ResponseEntity<ApiResponse<?>> createUser(
             @Valid @RequestBody AuthenticateRegisterDTO authenticateRegisterDTO
     )  throws Exception {
-        if (!authenticateRegisterDTO.getPassword().equals(authenticateRegisterDTO.getConfirmPassword())) {
-            throw new InvalidParamException("Passwords do not match");
-        }
-
         UserResponse newUserResponse = authService.createUser(authenticateRegisterDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.builder()
                 .status(HttpStatus.CREATED)

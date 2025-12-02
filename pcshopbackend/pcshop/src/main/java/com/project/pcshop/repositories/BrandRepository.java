@@ -1,6 +1,6 @@
 package com.project.pcshop.repositories;
 
-import com.project.pcshop.models.entities.Brand;
+import com.project.pcshop.entities.Brand;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

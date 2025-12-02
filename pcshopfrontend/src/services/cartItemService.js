@@ -1,6 +1,8 @@
 import { apiRequest } from "./api";
 
 const BASE_URL = "/cart-items";
+const unwrap = (res) => (res && typeof res === "object" && "response_object" in res ? res.response_object : res);
+const request = async (endpoint, options) => unwrap(await apiRequest(endpoint, options));
 
 const toCartDTO = ({ userId, productId, quantity = 1 }) => ({
 	user_id: Number(userId),
@@ -19,7 +21,7 @@ export const addCartItem = async (payload) => {
 					}
 				: toCartDTO(payload || {})
 		);
-		return await apiRequest(BASE_URL, {
+		return await request(BASE_URL, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body,
@@ -33,7 +35,7 @@ export const addCartItem = async (payload) => {
 export const updateCartItemQuantity = async (id, quantity) => {
 	try {
 		const q = new URLSearchParams({ quantity: String(quantity) });
-		return await apiRequest(`${BASE_URL}/${id}?${q.toString()}`, {
+		return await request(`${BASE_URL}/${id}?${q.toString()}`, {
 			method: "PUT",
 		});
 	} catch (error) {
@@ -45,7 +47,7 @@ export const updateCartItemQuantity = async (id, quantity) => {
 
 export const removeCartItem = async (id) => {
 	try {
-		return await apiRequest(`${BASE_URL}/${id}`, { method: "DELETE" });
+		return await request(`${BASE_URL}/${id}`, { method: "DELETE" });
 	} catch (error) {
 		console.error("Error removing cart item:", error);
 		throw error;
@@ -54,7 +56,7 @@ export const removeCartItem = async (id) => {
 
 export const clearCart = async (userId) => {
 	try {
-		return await apiRequest(`${BASE_URL}/user/${userId}`, { method: "DELETE" });
+		return await request(`${BASE_URL}/user/${userId}`, { method: "DELETE" });
 	} catch (error) {
 		console.error("Error clearing cart:", error);
 		throw error;
@@ -63,7 +65,7 @@ export const clearCart = async (userId) => {
 
 export const getCart = async (userId) => {
 	try {
-		return await apiRequest(`${BASE_URL}/user/${userId}`, { method: "GET" });
+		return await request(`${BASE_URL}/user/${userId}`, { method: "GET" });
 	} catch (error) {
 		console.error("Error fetching cart:", error);
 		throw error;

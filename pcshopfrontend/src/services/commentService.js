@@ -3,8 +3,13 @@ import { getAuthSnapshot } from "./auth";
 
 const BASE_URL = "/comments";
 
-const unwrap = (res) =>
-	res && typeof res === "object" && "response_object" in res ? res.response_object : res;
+const unwrap = (res) => {
+	if (!res || typeof res !== "object") return res;
+	if (res.responseObject !== undefined) return res.responseObject;
+	if (res.response_object !== undefined) return res.response_object;
+	if (res.data !== undefined) return res.data;
+	return res;
+};
 
 const resolveUserId = (userId) => {
 	if (userId != null) {

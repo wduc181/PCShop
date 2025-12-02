@@ -5,10 +5,10 @@ import com.project.pcshop.dtos.product.ProductDiscountDTO;
 import com.project.pcshop.dtos.product.ProductFeaturedDTO;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.exceptions.InvalidParamException;
-import com.project.pcshop.models.entities.Brand;
-import com.project.pcshop.models.entities.Category;
-import com.project.pcshop.models.entities.Product;
-import com.project.pcshop.models.entities.ProductImage;
+import com.project.pcshop.entities.Brand;
+import com.project.pcshop.entities.Category;
+import com.project.pcshop.entities.Product;
+import com.project.pcshop.entities.ProductImage;
 import com.project.pcshop.repositories.BrandRepository;
 import com.project.pcshop.repositories.CategoryRepository;
 import com.project.pcshop.repositories.ProductImageRepository;
@@ -18,6 +18,7 @@ import com.project.pcshop.responses.ProductResponse;
 import com.project.pcshop.services.interfaces.FileStorageService;
 import com.project.pcshop.services.interfaces.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -36,6 +37,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductImageRepository productImageRepository;
     private final FileStorageService fileStorageService;
 
+    @Transactional
     @Override
     public ProductResponse createProduct(
             ProductDTO productDTO
@@ -142,6 +144,7 @@ public class ProductServiceImpl implements ProductService {
         return products.stream().map(ProductResponse::fromProduct).toList();
     }
 
+    @Transactional
     @Override
     public ProductResponse updateProduct(Long id, ProductDTO productDTO) throws Exception {
         Product product = productRepository.findById(id)
@@ -164,6 +167,7 @@ public class ProductServiceImpl implements ProductService {
         return ProductResponse.fromProduct(product);
     }
 
+    @Transactional
     @Override
     public ProductResponse discountProduct(
             Long id,
@@ -178,6 +182,7 @@ public class ProductServiceImpl implements ProductService {
         return ProductResponse.fromProduct(product);
     }
 
+    @Transactional
     @Override
     public ProductResponse recommendProduct(
             Long id,
@@ -192,6 +197,7 @@ public class ProductServiceImpl implements ProductService {
         return ProductResponse.fromProduct(product);
     }
 
+    @Transactional
     @Override
     public void deleteProduct(
             Long id
@@ -203,6 +209,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
 
+    @Transactional
     @Override
     public List<ProductImageResponse> createProductImage(
             Long productId,
@@ -242,6 +249,7 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
     }
 
+    @Transactional
     @Override
     public ProductResponse setThumbnail(
             Long id,
@@ -256,6 +264,7 @@ public class ProductServiceImpl implements ProductService {
         return ProductResponse.fromProduct(existingProduct);
     }
 
+    @Transactional
     @Override
     public void deleteImages(
             Long[] imageIds

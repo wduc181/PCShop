@@ -3,13 +3,13 @@ package com.project.pcshop.services.implementations;
 import com.project.pcshop.dtos.category.CategoryDTO;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.exceptions.InvalidParamException;
-import com.project.pcshop.models.entities.Category;
+import com.project.pcshop.entities.Category;
 import com.project.pcshop.repositories.CategoryRepository;
 import com.project.pcshop.responses.CategoryResponse;
 import com.project.pcshop.services.interfaces.CategoryService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 

@@ -40,31 +40,39 @@ const UsersPage = () => {
   };
 
   useEffect(() => {
+    let active = true;
     const fetchUsersFx = async () => {
       setLoading(true);
       setError("");
       try {
         const data = await getUsers({ page, limit });
-        const list = Array.isArray(data) ? data : [];
+        if (!active) return;
+        const list = Array.isArray(data?.content)
+          ? data.content
+          : Array.isArray(data)
+            ? data
+            : [];
         setUsers(list);
-        // If backend later returns total pages in headers or wrapper, adjust here.
-        // For now derive naive totalPages when the page is not full (last page) or default to page+1 assumption until empty.
-        if (list.length < limit) {
-          setTotalPages(page); // last page reached
-        } else {
-          // optimistic: allow next page until an empty/partial result updates totalPages
-          setTotalPages(Math.max(totalPages, page + 1));
-        }
+        const nextTotalPages = Number.isFinite(data?.totalPages)
+          ? Number(data.totalPages)
+          : list.length < limit
+            ? page
+            : page + 1;
+        setTotalPages(Math.max(1, nextTotalPages));
       } catch (err) {
+        if (!active) return;
         console.error("Lỗi khi tải danh sách người dùng:", err);
         setError(err?.message || "Không thể tải người dùng");
         toast.error(err?.message || "Không thể tải người dùng");
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
     fetchUsersFx();
-  }, [page]);
+    return () => {
+      active = false;
+    };
+  }, [page, limit]);
 
   const handleEdit = (id) => {
     const u = users.find((x) => x.id === id);

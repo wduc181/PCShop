@@ -12,6 +12,12 @@ import OrderInfoDialog from "@/components/common/OrderInfoDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toVIOrderStatus, toVIPaymentStatus } from "@/lib/statusMaps";
 
+const toOrderList = (raw) => {
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === "object" && Array.isArray(raw.content)) return raw.content;
+  return [];
+};
+
 const AOrdersPage = () => {
   const navigate = useNavigate();
   const { token, isAdmin } = useAuth();
@@ -48,8 +54,7 @@ const AOrdersPage = () => {
     try {
       setLoading(true);
       const res = await getAllOrders(token);
-      const list = Array.isArray(res) ? res : Array.isArray(res?.content) ? res.content : [];
-      setOrders(list);
+      setOrders(toOrderList(res));
       setError("");
     } catch (e) {
       console.error("Load orders failed:", e);

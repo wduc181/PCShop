@@ -17,6 +17,24 @@ import OrderInfoDialog from "@/components/common/OrderInfoDialog";
 import { toast } from "sonner";
 import { toVIOrderStatus, toVIPaymentStatus } from "@/lib/statusMaps";
 
+const normalizeOrderPage = (raw) => {
+  if (!raw) return { content: [], totalPages: 1, totalElements: 0 };
+  if (Array.isArray(raw)) {
+    return { content: raw, totalPages: 1, totalElements: raw.length };
+  }
+  if (typeof raw === "object") {
+    const content = Array.isArray(raw.content) ? raw.content : [];
+    const totalPages = Number(raw.totalPages ?? raw.total_pages ?? 1);
+    const totalElements = Number(raw.totalElements ?? raw.total_elements ?? content.length ?? 0);
+    return {
+      content,
+      totalPages: Number.isFinite(totalPages) && totalPages > 0 ? totalPages : 1,
+      totalElements: Number.isFinite(totalElements) && totalElements >= 0 ? totalElements : content.length ?? 0,
+    };
+  }
+  return { content: [], totalPages: 1, totalElements: 0 };
+};
+
 const OrdersPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -63,17 +81,10 @@ const OrdersPage = () => {
     try {
       setLoading(true);
       const res = await getOrdersByUser(userId, page, size, token);
-      const list = Array.isArray(res?.content) ? res.content : Array.isArray(res) ? res : [];
-      setOrders(list);
-      if (res && typeof res === "object") {
-        const tp = Number(res.totalPages ?? 1);
-        const te = Number(res.totalElements ?? list.length ?? 0);
-        setTotalPages(Number.isFinite(tp) && tp > 0 ? tp : 1);
-        setTotalElements(Number.isFinite(te) && te >= 0 ? te : list.length ?? 0);
-      } else {
-        setTotalPages(1);
-        setTotalElements(list.length ?? 0);
-      }
+      const { content, totalPages: tp, totalElements: te } = normalizeOrderPage(res);
+      setOrders(content);
+      setTotalPages(tp);
+      setTotalElements(te);
       setError("");
     } catch (e) {
       console.error("Lỗi tải đơn hàng:", e);

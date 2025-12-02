@@ -1,7 +1,7 @@
 package com.project.pcshop.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.project.pcshop.models.entities.User;
+import com.project.pcshop.entities.User;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 

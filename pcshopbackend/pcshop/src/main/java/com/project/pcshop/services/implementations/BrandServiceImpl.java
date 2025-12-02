@@ -3,7 +3,7 @@ package com.project.pcshop.services.implementations;
 import com.project.pcshop.dtos.brand.BrandDTO;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.exceptions.InvalidParamException;
-import com.project.pcshop.models.entities.Brand;
+import com.project.pcshop.entities.Brand;
 import com.project.pcshop.repositories.BrandRepository;
 import com.project.pcshop.responses.BrandResponse;
 import com.project.pcshop.services.interfaces.BrandService;

@@ -1,6 +1,6 @@
 package com.project.pcshop.repositories;
 
-import com.project.pcshop.models.entities.User;
+import com.project.pcshop.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

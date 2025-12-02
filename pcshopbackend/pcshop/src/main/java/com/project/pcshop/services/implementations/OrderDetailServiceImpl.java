@@ -1,10 +1,10 @@
 package com.project.pcshop.services.implementations;
 
+import com.project.pcshop.responses.OrderDetailResponse;
 import com.project.pcshop.security.components.SecurityUtil;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.exceptions.PermissionDenyException;
-import com.project.pcshop.models.entities.Order;
-import com.project.pcshop.models.entities.OrderDetail;
+import com.project.pcshop.entities.Order;
 import com.project.pcshop.repositories.OrderDetailRepository;
 import com.project.pcshop.repositories.OrderRepository;
 import com.project.pcshop.services.interfaces.OrderDetailService;
@@ -21,12 +21,12 @@ public class OrderDetailServiceImpl implements OrderDetailService {
     private final OrderRepository orderRepository;
 
     @Override
-    public List<OrderDetail> getOrderDetailsByOrder(Long orderId) throws Exception {
+    public List<OrderDetailResponse> getOrderDetailsByOrder(Long orderId) throws Exception {
         Order existingOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new DataNotFoundException("Order not found"));
         if (!(securityUtil.currentUserIsAdmin() || securityUtil.currentUserIsValid(existingOrder.getUser().getId()))) {
             throw new PermissionDenyException("You don't have permission to view this order detail");
         }
-        return orderDetailRepository.findByOrderId(orderId);
+        return orderDetailRepository.findByOrderId(orderId).stream().map(OrderDetailResponse::fromOrderDetail).toList();
     }
 }

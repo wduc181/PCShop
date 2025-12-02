@@ -1,75 +1,91 @@
 package com.project.pcshop.controllers;
 
+import com.project.pcshop.common.ApiResponse;
 import com.project.pcshop.dtos.cartItem.CartItemsDTO;
-import com.project.pcshop.models.entities.CartItems;
-import com.project.pcshop.responses.ApiMessageResponse;
 import com.project.pcshop.responses.CartResponse;
 import com.project.pcshop.services.interfaces.CartItemsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("${api.prefix}/cart-items")
 @RequiredArgsConstructor
 public class CartItemsController {
-
     private final CartItemsService cartItemService;
 
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    @PostMapping
-    public ResponseEntity<?> addItem(
-            @Valid @RequestBody CartItemsDTO cartItemsDTO,
-            BindingResult result
-    ) {
-       try {
-           if (result.hasErrors()) {
-               List<String> errorMessages = result.getFieldErrors()
-                       .stream().map(FieldError::getDefaultMessage).toList();
-               return ResponseEntity.badRequest().body(errorMessages);
-           }
-           cartItemService.addItemToCart(cartItemsDTO);
-           return ResponseEntity.ok("Added to cart");
-       } catch (Exception e) {
-           return ResponseEntity.badRequest().body(e.getMessage());
-       }
+    @PostMapping("")
+    public ResponseEntity<ApiResponse<?>> addItem(
+            @Valid @RequestBody CartItemsDTO cartItemsDTO
+    ) throws Exception {
+       cartItemService.addItemToCart(cartItemsDTO);
+       return ResponseEntity.ok().body(ApiResponse.builder()
+               .status(HttpStatus.OK)
+               .message("Item added successfully")
+               .responseObject(null)
+               .build()
+       );
     }
 
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getCart(@PathVariable Long userId) {
-        List<CartItems> items = cartItemService.getCartByUser(userId);
-        return ResponseEntity.ok(CartResponse.fromCartItems(items, userId));
+    public ResponseEntity<ApiResponse<?>> getCart(
+            @PathVariable("userId") Long userId
+    ) throws Exception {
+        CartResponse cartResponse = cartItemService.getCartByUser(userId);
+        return ResponseEntity.ok().body(ApiResponse.builder()
+                .status(HttpStatus.OK)
+                .message("Get cart items successfully")
+                .responseObject(cartResponse)
+                .build()
+        );
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateQuantity(
-            @PathVariable Long id,
+    public ResponseEntity<ApiResponse<?>> updateQuantity(
+            @PathVariable("id") Long id,
             @RequestParam Integer quantity
-    ) {
+    ) throws Exception {
         cartItemService.updateItemQuantity(id, quantity);
-        return ResponseEntity.ok(new ApiMessageResponse("Updated quantity successfully"));
+        return ResponseEntity.ok().body(ApiResponse.builder()
+                .status(HttpStatus.OK)
+                .message("Update item quantity successfully")
+                .responseObject(null)
+                .build()
+        );
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> removeItem(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<?>> removeItem(
+            @PathVariable("id") Long id
+    ) throws Exception {
         cartItemService.removeItem(id);
-        return ResponseEntity.ok(new ApiMessageResponse("Removed item successfully"));
+        return ResponseEntity.ok().body(ApiResponse.builder()
+                .status(HttpStatus.OK)
+                .message("Removed item from cart successfully")
+                .responseObject(null)
+                .build()
+        );
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @DeleteMapping("/user/{userId}")
-    public ResponseEntity<?> clearCart(@PathVariable Long userId) {
+    public ResponseEntity<ApiResponse<?>> clearCart(
+            @PathVariable("userId") Long userId
+    ) throws Exception {
         cartItemService.clearCart(userId);
-        return ResponseEntity.ok(new ApiMessageResponse("Clear cart successfully"));
+        return ResponseEntity.ok().body(ApiResponse.builder()
+                .status(HttpStatus.OK)
+                .message("Cleared cart successfully")
+                .responseObject(null)
+                .build()
+        );
     }
 }

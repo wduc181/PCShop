@@ -19,10 +19,12 @@ import {
 } from "@/services/cartItemService";
 import ConfirmOrderDialog from "@/components/common/ConfirmOrderDialog";
 
+const EMPTY_CART = { userId: null, items: [], totalPrice: 0 };
+
 const CartPage = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
-  const [cart, setCart] = useState({ userId: null, items: [], totalPrice: 0 });
+  const [cart, setCart] = useState(EMPTY_CART);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [openConfirm, setOpenConfirm] = useState(false);
@@ -46,16 +48,17 @@ const CartPage = () => {
     try {
       setLoading(true);
       const data = await getCart(userId);
-      const normalized = {
+      const normalizedItems = Array.isArray(data?.items) ? data.items : [];
+      setCart({
         userId: data?.userId ?? userId,
-        items: Array.isArray(data?.items) ? data.items : [],
-        totalPrice: Number(data?.totalPrice || 0),
-      };
-      setCart(normalized);
+        items: normalizedItems,
+        totalPrice: Number(data?.totalPrice ?? 0),
+      });
       setError("");
     } catch (e) {
       console.error("Lỗi tải giỏ hàng:", e);
       setError("Không thể tải giỏ hàng. Hãy thử lại sau.");
+      setCart((prev) => ({ ...prev, items: [], totalPrice: 0 }));
     } finally {
       setLoading(false);
     }

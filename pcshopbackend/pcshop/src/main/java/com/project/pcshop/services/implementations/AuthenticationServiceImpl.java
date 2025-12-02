@@ -9,18 +9,18 @@ import com.project.pcshop.dtos.authentication.AuthenticateChangePasswordDTO;
 import com.project.pcshop.dtos.authentication.AuthenticateRegisterDTO;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.exceptions.PermissionDenyException;
-import com.project.pcshop.models.entities.Role;
-import com.project.pcshop.models.entities.User;
+import com.project.pcshop.entities.Role;
+import com.project.pcshop.entities.User;
 import com.project.pcshop.repositories.RoleRepository;
 import com.project.pcshop.repositories.UserRepository;
 import com.project.pcshop.services.interfaces.AuthService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +34,9 @@ public class AuthenticationServiceImpl implements AuthService {
     @Transactional
     @Override
     public UserResponse createUser(AuthenticateRegisterDTO authenticateRegisterDTO) throws Exception {
+        if (!authenticateRegisterDTO.getPassword().equals(authenticateRegisterDTO.getConfirmPassword())) {
+            throw new InvalidParamException("Passwords do not match");
+        }
         String phoneNumber = authenticateRegisterDTO.getPhoneNumber();
         if(userRepository.existsByPhoneNumber(phoneNumber)) {
             throw new InvalidParamException("Phone number already exists.");

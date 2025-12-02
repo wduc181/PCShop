@@ -1,22 +1,17 @@
 package com.project.pcshop.controllers;
 
+import com.project.pcshop.common.ApiResponse;
 import com.project.pcshop.dtos.order.OrderCreateDTO;
 import com.project.pcshop.dtos.order.OrderUpdateInfoDTO;
 import com.project.pcshop.dtos.order.OrderUpdateStatusDTO;
-import com.project.pcshop.models.entities.Order;
-import com.project.pcshop.responses.ApiMessageResponse;
 import com.project.pcshop.responses.OrderResponse;
 import com.project.pcshop.services.interfaces.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,42 +20,33 @@ import java.util.List;
 @RequestMapping("${api.prefix}/orders")
 @RequiredArgsConstructor
 public class OrderController {
-
     private final OrderService orderService;
 
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PostMapping("/from-cart/{userId}")
-    public ResponseEntity<?> createOrderFromCart(
-            @PathVariable Long userId,
-            @Valid @RequestBody OrderCreateDTO orderCreateDTO,
-            BindingResult result
-    ) {
-        try {
-            if (result.hasErrors()) {
-                List<String> errors = result.getFieldErrors()
-                        .stream()
-                        .map(FieldError::getDefaultMessage)
-                        .toList();
-                return ResponseEntity.badRequest().body(errors);
-            }
-            Order order = orderService.createOrderFromCart(userId, orderCreateDTO);
-            return ResponseEntity.ok(OrderResponse.fromOrderWithDetails(order));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<ApiResponse<?>> createOrderFromCart(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody OrderCreateDTO orderCreateDTO
+    ) throws Exception {
+        OrderResponse orderResponse = orderService.createOrderFromCart(userId, orderCreateDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.builder()
+                .status(HttpStatus.CREATED)
+                .message("Create order successfully")
+                .responseObject(orderResponse)
+                .build()
+        );
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("")
-    public ResponseEntity<?> getAllOrders() {
-        try {
-            List<Order> orders = orderService.getAllOrders();
-            return ResponseEntity.ok(
-                    orders.stream().map(OrderResponse::fromOrder).toList()
-            );
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<ApiResponse<?>> getAllOrders() {
+        List<OrderResponse> orderResponses = orderService.getAllOrders();
+        return ResponseEntity.ok().body(ApiResponse.builder()
+                .status(HttpStatus.OK)
+                .message("Get all orders successfully")
+                .responseObject(orderResponses)
+                .build()
+        );
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
@@ -69,52 +55,43 @@ public class OrderController {
             @PathVariable Long userId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
-    ) {
-        try {
-            Pageable pageable = PageRequest.of(
-                    page - 1
-                    , size
-                    , Sort.by("orderDate").descending());
-            Page<Order> orders = orderService.getOrdersByUser(userId, pageable);
-
-            Page<OrderResponse> response = orders.map(OrderResponse::fromOrder);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    ) throws Exception {
+        Page<OrderResponse> orderResponses = orderService.getOrdersByUser(userId, page, size);
+        return ResponseEntity.ok().body(ApiResponse.builder()
+                .status(HttpStatus.OK)
+                .message("Get all orders successfully")
+                .responseObject(orderResponses)
+                .build()
+        );
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/{id}/details")
-    public ResponseEntity<?> getOrderWithDetails(@PathVariable Long id) {
-        try {
-            Order order = orderService.getOrderWithDetails(id);
-            return ResponseEntity.ok(OrderResponse.fromOrderWithDetails(order));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<ApiResponse<?>> getOrderWithDetails(
+            @PathVariable("id") Long id
+    ) throws Exception {
+        OrderResponse orderResponse = orderService.getOrderWithDetails(id);
+        return ResponseEntity.ok().body(ApiResponse.builder()
+                .status(HttpStatus.OK)
+                .message("Get order successfully")
+                .responseObject(orderResponse)
+                .build()
+        );
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateOrderInfo(
+    public ResponseEntity<ApiResponse<?>> updateOrderInfo(
             @PathVariable Long id,
-            @Valid @RequestBody OrderUpdateInfoDTO orderUpdateInfoDTO,
-            BindingResult result
-    ) {
-        try {
-            if (result.hasErrors()) {
-                List<String> errors = result.getFieldErrors()
-                        .stream()
-                        .map(FieldError::getDefaultMessage)
-                        .toList();
-                return ResponseEntity.badRequest().body(errors);
-            }
-            Order order = orderService.updateOrderInfo(id, orderUpdateInfoDTO);
-            return ResponseEntity.ok(OrderResponse.fromOrderWithDetails(order));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+            @Valid @RequestBody OrderUpdateInfoDTO orderUpdateInfoDTO
+    ) throws Exception {
+        OrderResponse orderResponse = orderService.updateOrderInfo(id, orderUpdateInfoDTO);
+        return ResponseEntity.ok().body(ApiResponse.builder()
+                .status(HttpStatus.OK)
+                .message("Update order successfully")
+                .responseObject(orderResponse)
+                .build()
+        );
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -122,23 +99,27 @@ public class OrderController {
     public ResponseEntity<?> updateOrderStatus(
             @PathVariable Long id,
             @Valid @RequestBody OrderUpdateStatusDTO orderUpdateStatusDTO
-    ) {
-        try {
-            Order order = orderService.updateOrderStatus(id, orderUpdateStatusDTO);
-            return ResponseEntity.ok(OrderResponse.fromOrderWithDetails(order));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    )  throws Exception {
+        OrderResponse orderResponse = orderService.updateOrderStatus(id, orderUpdateStatusDTO);
+        return ResponseEntity.ok().body(ApiResponse.builder()
+                .status(HttpStatus.OK)
+                .message("Update order successfully")
+                .responseObject(orderResponse)
+                .build()
+        );
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelOrder(@PathVariable Long id) {
-        try {
-            orderService.cancelOrder(id);
-            return ResponseEntity.ok(new ApiMessageResponse("Order has been cancelled"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<?> cancelOrder(
+            @PathVariable("id") Long id
+    ) throws Exception {
+        orderService.cancelOrder(id);
+        return ResponseEntity.ok().body(ApiResponse.builder()
+                .status(HttpStatus.OK)
+                .message("Cancel order successfully")
+                .responseObject(null)
+                .build()
+        );
     }
 }

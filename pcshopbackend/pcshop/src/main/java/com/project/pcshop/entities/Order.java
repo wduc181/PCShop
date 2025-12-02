@@ -1,7 +1,7 @@
-package com.project.pcshop.models.entities;
+package com.project.pcshop.entities;
 
-import com.project.pcshop.models.enums.OrderStatus;
-import com.project.pcshop.models.enums.PaymentStatus;
+import com.project.pcshop.entities.enums.OrderStatus;
+import com.project.pcshop.entities.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -1,6 +1,6 @@
 package com.project.pcshop.responses;
 
-import com.project.pcshop.models.entities.ProductImage;
+import com.project.pcshop.entities.ProductImage;
 import lombok.*;
 
 @Getter

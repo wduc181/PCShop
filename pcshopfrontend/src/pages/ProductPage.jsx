@@ -43,7 +43,15 @@ const createThreadEntry = (overrides = {}) => ({
 });
 
 const normalizeComment = (raw = {}) => {
-	const replyCount = raw.replyCount ?? raw.repliesCount ?? raw.totalReplies ?? raw.childrenCount;
+	const replyCount =
+		raw.replyCount ??
+		raw.repliesCount ??
+		raw.totalReplies ??
+		raw.childrenCount ??
+		raw.reply_count ??
+		raw.replies_count ??
+		raw.total_replies ??
+		raw.children_count;
 	return {
 		id: raw.id ?? raw.commentId ?? null,
 		productId: raw.productId ?? raw.product_id ?? null,
@@ -746,6 +754,18 @@ const CommentNode = ({
 	const [replyValue, setReplyValue] = useState("");
 	const [replyLoading, setReplyLoading] = useState(false);
 	const thread = getThread(comment.id);
+	const normalizedReplyCount = (() => {
+		const n = Number(comment.replyCount);
+		return Number.isFinite(n) ? n : null;
+	})();
+	const threadTotal = Number.isFinite(thread.total) ? thread.total : null;
+	const threadItemsCount = thread.items?.length;
+	const resolvedCount = thread.loaded
+		? threadTotal ?? threadItemsCount ?? normalizedReplyCount
+		: normalizedReplyCount;
+	const hasKnownReplies = (threadTotal ?? 0) > 0 || (threadItemsCount ?? 0) > 0 || (normalizedReplyCount ?? 0) > 0;
+	const allowLoadReplies = depth === 0 && !thread.loaded;
+	const showRepliesButton = hasKnownReplies || allowLoadReplies;
 
 	useEffect(() => {
 		if (!isEditing) setEditValue(comment.content || "");
@@ -776,7 +796,6 @@ const CommentNode = ({
 		}
 	};
 
-	const hasReplies = (thread.total ?? 0) > 0 || (thread.items?.length ?? 0) > 0;
 	const formattedDate = formatTimestamp(comment.createdAt);
 
 	return (
@@ -847,9 +866,13 @@ const CommentNode = ({
 				>
 					Trả lời
 				</button>
-				{hasReplies && (
+				{showRepliesButton && (
 					<button type="button" className="text-blue-600 hover:underline" onClick={() => onToggleReplies(comment)}>
-						{thread.expanded ? `Ẩn trả lời (${thread.total})` : `Hiển thị ${thread.total || ""} trả lời`}
+						{thread.expanded
+							? `Ẩn trả lời${resolvedCount != null ? ` (${resolvedCount})` : ""}`
+							: resolvedCount != null
+							? `Hiển thị ${resolvedCount} trả lời`
+							: "Hiển thị trả lời"}
 					</button>
 				)}
 			</div>

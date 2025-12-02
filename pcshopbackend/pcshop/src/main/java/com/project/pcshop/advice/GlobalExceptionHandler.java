@@ -3,6 +3,7 @@ package com.project.pcshop.advice;
 import com.project.pcshop.common.ApiResponse;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.exceptions.InvalidParamException;
+import com.project.pcshop.exceptions.PermissionDenyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -39,6 +40,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleParamException(Exception e) {
         return ResponseEntity.badRequest().body(ApiResponse.builder()
                 .status(HttpStatus.BAD_REQUEST)
+                .message(e.getMessage())
+                .responseObject(null)
+                .build()
+        );
+    }
+
+    @ExceptionHandler({PermissionDenyException.class})
+    public ResponseEntity<ApiResponse<?>> handlePermissionException(Exception e) {
+        return ResponseEntity.badRequest().body(ApiResponse.builder()
+                .status(HttpStatus.FORBIDDEN)
                 .message(e.getMessage())
                 .responseObject(null)
                 .build()

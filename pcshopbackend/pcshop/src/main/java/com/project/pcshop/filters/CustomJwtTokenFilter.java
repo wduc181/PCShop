@@ -1,7 +1,7 @@
 package com.project.pcshop.filters;
 
 import com.project.pcshop.security.components.JwtTokenUtil;
-import com.project.pcshop.models.entities.User;
+import com.project.pcshop.entities.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

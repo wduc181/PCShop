@@ -1,23 +1,24 @@
 package com.project.pcshop.services.implementations;
 
+import com.project.pcshop.entities.*;
+import com.project.pcshop.exceptions.*;
+import com.project.pcshop.responses.OrderResponse;
 import com.project.pcshop.security.components.SecurityUtil;
 import com.project.pcshop.dtos.order.OrderCreateDTO;
 import com.project.pcshop.dtos.order.OrderUpdateInfoDTO;
 import com.project.pcshop.dtos.order.OrderUpdateStatusDTO;
-import com.project.pcshop.exceptions.DataNotFoundException;
-import com.project.pcshop.exceptions.InsufficientStockException;
-import com.project.pcshop.exceptions.OrderStatusException;
-import com.project.pcshop.exceptions.PermissionDenyException;
-import com.project.pcshop.models.entities.*;
-import com.project.pcshop.models.enums.OrderStatus;
-import com.project.pcshop.models.enums.PaymentStatus;
+import com.project.pcshop.entities.enums.OrderStatus;
+import com.project.pcshop.entities.enums.PaymentStatus;
 import com.project.pcshop.repositories.*;
 import com.project.pcshop.services.interfaces.OrderService;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,9 +35,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public Order createOrderFromCart(Long userId, OrderCreateDTO orderCreateDTO) {
+    public OrderResponse createOrderFromCart(
+            Long userId,
+            OrderCreateDTO orderCreateDTO
+    ) throws Exception {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new DataNotFoundException("User not found"));
 
         if (!securityUtil.currentUserIsValid(userId)) {
             throw new PermissionDenyException("You don't have permission to create order for another user");
@@ -44,7 +48,7 @@ public class OrderServiceImpl implements OrderService {
 
         List<CartItems> cartItems = cartItemsRepository.findByUserId(userId);
         if (cartItems.isEmpty()) {
-            throw new RuntimeException("Cart is empty");
+            throw new InvalidParamException("Cart is empty");
         }
         Order order = Order.builder()
                 .user(user)
@@ -92,33 +96,37 @@ public class OrderServiceImpl implements OrderService {
         Order savedOrder = orderRepository.save(order);
         cartItemsRepository.deleteAll(cartItems);
 
-        return savedOrder;
+        return OrderResponse.fromOrderWithDetails(savedOrder);
     }
 
     @Override
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    public List<OrderResponse> getAllOrders() {
+        return orderRepository.findAll().stream().map(OrderResponse::fromOrder).toList();
     }
 
     @Override
-    public Page<Order> getOrdersByUser(Long userId, Pageable pageable) {
+    public Page<OrderResponse> getOrdersByUser(Long userId, Integer page, Integer size) throws Exception {
         if (!(securityUtil.currentUserIsValid(userId) || securityUtil.currentUserIsAdmin())) {
             throw new PermissionDenyException("You don't have permission to see orders of this user");
         }
-        return orderRepository.findByUserId(userId, pageable);
+        Pageable pageable = PageRequest.of(
+                page - 1
+                , size
+                , Sort.by("orderDate").descending());
+        return orderRepository.findByUserId(userId, pageable).map(OrderResponse::fromOrder);
     }
 
     @Override
-    public Order getOrderWithDetails(Long id) {
-        return orderRepository.findByIdWithDetails(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+    public OrderResponse getOrderWithDetails(Long id) throws Exception {
+        return OrderResponse.fromOrder(orderRepository.findByIdWithDetails(id)
+                .orElseThrow(() -> new DataNotFoundException("Order not found")));
     }
 
     @Transactional
     @Override
-    public Order updateOrderInfo(Long id, OrderUpdateInfoDTO orderUpdateInfoDTO) {
+    public OrderResponse updateOrderInfo(Long id, OrderUpdateInfoDTO orderUpdateInfoDTO) throws Exception {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new DataNotFoundException("Order not found"));
         if (!(securityUtil.currentUserIsValid(orderUpdateInfoDTO.getUserId()) || securityUtil.currentUserIsAdmin())) {
             throw new PermissionDenyException("You don't have permission to update order for another user");
         }
@@ -133,24 +141,27 @@ public class OrderServiceImpl implements OrderService {
         order.setPaymentMethod(orderUpdateInfoDTO.getPaymentMethod());
         order.setShippingMethod(orderUpdateInfoDTO.getShippingMethod());
 
-        return orderRepository.save(order);
+        orderRepository.save(order);
+
+        return OrderResponse.fromOrder(order);
     }
 
     @Transactional
     @Override
-    public Order updateOrderStatus(Long id, OrderUpdateStatusDTO orderUpdateStatusDTO) {
+    public OrderResponse updateOrderStatus(Long id, OrderUpdateStatusDTO orderUpdateStatusDTO) throws Exception {
         Order existingOrder = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new DataNotFoundException("Order not found"));
         existingOrder.setStatus(orderUpdateStatusDTO.getStatus());
         if (orderUpdateStatusDTO.getStatus().equals(OrderStatus.delivered)) {
             existingOrder.setPaymentStatus(PaymentStatus.paid);
         }
-        return orderRepository.save(existingOrder);
+        orderRepository.save(existingOrder);
+        return OrderResponse.fromOrder(existingOrder);
     }
 
     @Transactional
     @Override
-    public void cancelOrder(Long id) throws DataNotFoundException {
+    public void cancelOrder(Long id) throws Exception {
         Order existingOrder = orderRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException("Order not found"));
         if (!(securityUtil.currentUserIsAdmin() || securityUtil.currentUserIsValid(existingOrder.getUser().getId()))) {

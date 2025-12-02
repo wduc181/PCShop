@@ -1,6 +1,6 @@
 package com.project.pcshop.repositories;
 
-import com.project.pcshop.models.entities.CartItems;
+import com.project.pcshop.entities.CartItems;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
