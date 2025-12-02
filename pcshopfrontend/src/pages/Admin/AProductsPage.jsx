@@ -33,8 +33,15 @@ const ProductsPage = () => {
     try {
       setLoading(true);
       const res = await getAllProducts(pageNumber, 10, sort || undefined, keyword);
-      setProducts(res.products || []);
-      setTotalPages(res.totalPages || 1);
+      const list = Array.isArray(res?.content)
+        ? res.content
+        : Array.isArray(res?.products)
+          ? res.products
+          : Array.isArray(res)
+            ? res
+            : [];
+      setProducts(list);
+      setTotalPages(res?.totalPages || 1);
     } catch (error) {
       console.error("Lỗi tải danh sách sản phẩm:", error);
     } finally {

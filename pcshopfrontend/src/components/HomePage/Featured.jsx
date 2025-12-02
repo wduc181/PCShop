@@ -16,7 +16,14 @@ const Featured = () => {
       try {
         setLoading(true);
         const res = await getAllProducts(1, 20, "featured");
-        const list = (res?.products || []).filter(
+        const rawList = Array.isArray(res?.content)
+          ? res.content
+          : Array.isArray(res?.products)
+            ? res.products
+            : Array.isArray(res)
+              ? res
+              : [];
+        const list = rawList.filter(
           (p) => Boolean(p?.isFeatured ?? p?.featured ?? false)
         );
         if (active) setItems(list);

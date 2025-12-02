@@ -17,7 +17,14 @@ const OnSale = () => {
       try {
         setLoading(true);
         const res = await getAllProducts(1, 20, "discount");
-        const list = (res?.products || []).filter((p) => (p.discount ?? 0) > 0);
+        const rawList = Array.isArray(res?.content)
+          ? res.content
+          : Array.isArray(res?.products)
+            ? res.products
+            : Array.isArray(res)
+              ? res
+              : [];
+        const list = rawList.filter((p) => (p.discount ?? 0) > 0);
         if (active) {
           setItems(list);
         }

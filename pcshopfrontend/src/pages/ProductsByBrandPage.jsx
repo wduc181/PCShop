@@ -86,7 +86,14 @@ const ProductsByBrand = () => {
         setLoading(true);
         const resp = await getProductsByBrand(brandId, page, pageSize, sort || undefined);
         if (!active) return;
-        setItems(resp?.products || []);
+        const list = Array.isArray(resp?.content)
+          ? resp.content
+          : Array.isArray(resp?.products)
+            ? resp.products
+            : Array.isArray(resp)
+              ? resp
+              : [];
+        setItems(list);
         setTotalPages(resp?.totalPages || 1);
       } catch (e) {
         console.error("Lỗi tải sản phẩm theo brand:", e);

@@ -95,6 +95,21 @@ const useStoredAuthSnapshot = (token) => {
 	return snapshot;
 };
 
+const normalizeImageEntries = (list) => {
+	if (!Array.isArray(list)) return [];
+	return list
+		.map((item) => {
+			if (!item) return "";
+			if (typeof item === "string") return item;
+			if (typeof item.imageUrl === "string") return item.imageUrl;
+			if (typeof item.url === "string") return item.url;
+			if (typeof item.path === "string") return item.path;
+			return "";
+		})
+		.filter((path) => Boolean(path && path.trim()))
+		.map((path) => productImageUrl(path.trim()));
+};
+
 const useProductDetails = (productId) => {
 	const [product, setProduct] = useState(null);
 	const [images, setImages] = useState([]);
@@ -114,7 +129,8 @@ const useProductDetails = (productId) => {
 				]);
 				if (ignore) return;
 				setProduct(data);
-				setImages(Array.isArray(imgs) ? imgs.map(productImageUrl) : []);
+				const normalized = normalizeImageEntries(imgs);
+				setImages(normalized);
 			} catch (err) {
 				if (!ignore) setError(err?.message || "Không thể tải sản phẩm");
 			} finally {

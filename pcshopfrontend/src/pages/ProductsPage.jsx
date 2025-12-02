@@ -22,7 +22,14 @@ const ProductsPage = () => {
         setLoading(true);
         const res = await getAllProducts(page, 20, sort);
         if (!active) return;
-        setItems(res?.products || []);
+        const list = Array.isArray(res?.content)
+          ? res.content
+          : Array.isArray(res?.products)
+            ? res.products
+            : Array.isArray(res)
+              ? res
+              : [];
+        setItems(list);
         setTotalPages(res?.totalPages || 1);
       } catch (e) {
         console.error("Lỗi tải sản phẩm:", e);

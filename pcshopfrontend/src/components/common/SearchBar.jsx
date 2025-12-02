@@ -77,7 +77,13 @@ const SearchBar = ({ placeholder = "Tìm sản phẩm...", onSelect, className =
 			try {
 				const data = await searchProduct(q);
 				if (lastRequestId.current !== rid) return; // ignore stale
-				const arr = Array.isArray(data) ? data : (data?.products || []);
+				const arr = Array.isArray(data)
+					? data
+					: Array.isArray(data?.content)
+						? data.content
+						: Array.isArray(data?.products)
+							? data.products
+							: [];
 				setResults(arr);
 				setError("");
 			} catch (e) {

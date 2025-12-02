@@ -10,6 +10,7 @@ import java.util.List;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
+    boolean existsByName(String name);
     Page<Product> findByCategory_Id(Long categoryId, Pageable pageable);
     Page<Product> findByBrand_Id(Long brandId, Pageable pageable);
     Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
