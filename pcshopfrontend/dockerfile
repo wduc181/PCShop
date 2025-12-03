@@ -1,0 +1,29 @@
+# Build (Dùng Node.js để đóng gói React) ---
+FROM node:18-alpine as builder
+
+WORKDIR /app
+
+# Copy file package để cài thư viện trước (Tận dụng Cache)
+COPY package.json package-lock.json ./
+RUN npm install
+
+# Copy toàn bộ code frontend vào
+COPY . .
+
+# Build ra thư mục 'dist' (Vite mặc định build ra dist)
+RUN npm run build
+
+# -Run (Dùng Nginx để chạy web) ---
+FROM nginx:alpine
+
+#  Copy file build từ giai đoạn 1 sang thư mục chạy web của Nginx
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy file cấu hình Nginx custom vào container
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Nginx chạy mặc định ở port 80
+EXPOSE 80
+
+# Chạy Nginx (CMD mặc định của image nginx đã có, nhưng ghi rõ cho chắc)
+CMD ["nginx", "-g", "daemon off;"]

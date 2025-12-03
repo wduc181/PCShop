@@ -1,0 +1,31 @@
+# Stage build
+FROM amazoncorretto:24-alpine AS builder
+
+WORKDIR /app
+
+# Copy cấu hình Maven
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
+
+# Cấp quyền thực thi (Fix lỗi permission denied trên Linux)
+RUN chmod +x mvnw
+# Tải thư viện (Dependency caching)
+RUN ./mvnw dependency:go-offline
+
+# Copy source code và Build
+COPY src ./src
+RUN ./mvnw clean package -DskipTests
+
+# Stage run
+FROM amazoncorretto:24-alpine
+
+WORKDIR /app
+
+# Copy file JAR từ giai đoạn builder
+COPY --from=builder /app/target/*.jar app.jar
+
+# Expose port 
+EXPOSE 8080
+
+# Chạy ứng dụng
+ENTRYPOINT ["java", "-jar", "app.jar"]

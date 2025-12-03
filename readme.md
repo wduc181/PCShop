@@ -25,7 +25,7 @@ PCShop is a full-stack demo storefront targeting desktop parts and accessories. 
 | Backend  | Java Spring Boot (Corretto 24.0.2), Spring Security, Spring Data JPA |
 | Database | MySQL                                                                |
 | Frontend | React 18, Vite, Tailwind CSS, shadcn/ui, Sonner toast                |
-| Tooling  | Maven, npm                                                           |
+| Tooling  | Maven, npm, Docker, Docker Compose                                   |
 
 ## Prerequisites
 
@@ -48,6 +48,7 @@ PCShop is a full-stack demo storefront targeting desktop parts and accessories. 
 	```
 
 3. (Optional) Load the sample data: `mysql -u <user> -p pcshop < sample_database.sql`.
+	> **Heads-up:** the dump references product/brand image files stored in `uploads/` on the original machine. If you import it without copying those files, the image URLs will return 404s—either upload your own images or sync the `uploads` folder.
 4. From the backend root, run the API (pick one):
 
 	```bash
@@ -77,6 +78,40 @@ The service listens on `http://localhost:8080/main-api` by default.
 	```
 
 4. Visit the Vite dev URL (usually `http://localhost:5173`).
+
+## Run With Docker Compose
+
+1. Copy `.env.example` (if present) to `.env` at the repo root or adjust the provided values:
+
+	```env
+	MYSQL_ROOT_PASSWORD=<your-password>
+	MYSQL_DATABASE=pcshop
+	MYSQL_USER=<your-username>
+	MYSQL_PASSWORD=<your-password>
+	MYSQL_LOCAL_PORT=3307
+	BACKEND_LOCAL_PORT=8080
+	FRONTEND_LOCAL_PORT=5173
+	JWT_SECRET=<your-secret>
+	```
+
+2. Build and start everything:
+
+	```bash
+	docker compose up --build
+	```
+
+	- `pcshop-db` exposes MySQL on `MYSQL_LOCAL_PORT` (defaults to 3307)
+	- `pcshop-backend` maps to `http://localhost:8080/main-api`
+	- `pcshop-frontend` maps to `http://localhost:5173`
+
+3. To rebuild or stop:
+
+	```bash
+	docker compose down -v        # stop and remove containers + volumes
+	docker compose up --build     # rebuild images after code changes
+	```
+
+If you rely on local uploads, bind-mounting `./uploads:/app/uploads` (already configured for the backend) keeps files persistent between runs.
 
 ## Project Structure
 
