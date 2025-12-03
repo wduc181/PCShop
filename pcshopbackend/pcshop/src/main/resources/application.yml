@@ -1,5 +1,5 @@
 server:
-  port: 8088
+  port: 8080
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/pcshop?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
