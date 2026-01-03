@@ -7,8 +7,8 @@ import com.project.pcshop.security.components.SecurityUtil;
 import com.project.pcshop.dtos.order.OrderCreateDTO;
 import com.project.pcshop.dtos.order.OrderUpdateInfoDTO;
 import com.project.pcshop.dtos.order.OrderUpdateStatusDTO;
-import com.project.pcshop.entities.enums.OrderStatus;
-import com.project.pcshop.entities.enums.PaymentStatus;
+import com.project.pcshop.common.enums.OrderStatus;
+import com.project.pcshop.common.enums.PaymentStatus;
 import com.project.pcshop.repositories.*;
 import com.project.pcshop.services.interfaces.OrderService;
 
