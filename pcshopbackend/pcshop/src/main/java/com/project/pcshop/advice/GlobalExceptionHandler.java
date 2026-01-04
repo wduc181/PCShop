@@ -4,6 +4,7 @@ import com.project.pcshop.common.ApiResponse;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.exceptions.InvalidParamException;
 import com.project.pcshop.exceptions.PermissionDenyException;
+import com.project.pcshop.exceptions.RedisException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -18,7 +19,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGeneralException(Exception e) {
-        return ResponseEntity.badRequest().body(ApiResponse.builder()
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .message(e.getMessage())
                 .responseObject(null)
@@ -28,7 +29,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({DataNotFoundException.class})
     public ResponseEntity<ApiResponse<?>> handleAppException(Exception e) {
-        return ResponseEntity.badRequest().body(ApiResponse.builder()
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.builder()
                 .status(HttpStatus.NOT_FOUND)
                 .message(e.getMessage())
                 .responseObject(null)
@@ -65,6 +66,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(ApiResponse.builder()
                 .status(HttpStatus.BAD_REQUEST)
                 .message(String.join(", ", errorMessages))
+                .responseObject(null)
+                .build()
+        );
+    }
+
+    @ExceptionHandler({RedisException.class})
+    public ResponseEntity<ApiResponse<?>> handleRedisException(Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .message("Cache error" + e.getMessage())
                 .responseObject(null)
                 .build()
         );

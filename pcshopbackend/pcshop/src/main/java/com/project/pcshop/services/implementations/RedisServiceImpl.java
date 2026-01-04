@@ -1,5 +1,8 @@
 package com.project.pcshop.services.implementations;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.pcshop.exceptions.RedisException;
 import com.project.pcshop.services.interfaces.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -12,37 +15,57 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class RedisServiceImpl implements RedisService {
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
+
+    private void execute(Runnable action, String errorMessage) {
+        try {
+            action.run();
+        } catch (Exception e) {
+            throw new RedisException("Error in " + errorMessage, e);
+        }
+    }
 
     @Override
     public void set(String key, Object value) {
-        redisTemplate.opsForValue().set(key, value);
+        execute(() -> redisTemplate.opsForValue().set(key, value), "setting value for key: " + key);
     }
 
     @Override
     public void setWithTimeout(String key, Object value, long timeout, TimeUnit unit) {
-        redisTemplate.opsForValue().set(key, value, timeout, unit);
+        execute(() -> redisTemplate.opsForValue().set(key, value, timeout, unit),
+                "setting value with timeout for key: " + key);
     }
 
     @Override
-    public Object get(String key) {
-        return redisTemplate.opsForValue().get(key);
+    public <T> T get(String key, TypeReference<T> type) {
+        Object value = redisTemplate.opsForValue().get(key);
+        if (value == null) return null;
+        return objectMapper.convertValue(value, type);
     }
 
     @Override
     public void delete(String key) {
-        redisTemplate.delete(key);
+        execute(() -> redisTemplate.delete(key), "deleting key: " + key);
     }
 
     @Override
     public boolean hasKey(String key) {
-        return redisTemplate.hasKey(key);
+        try {
+            return redisTemplate.hasKey(key);
+        } catch (Exception e) {
+            throw new RedisException("Error in checking existence of key: " + key, e);
+        }
     }
 
     @Override
     public void deleteByPattern(String pattern) {
-        Set<String> keys = redisTemplate.keys(pattern);
-        if (!keys.isEmpty()) {
-            redisTemplate.delete(keys);
+        try {
+            Set<String> keys = redisTemplate.keys(pattern);
+            if (!keys.isEmpty()) {
+                redisTemplate.delete(keys);
+            }
+        } catch (Exception e) {
+            throw new RedisException("Error in deleting by pattern: " + pattern, e);
         }
     }
 }
