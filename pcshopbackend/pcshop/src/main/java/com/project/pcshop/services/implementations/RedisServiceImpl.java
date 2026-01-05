@@ -38,9 +38,18 @@ public class RedisServiceImpl implements RedisService {
 
     @Override
     public <T> T get(String key, TypeReference<T> type) {
-        Object value = redisTemplate.opsForValue().get(key);
-        if (value == null) return null;
-        return objectMapper.convertValue(value, type);
+        try {
+            Object value = redisTemplate.opsForValue().get(key);
+            if (value == null) {
+                //System.out.println("[CACHE MISS]--------- " + key);
+                return null;
+            }
+            //System.out.println("[CACHE HIT]--------- " + key);
+            return objectMapper.convertValue(value, type);
+        } catch (Exception e) {
+            //System.out.println("[CACHE ERROR]--------- " + key + " -> " + e.getMessage());
+            return null;
+        }
     }
 
     @Override
