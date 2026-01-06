@@ -23,7 +23,7 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password:
+      password: ${REDIS_PASSWORD}
       timeout: 60000
       lettuce:
         pool:
@@ -38,3 +38,10 @@ api:
 jwt:
   expiration: 2592000
   secretKey: ${JWT_SECRET_KEY}
+cache:
+  ttl:
+    default: 24 #hours
+    product: #minutes
+      list: 10
+      detail: 10
+      image: 120

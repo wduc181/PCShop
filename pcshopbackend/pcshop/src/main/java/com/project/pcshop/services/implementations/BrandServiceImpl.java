@@ -1,7 +1,7 @@
 package com.project.pcshop.services.implementations;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.project.pcshop.common.CacheConst;
+import com.project.pcshop.common.cache.CacheConst;
 import com.project.pcshop.dtos.brand.BrandDTO;
 import com.project.pcshop.exceptions.DataNotFoundException;
 import com.project.pcshop.exceptions.InvalidParamException;

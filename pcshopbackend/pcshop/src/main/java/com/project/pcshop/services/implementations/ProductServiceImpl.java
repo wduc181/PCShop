@@ -1,7 +1,8 @@
 package com.project.pcshop.services.implementations;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.project.pcshop.common.CacheConst;
+import com.project.pcshop.common.cache.CacheConst;
+import com.project.pcshop.common.cache.CacheCustomPage;
 import com.project.pcshop.dtos.product.ProductDTO;
 import com.project.pcshop.dtos.product.ProductDiscountDTO;
 import com.project.pcshop.dtos.product.ProductFeaturedDTO;
@@ -21,6 +22,7 @@ import com.project.pcshop.services.interfaces.FileStorageService;
 import com.project.pcshop.services.interfaces.ProductService;
 import com.project.pcshop.services.interfaces.RedisService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -130,12 +132,16 @@ public class ProductServiceImpl implements ProductService {
             String searchKey
     ) {
         String cacheKey = CacheConst.productAllKey(page, limit, sort, searchKey);
-        Page<ProductResponse> cachedData = redisService.get(
+        CacheCustomPage<ProductResponse> cachedData = redisService.get(
                 cacheKey,
                 new TypeReference<>() {}
         );
         if (cachedData != null) {
-            return cachedData;
+            return new PageImpl<>(
+                    cachedData.getContent(),
+                    PageRequest.of(cachedData.getPage(), cachedData.getSize()),
+                    cachedData.getTotalElements()
+            );
         }
 
         Sort sortSpec = sortProductsBy(sort);
@@ -150,12 +156,19 @@ public class ProductServiceImpl implements ProductService {
             ).map(ProductResponse::fromProduct);
         }
 
+        CacheCustomPage<ProductResponse> cachePage = new CacheCustomPage<>(
+                productResponsePage.getContent(),
+                productResponsePage.getNumber(),
+                productResponsePage.getSize(),
+                productResponsePage.getTotalElements()
+        );
         redisService.setWithTimeout(
                 cacheKey,
-                productResponsePage,
+                cachePage,
                 CacheConst.PRODUCT_LIST_TLL,
                 TimeUnit.MINUTES
         );
+
 
         return productResponsePage;
     }
@@ -168,12 +181,17 @@ public class ProductServiceImpl implements ProductService {
             Long categoryId
     ) {
         String cacheKey = CacheConst.productCategoryKey(page, limit, sort, categoryId);
-        Page<ProductResponse> cachedData = redisService.get(
+        CacheCustomPage<ProductResponse> cachedData = redisService.get(
                 cacheKey,
                 new TypeReference<>() {}
         );
+
         if (cachedData != null) {
-            return cachedData;
+            return new PageImpl<>(
+                    cachedData.getContent(),
+                    PageRequest.of(cachedData.getPage(), cachedData.getSize()),
+                    cachedData.getTotalElements()
+            );
         }
 
         Sort sortSpec = sortProductsBy(sort);
@@ -182,12 +200,20 @@ public class ProductServiceImpl implements ProductService {
                 .findByCategory_Id(categoryId, pageRequest)
                 .map(ProductResponse::fromProduct);
 
+        CacheCustomPage<ProductResponse> cachePage = new CacheCustomPage<>(
+                productResponsePage.getContent(),
+                productResponsePage.getNumber(),
+                productResponsePage.getSize(),
+                productResponsePage.getTotalElements()
+        );
+
         redisService.setWithTimeout(
                 cacheKey,
-                productResponsePage,
+                cachePage,
                 CacheConst.PRODUCT_LIST_TLL,
                 TimeUnit.MINUTES
         );
+
         return productResponsePage;
     }
 
@@ -199,12 +225,17 @@ public class ProductServiceImpl implements ProductService {
             Long brandId
     ) {
         String cacheKey = CacheConst.productBrandKey(page, limit, sort, brandId);
-        Page<ProductResponse> cachedData = redisService.get(
+        CacheCustomPage<ProductResponse> cachedData = redisService.get(
                 cacheKey,
                 new TypeReference<>() {}
         );
+
         if (cachedData != null) {
-            return cachedData;
+            return new PageImpl<>(
+                    cachedData.getContent(),
+                    PageRequest.of(cachedData.getPage(), cachedData.getSize()),
+                    cachedData.getTotalElements()
+            );
         }
 
         Sort sortSpec = sortProductsBy(sort);
@@ -213,9 +244,16 @@ public class ProductServiceImpl implements ProductService {
                 .findByBrand_Id(brandId, pageRequest)
                 .map(ProductResponse::fromProduct);
 
+        CacheCustomPage<ProductResponse> cachePage = new CacheCustomPage<>(
+                productResponsePage.getContent(),
+                productResponsePage.getNumber(),
+                productResponsePage.getSize(),
+                productResponsePage.getTotalElements()
+        );
+
         redisService.setWithTimeout(
                 cacheKey,
-                productResponsePage,
+                cachePage,
                 CacheConst.PRODUCT_LIST_TLL,
                 TimeUnit.MINUTES
         );

@@ -1,4 +1,5 @@
-package com.project.pcshop.common;
+package com.project.pcshop.common.cache;
+
 
 public class CacheConst {
     public static final long DEFAULT_TTL = 24;
