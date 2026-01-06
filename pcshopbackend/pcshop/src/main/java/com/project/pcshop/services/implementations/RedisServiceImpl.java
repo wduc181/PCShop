@@ -41,13 +41,13 @@ public class RedisServiceImpl implements RedisService {
         try {
             Object value = redisTemplate.opsForValue().get(key);
             if (value == null) {
-                //System.out.println("[CACHE MISS]--------- " + key);
+                System.out.println("[CACHE MISS]--------- " + key);
                 return null;
             }
-            //System.out.println("[CACHE HIT]--------- " + key);
+            System.out.println("[CACHE HIT]--------- " + key);
             return objectMapper.convertValue(value, type);
         } catch (Exception e) {
-            //System.out.println("[CACHE ERROR]--------- " + key + " -> " + e.getMessage());
+            System.out.println("[CACHE ERROR]--------- " + key + " -> " + e.getMessage());
             return null;
         }
     }

@@ -23,6 +23,20 @@ services:
       timeout: 10s
       retries: 5
 
+    # --- Redis ---
+  redis:
+    container_name: pcshop-redis
+    image: redis:7.2-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - pcshop-network
+
+
   # --- Backend ---
   backend:
     container_name: pcshop-backend
@@ -31,12 +45,13 @@ services:
     ports:
       - "${BACKEND_LOCAL_PORT}:8080"
     environment:
-      # Kết nối DB bằng user 'springboot'
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/${MYSQL_DATABASE}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
       - DB_USERNAME=${MYSQL_USER}
       - DB_PASSWORD=${MYSQL_PASSWORD}
       - JWT_SECRET_KEY=${JWT_SECRET}
       - APP_UPLOAD_ROOT_DIR=/app/uploads
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     volumes:
       - ./uploads:/app/uploads
     depends_on:
@@ -59,6 +74,7 @@ services:
 
 volumes:
   mysql_data:
+  redis_data:
 
 networks:
   pcshop-network:
