@@ -1,6 +1,7 @@
 package com.project.pcshop.repositories;
 
 import com.project.pcshop.entities.Product;
+import com.project.pcshop.entities.ProductImage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
