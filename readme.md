@@ -2,37 +2,44 @@
 
 # PCShop
 
-Basic e-commerce web app for browsing PC hardware, managing carts, and fulfilling orders.
+Basic e-commerce web app for browsing PC hardware and PC builds, managing carts, and fulfilling orders.
 
 </div>
 
 ## About
 
-PCShop is a full-stack demo storefront targeting desktop parts and accessories. It provides the usual customer experience (catalog browsing, product detail, cart checkout) plus a lightweight admin back office for inventory and order management. The stack is intentionally familiar—Spring Boot on the backend and React + Vite + Tailwind CSS on the frontend—so that the project can serve as a learning or hiring sample.
+PCShop is a demo full-stack e-commerce project focused on desktop PC parts and accessories.  
+It covers common real-world workflows such as product browsing, searching, cart checkout, and order tracking, along with a lightweight admin interface for management.
+
+The project is designed as a **learning and portfolio showcase**.
 
 ## Features
 
-- Product catalog with brand/category filtering, image galleries, and rich descriptions
-- Customer authentication, comment threads, and localized status labels
-- Shopping cart, checkout from cart, and order tracking with pagination
-- Admin dashboard for updating order status, editing shipping info, and reviewing history
-- Shared API layer that wraps responses in a consistent `ApiResponse` envelope
+- Product catalog with search, pagination, and sorting
+  - Sort by price (asc/desc), name (A–Z), featured, and discount
+- Product details with image galleries and rich descriptions
+- Customer authentication with JWT
+- Shopping cart, checkout flow, and order tracking with pagination
+- Admin dashboard for managing orders and updating order status
+- Redis-backed caching for frequently accessed product and category queries
+- Unified API response format via a shared `ApiResponse` wrapper
 
 ## Tech Stack
 
 | Layer    | Tech                                                                 |
-|----------|----------------------------------------------------------------------|
-| Backend  | Java Spring Boot (Corretto 24.0.2), Spring Security, Spring Data JPA |
-| Database | MySQL                                                                |
+|--------- |----------------------------------------------------------------------|
+| Backend  | Java Spring Boot (Amazon Corretto 24.0.2), Spring Security, Spring Data JPA |
+| Cache    | Redis                                                                |
+| Database | MySQL 8.x                                                            |
 | Frontend | React 18, Vite, Tailwind CSS, shadcn/ui, Sonner toast                |
 | Tooling  | Maven, npm, Docker, Docker Compose                                   |
-
 ## Prerequisites
 
 - JDK 24+ (Amazon Corretto 24.0.2 recommended)
 - Maven 3.9+
 - MySQL 8.x with a database named `pcshop`
 - Node.js 18+ and npm
+- Redis (Docker container)
 
 ## Backend Setup
 
@@ -49,7 +56,14 @@ PCShop is a full-stack demo storefront targeting desktop parts and accessories. 
 
 3. (Optional) Load the sample data: `mysql -u <user> -p pcshop < sample_database.sql`.
 	> **Heads-up:** the dump references product/brand image files stored in `uploads/` on the original machine. If you import it without copying those files, the image URLs will return 404s—either upload your own images or sync the `uploads` folder.
-4. From the backend root, run the API (pick one):
+
+4. Create and run a Redis container:
+
+    ```bash
+    docker run -d --name pcshopredis -p 6379:6379 redis:7-alpine
+    ```
+
+5. From the backend root, run the API (pick one):
 
 	```bash
 	# Using Maven
